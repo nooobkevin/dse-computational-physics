@@ -1,0 +1,43 @@
+# OpenCode internal state
+.omo/
+
+# Environment / virtualenvs
+.venv/
+venv/
+env/
+ENV/
+.conda/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+.venv
+
+# Jupyter notebooks (checkpoints only)
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Virtual environment tooling
+.poetry/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
