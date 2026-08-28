@@ -1,6 +1,3 @@
-# OpenCode internal state
-.omo/
-
 # Environment / virtualenvs
 .venv/
 venv/
@@ -19,6 +16,9 @@ build/
 dist/
 *.egg
 .venv
+
+# Agent workflow state (boulder / run continuation ledgers)
+.omo/
 
 # Jupyter notebooks (checkpoints only)
 .ipynb_checkpoints/
@@ -41,3 +41,22 @@ htmlcov/
 
 # Logs
 *.log
+
+# Rendered simulation output
+units/**/output/
+
+# Manim render scratch (docker working dirs)
+media/
+media_w*/
+
+# Hidden exercise solution files (student must not see these)
+units/**/pendulum_solution.py
+units/**/gas_solution.py
+units/**/wave_solution.py
+units/**/em_solution.py
+units/**/engineering_solution.py
+units/**/society_solution.py
+units/**/inquiry_solution.py
+units/**/astrophysics_solution.py
+units/**/quantum_solution.py
+units/**/teacher_key.md
