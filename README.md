@@ -96,17 +96,19 @@ uv run pytest units/01_mechanics/exercises/test_exercise.py \
 
 ## Unit Index
 
+Aligned to the **CAF (Secondary 4–6) Consultation Draft (June 2026)** — each unit's README carries the detailed learning-outcome map and curriculum-alignment notes.
+
 | Unit | Directory | Topics |
 |---|---|---|
-| 01 — Mechanics | `units/01_mechanics/` | Kinematics, projectile motion, SHM, circular motion, numerical integration |
-| 02 — Thermal Physics | `units/02_thermal/` | Kinetic theory of gases, Maxwell-Boltzmann distribution, ideal gas law, pressure, internal energy |
-| 03 — Waves | `units/03_waves/` | Superposition, interference, standing waves, wave speed, intensity, Young's double-slit |
-| 04 — Electricity & Magnetism | `units/04_em/` | Coulomb's law, electric field, circuits, Kirchhoff's laws, magnetic fields, motor effect |
-| 05 — Physics & Engineering | `units/05_engineering/` | Optical fibres & total internal reflection, transformers, lasers, electric motors |
-| 06 — Physics & Society | `units/06_society/` | Radioactivity, radioactive decay & half-life, Monte Carlo decay, fission chain reactions |
-| 07 — Quantum Physics | `units/07_quantum/` | Wave-particle duality, de Broglie wavelength, energy levels, photoelectric effect, tunneling |
-| 08 — Astrophysics & Relativity | `units/08_astrophysics/` | Doppler redshift, Hubble's law, stellar life cycle, Big Bang, time dilation |
-| 09 — Scientific Inquiry | `units/09_inquiry/` | Data analysis, linearisation, error propagation, curve fitting, evidence-based conclusion |
+| 01 — Mechanics | `units/01_mechanics/` | Kinematics, projectile (with drag), SHM + damping & resonance, circular motion, free fall on different planets, numerical integration |
+| 02 — Thermal Physics | `units/02_thermal/` | Kinetic theory, Maxwell-Boltzmann distribution, gas laws + absolute zero, molecular random walk, specific heat (data analysis) |
+| 03 — Waves | `units/03_waves/` | Superposition, standing waves, Young's double-slit + intensity, polarisation (Malus), EM spectrum, ultrasound ranging, inverse-square data analysis |
+| 04 — Electricity & Magnetism | `units/04_em/` | Electric field, series/parallel circuits + KCL, I-V characteristics, magnetic force on moving charges, solenoid & field patterns |
+| 05 — Physics & Engineering | `units/05_engineering/` | Orbital motion of celestial bodies, Bernoulli & pitot tube, electromagnetic induction, transformers, domestic electricity, (beyond-core: TIR/fibres, semiconductors) |
+| 06 — Physics & Society | `units/06_society/` | Radioactivity & half-life, Monte Carlo decay, fission chain reactions, energy sources (fission/fusion/solar/wind), radioisotope uses |
+| 07 — Quantum Physics | `units/07_quantum/` | Rutherford scattering, Bohr hydrogen model (primary) + line spectra, photoelectric effect, de Broglie wavelength, square well, superposition & uncertainty, laser |
+| 08 — Astrophysics & Relativity | `units/08_astrophysics/` | Doppler redshift, Hubble's law + rotation curves (dark matter), stellar life cycle, H-R diagram & black-body radiation, parallax, time dilation & spacetime diagrams, Big Bang |
+| 09 — Scientific Inquiry | `units/09_inquiry/` | Data analysis, linearisation, uncertainty & outliers, curve fitting, complex systems (epidemic model), engineering design loop |
 
 Each unit follows the layout convention:
 
@@ -133,7 +135,7 @@ units/NN_<unit>/
 
 ## HKDSE Curriculum Coverage
 
-The toolkit maps to the following HKDSE Physics curriculum topics. Each topic is a candidate for a future unit.
+The toolkit maps to the Computational Physics activities proposed in the **CAF (Secondary 4–6) Consultation Draft (June 2026)**. All nine topics below are implemented as units.
 
 ### 1. Mechanics ✓ unit 01
 
@@ -197,13 +199,23 @@ See `units/_NEW_UNIT_TEMPLATE.md` for the step-by-step replication template. The
 .
 ├── pyproject.toml          # uv / hatchling config (pythonpath = ["src"])
 ├── src/
-│   └── physics_core/       # shared physics engine
+│   └── physics_core/       # shared physics engine (one domain per topic)
 │       ├── integrators.py  # euler_step, verlet_step
 │       ├── errors.py       # percent_error, sig_figs, etc.
-│       └── mechanics/      # pendulum, projectile, circular
+│       ├── mechanics/      # pendulum, projectile, circular
+│       ├── thermal/        # gas simulation, Maxwell-Boltzmann, random walk
+│       ├── waves/          # superposition, standing waves, intensity
+│       ├── em/             # fields, circuits, magnetism
+│       ├── engineering/    # fibres, transformers, orbital, fluid, induction
+│       ├── society/        # decay, reactor, energy sources
+│       ├── quantum/        # wavefunctions, photoelectric, rutherford, bohr, lasers
+│       ├── astrophysics/   # doppler, hubble, relativity, hr_diagram
+│       └── inquiry/        # linearisation, uncertainty, complex systems
 ├── tests/                  # engine unit tests
-├── units/                  # per-unit artifacts
+├── units/                  # per-unit artifacts (01..09)
 │   ├── 01_mechanics/
 │   └── _NEW_UNIT_TEMPLATE.md
+├── tools/
+│   └── verify_video_motion.py  # strict motion gate for rendered MP4s
 └── docs/
 ```

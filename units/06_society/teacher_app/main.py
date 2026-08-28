@@ -5,6 +5,7 @@ Usage
     uv run python units/06_society/teacher_app/main.py --mode decay
     uv run python units/06_society/teacher_app/main.py --mode radiation
     uv run python units/06_society/teacher_app/main.py --mode reactor
+    uv run python units/06_society/teacher_app/main.py --mode energy
     uv run python units/06_society/teacher_app/main.py --mode decay --headless-selfcheck
 
 All modes are fully synthetic — no camera required.
@@ -21,6 +22,7 @@ import cv2
 import numpy as np
 
 from physics_core.society.decay import ReferenceDecaySim
+from physics_core.society.energy import ReferenceEnergySim
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -54,7 +56,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         required=True,
-        choices=["decay", "radiation", "reactor"],
+        choices=["decay", "radiation", "reactor", "energy"],
         help="Demo mode",
     )
     parser.add_argument(
@@ -185,6 +187,7 @@ def _run_decay(args: argparse.Namespace) -> None:
             f"Step: {step}  |  N = {sim.nuclei_remaining()}",
             f"t = {sim.state['t']:.2f}s",
             f"Decays: {N0 - sim.nuclei_remaining()}",
+            f"Activity A = {sim.activity:.1f} Bq",
             f"Estimated half-life: {estimated_T:.4f}s" if estimated_T != float("inf") else "Estimating half-life...",
             "",
             "Green: analytic  N = N0 * (1/2)^(t/T)",
@@ -363,6 +366,138 @@ def _run_reactor(args: argparse.Namespace) -> None:
     cv2.destroyAllWindows()
 
 
+def _run_energy(args: argparse.Namespace) -> None:
+    """Energy mode — wind turbine + fission mass-defect panel."""
+    sim = ReferenceEnergySim()
+    cv2.namedWindow(WIN_NAME)
+
+    # Slider state
+    r = 5.0       # rotor radius (m)
+    v = 8.0       # wind speed (m/s)
+    eta = 0.35    # turbine efficiency
+    dm = 0.1      # mass defect (amu)
+
+    while True:
+        canvas = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.uint8)
+
+        # Title
+        cv2.putText(canvas, "Energy Sources — Wind Turbine & Fission",
+                    (CANVAS_W // 2 - 300, 40), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.7, COLOR_TEXT, 2)
+
+        # ==================================================================
+        # Left panel: Wind turbine
+        # ==================================================================
+        cv2.putText(canvas, "Wind Turbine", (50, 100),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_ANALYTIC, 2)
+
+        # Formula
+        cv2.putText(canvas, "P = 1/2 * eta * rho * pi * r^2 * v^3",
+                    (50, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        # Slider values
+        cv2.putText(canvas, f"Radius r = {r:.1f} m", (50, 170),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+        cv2.putText(canvas, f"Wind speed v = {v:.1f} m/s", (50, 200),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+        cv2.putText(canvas, f"Efficiency eta = {eta:.2f}", (50, 230),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        # Compute power
+        p_wind = sim.wind_power(r=r, wind_speed=v, air_density=1.2, efficiency=eta)
+        cv2.putText(canvas, f"Power P = {p_wind:.1f} W ({p_wind/1000:.1f} kW)",
+                    (50, 270), cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_ANALYTIC, 2)
+
+        # P vs v cubic curve
+        graph_ox, graph_oy = 50, 500
+        graph_w, graph_h = 350, 250
+        cv2.rectangle(canvas, (graph_ox, graph_oy - graph_h),
+                      (graph_ox + graph_w, graph_oy), COLOR_AXIS, 1)
+        cv2.putText(canvas, "P vs v (cubic)", (graph_ox + 10, graph_oy - graph_h - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_TEXT, 1)
+
+        v_max = 20.0
+        p_at_vmax = sim.wind_power(r=r, wind_speed=v_max, air_density=1.2, efficiency=eta)
+        p_max_plot = max(p_at_vmax, 1.0)
+
+        pts: List[Tuple[int, int]] = []
+        for vi in np.linspace(0.5, v_max, 50):
+            pi = sim.wind_power(r=r, wind_speed=float(vi), air_density=1.2, efficiency=eta)
+            px = graph_ox + int((vi / v_max) * graph_w)
+            py = graph_oy - int((pi / p_max_plot) * graph_h * 0.9)
+            pts.append((px, py))
+        for i in range(1, len(pts)):
+            cv2.line(canvas, pts[i - 1], pts[i], COLOR_ANALYTIC, 2, cv2.LINE_AA)
+
+        # Mark current operating point
+        cx = graph_ox + int((v / v_max) * graph_w)
+        cy = graph_oy - int((p_wind / p_max_plot) * graph_h * 0.9)
+        cv2.circle(canvas, (cx, cy), 6, COLOR_ALPHA, -1)
+        cv2.putText(canvas, f"v={v:.1f}", (cx + 8, cy),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_ALPHA, 1)
+
+        # ==================================================================
+        # Right panel: Fission mass-defect
+        # ==================================================================
+        cv2.putText(canvas, "Nuclear Fission — Mass-Energy", (500, 100),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_FISSION, 2)
+
+        cv2.putText(canvas, "Delta E = Delta m * c^2",
+                    (500, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        cv2.putText(canvas, f"Mass defect dm = {dm:.3f} amu", (500, 170),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        energy_J, energy_MeV = sim.mass_energy_delta(dm, in_amu=True)
+        cv2.putText(canvas, f"Energy = {energy_MeV:.2f} MeV",
+                    (500, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_FISSION, 2)
+        cv2.putText(canvas, f"Energy = {energy_J:.2e} J",
+                    (500, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        # Reference: 1 amu = 931.5 MeV
+        cv2.putText(canvas, "1 amu = 931.5 MeV/c^2",
+                    (500, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        # Solar power info
+        cv2.putText(canvas, "Solar Power", (500, 340),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_NEUTRON, 2)
+        p_solar = sim.solar_power(area=1.0, solar_constant=1000.0, efficiency=0.20)
+        cv2.putText(canvas, f"1 m^2 panel (20% eff): {p_solar:.0f} W",
+                    (500, 370), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        # Wind power info
+        p_wind_ref = sim.wind_power(r=5.0, wind_speed=10.0, air_density=1.2, efficiency=0.4)
+        cv2.putText(canvas, f"Wind (r=5m, v=10, eta=0.4): {p_wind_ref/1000:.1f} kW",
+                    (500, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        # Instructions
+        cv2.putText(canvas, "Controls: [r/R] radius  [v/V] wind speed  [e/E] efficiency  [m/M] mass defect",
+                    (50, CANVAS_H - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_TEXT, 1)
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:
+            break
+        elif key == ord('r'):
+            r = max(1.0, r - 0.5)
+        elif key == ord('R'):
+            r = min(50.0, r + 0.5)
+        elif key == ord('v'):
+            v = max(1.0, v - 0.5)
+        elif key == ord('V'):
+            v = min(30.0, v + 0.5)
+        elif key == ord('e'):
+            eta = max(0.05, eta - 0.05)
+        elif key == ord('E'):
+            eta = min(1.0, eta + 0.05)
+        elif key == ord('m'):
+            dm = max(0.001, dm - 0.01)
+        elif key == ord('M'):
+            dm = min(10.0, dm + 0.01)
+
+    cv2.destroyAllWindows()
+
+
 # ---------------------------------------------------------------------------
 # Headless self-check
 # ---------------------------------------------------------------------------
@@ -383,6 +518,13 @@ def _headless_selfcheck(mode: str) -> None:
         assert rel_err < 1e-6, \
             f"Analytic N(T) = {N_at_T}, expected {expected_N} (rel_err {rel_err})"
 
+        # Check activity
+        initial_activity = sim.activity
+        expected_initial = (math.log(2.0) / T) * N0
+        rel_err_act = abs(initial_activity - expected_initial) / expected_initial
+        assert rel_err_act < 1e-6, \
+            f"Initial activity = {initial_activity}, expected {expected_initial}"
+
         # Run Monte Carlo simulation
         n_steps = 150
         for _ in range(n_steps):
@@ -395,7 +537,12 @@ def _headless_selfcheck(mode: str) -> None:
         assert rel_err < 0.10, \
             f"Half-life estimate {estimated_T:.4f}s vs T={T}s (error {rel_err*100:.2f}%)"
 
-        print("Decay self-check OK (analytic N verified, Monte Carlo half-life within 10%)")
+        # Check activity after decay
+        current_activity = sim.activity
+        assert current_activity < initial_activity, \
+            "Activity should decrease as nuclei decay"
+
+        print("Decay self-check OK (analytic N verified, activity verified, Monte Carlo half-life within 10%)")
 
     elif mode == "radiation":
         # Verify radiation property constants
@@ -415,6 +562,37 @@ def _headless_selfcheck(mode: str) -> None:
         assert n_crit == n0, "Critical should stay constant"
         assert n_super > n0, "Supercritical should increase"
         print("Reactor self-check OK (neutron multiplication verified)")
+
+    elif mode == "energy":
+        sim = ReferenceEnergySim()
+
+        # Check mass-energy: 1 amu → ~931.5 MeV
+        _, energy_MeV = sim.mass_energy_delta(1.0, in_amu=True)
+        rel_err = abs(energy_MeV - 931.5) / 931.5
+        assert rel_err < 0.01, \
+            f"1 amu → {energy_MeV:.1f} MeV, expected ~931.5 MeV"
+
+        # Check solar power
+        p_solar = sim.solar_power(area=1.0, solar_constant=1000.0, efficiency=0.20)
+        rel_err = abs(p_solar - 200.0) / 200.0
+        assert rel_err < 0.01, \
+            f"Solar power = {p_solar:.1f} W, expected 200 W"
+
+        # Check wind power cubic scaling
+        p1 = sim.wind_power(r=1.0, wind_speed=5.0, air_density=1.2, efficiency=1.0)
+        p2 = sim.wind_power(r=1.0, wind_speed=10.0, air_density=1.2, efficiency=1.0)
+        ratio = p2 / p1
+        rel_err = abs(ratio - 8.0) / 8.0
+        assert rel_err < 0.01, \
+            f"Wind power ratio = {ratio:.2f}, expected 8.0"
+
+        # Check photovoltaic default efficiency
+        p_pv = sim.photovoltaic_power(area=1.0, solar_constant=1000.0)
+        rel_err = abs(p_pv - 200.0) / 200.0
+        assert rel_err < 0.01, \
+            f"PV power = {p_pv:.1f} W, expected 200 W"
+
+        print("Energy self-check OK (mass-energy, solar, wind cubic, PV verified)")
 
     print("Physics & Society self-check OK")
     sys.exit(0)
@@ -438,6 +616,8 @@ def main() -> None:
         _run_radiation(args)
     elif args.mode == "reactor":
         _run_reactor(args)
+    elif args.mode == "energy":
+        _run_energy(args)
 
 
 if __name__ == "__main__":

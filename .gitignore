@@ -59,4 +59,14 @@ units/**/society_solution.py
 units/**/inquiry_solution.py
 units/**/astrophysics_solution.py
 units/**/quantum_solution.py
+units/**/kinematics_solution.py
+units/**/specific_heat_solution.py
+units/**/orbital_solution.py
+units/**/power_rating_solution.py
+units/**/decay_analysis_solution.py
+units/**/energy_solution.py
+units/**/hydrogen_solution.py
+units/**/stars_solution.py
+units/**/data_analysis_solution.py
+units/**/design_solution.py
 units/**/teacher_key.md

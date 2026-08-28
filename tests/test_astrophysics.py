@@ -2,10 +2,23 @@
 
 import math
 
+import numpy as np
 import pytest
 
 from physics_core.astrophysics.doppler import C, H0, DopplerShift, ReferenceDopplerShift
+from physics_core.astrophysics.hr_diagram import (
+    HRDiagram,
+    L_SUN,
+    R_SUN,
+    ReferenceHRDiagram,
+    T_SUN,
+)
 from physics_core.astrophysics.hubble import HubbleLaw
+from physics_core.astrophysics.relativity import (
+    C as C_REL,
+    ReferenceRelativityEngine,
+    RelativityEngine,
+)
 
 
 # ===========================================================================
@@ -201,3 +214,213 @@ class TestHubbleLaw:
         """Custom H0 value."""
         hl = HubbleLaw(h0=70.0)
         assert hl.velocity(10.0) == pytest.approx(700.0, rel=1e-12)
+
+
+# ===========================================================================
+# RelativityEngine — abstract base
+# ===========================================================================
+
+
+class TestRelativityEngine:
+    """Tests for the abstract base."""
+
+    def test_lorentz_factor_raises_not_implemented(self) -> None:
+        re = RelativityEngine()
+        with pytest.raises(NotImplementedError):
+            re.lorentz_factor(0.0)
+
+    def test_time_dilated_raises_not_implemented(self) -> None:
+        re = RelativityEngine()
+        with pytest.raises(NotImplementedError):
+            re.time_dilated(0.0, 1.0)
+
+    def test_length_contracted_raises_not_implemented(self) -> None:
+        re = RelativityEngine()
+        with pytest.raises(NotImplementedError):
+            re.length_contracted(0.0, 1.0)
+
+    def test_lorentz_transform_raises_not_implemented(self) -> None:
+        re = RelativityEngine()
+        with pytest.raises(NotImplementedError):
+            re.lorentz_transform(0.0, 0.0, 0.0)
+
+
+# ===========================================================================
+# ReferenceRelativityEngine
+# ===========================================================================
+
+
+class TestReferenceRelativityEngine:
+    """Tests for the reference relativity implementation."""
+
+    def test_gamma_at_rest(self) -> None:
+        """γ = 1 at v = 0."""
+        re = ReferenceRelativityEngine()
+        assert re.lorentz_factor(0.0) == pytest.approx(1.0, rel=1e-12)
+
+    def test_gamma_at_0_6c(self) -> None:
+        """γ(0.6c) = 1.25."""
+        re = ReferenceRelativityEngine()
+        v = 0.6 * C_REL
+        gamma = re.lorentz_factor(v)
+        assert gamma == pytest.approx(1.25, rel=1e-4)
+
+    def test_gamma_at_0_99c(self) -> None:
+        """γ(0.99c) ≈ 7.09."""
+        re = ReferenceRelativityEngine()
+        v = 0.99 * C_REL
+        gamma = re.lorentz_factor(v)
+        assert gamma == pytest.approx(7.09, rel=1e-2)
+
+    def test_gamma_increases_with_v(self) -> None:
+        """γ increases monotonically with v."""
+        re = ReferenceRelativityEngine()
+        g1 = re.lorentz_factor(0.1 * C_REL)
+        g2 = re.lorentz_factor(0.5 * C_REL)
+        g3 = re.lorentz_factor(0.9 * C_REL)
+        assert g1 < g2 < g3
+
+    def test_time_dilation(self) -> None:
+        """Δt = γ · Δt₀."""
+        re = ReferenceRelativityEngine()
+        v = 0.6 * C_REL
+        t0 = 1.0
+        dt = re.time_dilated(v, t0)
+        assert dt == pytest.approx(1.25, rel=1e-4)
+
+    def test_length_contraction(self) -> None:
+        """l = l₀ / γ."""
+        re = ReferenceRelativityEngine()
+        v = 0.6 * C_REL
+        l0 = 1.0
+        l = re.length_contracted(v, l0)
+        assert l == pytest.approx(1.0 / 1.25, rel=1e-4)
+
+    def test_lorentz_transform_light_consistency(self) -> None:
+        """A light signal at x = ct should transform to x' = ct'."""
+        re = ReferenceRelativityEngine()
+        v = 0.6 * C_REL
+        t = 1.0
+        x = C_REL * t  # light signal at x = ct
+        t_prime, x_prime = re.lorentz_transform(v, t, x)
+        # In any inertial frame, light speed is c: x'/t' = c
+        assert abs(x_prime / t_prime - C_REL) < 1.0
+
+    def test_lorentz_transform_invariance_of_c(self) -> None:
+        """The speed of light is invariant under Lorentz transform."""
+        re = ReferenceRelativityEngine()
+        for v in (0.3 * C_REL, 0.6 * C_REL, 0.9 * C_REL):
+            t = 2.0
+            x = C_REL * t
+            t_prime, x_prime = re.lorentz_transform(v, t, x)
+            assert abs(x_prime / t_prime - C_REL) < 1.0
+
+    def test_lorentz_transform_raises_for_superluminal(self) -> None:
+        """|v| >= c should raise ValueError."""
+        re = ReferenceRelativityEngine()
+        with pytest.raises(ValueError):
+            re.lorentz_factor(C_REL * 1.1)
+
+
+# ===========================================================================
+# HRDiagram — abstract base
+# ===========================================================================
+
+
+class TestHRDiagram:
+    """Tests for the abstract base."""
+
+    def test_luminosity_raises_not_implemented(self) -> None:
+        hr = HRDiagram()
+        with pytest.raises(NotImplementedError):
+            hr.luminosity(5772.0, 6.96e8)
+
+    def test_radius_from_luminosity_raises_not_implemented(self) -> None:
+        hr = HRDiagram()
+        with pytest.raises(NotImplementedError):
+            hr.radius_from_luminosity(3.8e26, 5772.0)
+
+    def test_peak_wavelength_raises_not_implemented(self) -> None:
+        hr = HRDiagram()
+        with pytest.raises(NotImplementedError):
+            hr.peak_wavelength(5772.0)
+
+    def test_blackbody_curve_raises_not_implemented(self) -> None:
+        hr = HRDiagram()
+        with pytest.raises(NotImplementedError):
+            hr.blackbody_curve(5772.0, np.array([500e-9]))
+
+    def test_classify_raises_not_implemented(self) -> None:
+        hr = HRDiagram()
+        with pytest.raises(NotImplementedError):
+            hr.classify(3.8e26, 5772.0)
+
+
+# ===========================================================================
+# ReferenceHRDiagram
+# ===========================================================================
+
+
+class TestReferenceHRDiagram:
+    """Tests for the reference H-R diagram implementation."""
+
+    def test_sun_luminosity(self) -> None:
+        """Sun: T=5772 K, R=6.96e8 m → L ≈ 3.8e26 W."""
+        hr = ReferenceHRDiagram()
+        L = hr.luminosity(T_SUN, R_SUN)
+        assert L == pytest.approx(L_SUN, rel=0.05)
+
+    def test_sun_radius_from_luminosity(self) -> None:
+        """Recover solar radius from L and T."""
+        hr = ReferenceHRDiagram()
+        R = hr.radius_from_luminosity(L_SUN, T_SUN)
+        assert R == pytest.approx(R_SUN, rel=0.05)
+
+    def test_wien_peak_sun(self) -> None:
+        """Sun: Wien peak ≈ 502 nm."""
+        hr = ReferenceHRDiagram()
+        lam = hr.peak_wavelength(T_SUN)
+        assert lam * 1e9 == pytest.approx(502.0, rel=0.02)
+
+    def test_wien_peak_hotter_shorter(self) -> None:
+        """Hotter stars have shorter peak wavelengths."""
+        hr = ReferenceHRDiagram()
+        lam_cool = hr.peak_wavelength(3000.0)
+        lam_hot = hr.peak_wavelength(10000.0)
+        assert lam_hot < lam_cool
+
+    def test_blackbody_curve_normalised(self) -> None:
+        """Blackbody curve is normalised to peak = 1.0."""
+        hr = ReferenceHRDiagram()
+        wl = np.linspace(100e-9, 3000e-9, 500)
+        curve = hr.blackbody_curve(T_SUN, wl)
+        assert abs(float(np.max(curve)) - 1.0) < 1e-10
+
+    def test_blackbody_curve_peak_at_wien(self) -> None:
+        """Blackbody curve peak matches Wien's law."""
+        hr = ReferenceHRDiagram()
+        wl = np.linspace(100e-9, 3000e-9, 5000)
+        curve = hr.blackbody_curve(T_SUN, wl)
+        peak_idx = int(np.argmax(curve))
+        peak_wl = wl[peak_idx]
+        wien_wl = hr.peak_wavelength(T_SUN)
+        assert abs(peak_wl - wien_wl) / wien_wl < 0.05
+
+    def test_classify_sun_main_sequence(self) -> None:
+        """Sun is main sequence."""
+        hr = ReferenceHRDiagram()
+        assert hr.classify(L_SUN, T_SUN) == "main sequence"
+
+    def test_classify_giant(self) -> None:
+        """High L, low T → giant."""
+        hr = ReferenceHRDiagram()
+        L_giant = 1000.0 * L_SUN
+        T_giant = 3500.0
+        assert hr.classify(L_giant, T_giant) == "giant"
+
+    def test_classify_white_dwarf(self) -> None:
+        """Low L, high T → white dwarf."""
+        hr = ReferenceHRDiagram()
+        L_wd = 0.01 * L_SUN
+        T_wd = 20000.0
+        assert hr.classify(L_wd, T_wd) == "white dwarf"

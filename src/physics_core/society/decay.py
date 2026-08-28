@@ -231,3 +231,12 @@ class ReferenceDecaySim(DecaySim):
     def mean_lifetime(self) -> float:
         """Mean lifetime τ = 1/λ = T / ln(2) (s)."""
         return 1.0 / self._lambda
+
+    @property
+    def activity(self) -> float:
+        """Activity A = λN (decays per second, Bq).
+
+        Returns the current activity based on the number of undecayed
+        nuclei and the decay constant.
+        """
+        return self._lambda * self._N

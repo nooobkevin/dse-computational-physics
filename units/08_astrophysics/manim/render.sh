@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SCENES_DIR_REL="units/08_astrophysics/manim/scenes"
 OUTPUT_DIR="$SCRIPT_DIR/output"
-SCENE_NAMES=("doppler_redshift" "hubble_law" "stellar_lifecycle")
+SCENE_NAMES=("doppler_redshift" "hubble_law" "stellar_lifecycle" "spacetime_diagram" "hr_diagram")
 
 # ── Quality flag ─────────────────────────────────────────────────────
 QUALITY="${2:--qm}"

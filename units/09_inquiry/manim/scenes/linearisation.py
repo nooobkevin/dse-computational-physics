@@ -226,3 +226,209 @@ class LinearisationShort(Scene):
 
         self.add(axes, dots, fit_line, eq_text)
         self.wait(3.0)
+
+
+class LinearisationTransforms(Scene):
+    """Additional linearisation transforms: 1/x and 1/x².
+
+    Panel 1: y = k/x (hyperbola) — linearise as y vs 1/x.
+    Panel 2: y = k/x² (inverse square) — linearise as y vs 1/x².
+    """
+
+    def construct(self) -> None:
+        title = Text(
+            "More Linearisation Transforms", font_size=28, color=YELLOW
+        )
+        title.to_edge(UP)
+        self.play(Write(title), run_time=0.8)
+        self.wait(0.3)
+
+        # ------------------------------------------------------------------
+        # Panel 1: y = 8 / x  →  y vs 1/x (straight)
+        # ------------------------------------------------------------------
+        label1 = Text("y = k / x  →  y vs 1/x", font_size=18, color=BLUE_D)
+        label1.move_to(LEFT * 3.5 + UP * 2.0)
+        self.play(Write(label1), run_time=0.5)
+
+        x_vals1 = np.linspace(0.5, 4.0, 12)
+        k1 = 8.0
+        y_curved1 = k1 / x_vals1
+        y_linearised1 = y_curved1  # y vs 1/x — same y, but x axis is 1/x
+        inv_x1 = 1.0 / x_vals1
+
+        # Curved plot
+        ax_curved1 = Axes(
+            x_range=[0, 4.5, 1.0],
+            y_range=[0, 18, 5],
+            x_length=2.8,
+            y_length=2.0,
+            axis_config={"color": GRAY_A, "include_numbers": True, "font_size": 14},
+        )
+        ax_curved1.move_to(LEFT * 3.5 + DOWN * 0.8)
+        self.play(Create(ax_curved1), run_time=0.6)
+        self.add(
+            MathTex("x", font_size=16, color=GRAY).next_to(
+                ax_curved1.x_axis.get_end(), DOWN
+            ),
+            MathTex("y", font_size=16, color=GRAY).next_to(
+                ax_curved1.y_axis.get_end(), LEFT
+            ),
+        )
+
+        dots_c1 = VGroup()
+        for xv, yv in zip(x_vals1, y_curved1):
+            dots_c1.add(Dot(ax_curved1.c2p(xv, yv), color=RED_C, radius=0.05))
+        self.play(
+            LaggedStart(*[FadeIn(d) for d in dots_c1], lag_ratio=0.1),
+            run_time=1.2,
+        )
+
+        curve_c1 = ax_curved1.plot_line_graph(
+            x_values=x_vals1, y_values=y_curved1,
+            line_color=RED_C, stroke_width=2, add_vertex_dots=False,
+        )
+        self.play(Create(curve_c1), run_time=0.7)
+
+        # Arrow
+        arrow1 = MathTex(r"\Rightarrow", font_size=30, color=YELLOW)
+        arrow1.move_to(LEFT * 0.1)
+        self.play(Write(arrow1), run_time=0.3)
+
+        # Linearised plot
+        ax_lin1 = Axes(
+            x_range=[0, 2.2, 0.5],
+            y_range=[0, 18, 5],
+            x_length=2.8,
+            y_length=2.0,
+            axis_config={"color": GRAY_A, "include_numbers": True, "font_size": 14},
+        )
+        ax_lin1.move_to(RIGHT * 3.5 + DOWN * 0.8)
+        self.play(Create(ax_lin1), run_time=0.6)
+        self.add(
+            MathTex("1/x", font_size=16, color=GRAY).next_to(
+                ax_lin1.x_axis.get_end(), DOWN
+            ),
+            MathTex("y", font_size=16, color=GRAY).next_to(
+                ax_lin1.y_axis.get_end(), LEFT
+            ),
+        )
+
+        dots_l1 = VGroup()
+        for xv, yv in zip(inv_x1, y_linearised1):
+            dots_l1.add(Dot(ax_lin1.c2p(xv, yv), color=GREEN_C, radius=0.05))
+        self.play(
+            LaggedStart(*[FadeIn(d) for d in dots_l1], lag_ratio=0.1),
+            run_time=1.2,
+        )
+
+        # Fit line
+        fit1 = ReferenceLinearFit(x_data=inv_x1, y_data=y_linearised1)
+        xf1, yf1 = fit1.position()
+        line1 = ax_lin1.plot_line_graph(
+            x_values=xf1, y_values=yf1,
+            line_color=GREEN, stroke_width=2, add_vertex_dots=False,
+        )
+        self.play(Create(line1), run_time=0.7)
+
+        eq1 = MathTex(
+            r"y = k \cdot (1/x), \; k = 8.0",
+            font_size=18, color=GREEN,
+        )
+        eq1.next_to(ax_lin1, DOWN, buff=0.2)
+        self.play(Write(eq1), run_time=0.5)
+
+        self.wait(0.3)
+
+        # ------------------------------------------------------------------
+        # Panel 2: y = 10 / x²  →  y vs 1/x² (straight)
+        # ------------------------------------------------------------------
+        label2 = Text("y = k / x²  →  y vs 1/x²", font_size=18, color=BLUE_D)
+        label2.move_to(LEFT * 3.5 + DOWN * 3.2)
+        self.play(Write(label2), run_time=0.5)
+
+        x_vals2 = np.linspace(0.5, 3.5, 10)
+        k2 = 10.0
+        y_curved2 = k2 / x_vals2**2
+        inv_x2_sq = 1.0 / x_vals2**2
+
+        # Curved plot
+        ax_curved2 = Axes(
+            x_range=[0, 4.0, 1.0],
+            y_range=[0, 42, 10],
+            x_length=2.8,
+            y_length=2.0,
+            axis_config={"color": GRAY_A, "include_numbers": True, "font_size": 14},
+        )
+        ax_curved2.move_to(LEFT * 3.5 + DOWN * 4.0)
+        self.play(Create(ax_curved2), run_time=0.6)
+        self.add(
+            MathTex("x", font_size=16, color=GRAY).next_to(
+                ax_curved2.x_axis.get_end(), DOWN
+            ),
+            MathTex("y", font_size=16, color=GRAY).next_to(
+                ax_curved2.y_axis.get_end(), LEFT
+            ),
+        )
+
+        dots_c2 = VGroup()
+        for xv, yv in zip(x_vals2, y_curved2):
+            dots_c2.add(Dot(ax_curved2.c2p(xv, yv), color=RED_C, radius=0.05))
+        self.play(
+            LaggedStart(*[FadeIn(d) for d in dots_c2], lag_ratio=0.1),
+            run_time=1.2,
+        )
+
+        curve_c2 = ax_curved2.plot_line_graph(
+            x_values=x_vals2, y_values=y_curved2,
+            line_color=RED_C, stroke_width=2, add_vertex_dots=False,
+        )
+        self.play(Create(curve_c2), run_time=0.7)
+
+        # Arrow
+        arrow2 = MathTex(r"\Rightarrow", font_size=30, color=YELLOW)
+        arrow2.move_to(LEFT * 0.1 + DOWN * 3.2)
+        self.play(Write(arrow2), run_time=0.3)
+
+        # Linearised plot
+        ax_lin2 = Axes(
+            x_range=[0, 4.5, 1.0],
+            y_range=[0, 42, 10],
+            x_length=2.8,
+            y_length=2.0,
+            axis_config={"color": GRAY_A, "include_numbers": True, "font_size": 14},
+        )
+        ax_lin2.move_to(RIGHT * 3.5 + DOWN * 4.0)
+        self.play(Create(ax_lin2), run_time=0.6)
+        self.add(
+            MathTex("1/x^2", font_size=16, color=GRAY).next_to(
+                ax_lin2.x_axis.get_end(), DOWN
+            ),
+            MathTex("y", font_size=16, color=GRAY).next_to(
+                ax_lin2.y_axis.get_end(), LEFT
+            ),
+        )
+
+        dots_l2 = VGroup()
+        for xv, yv in zip(inv_x2_sq, y_curved2):
+            dots_l2.add(Dot(ax_lin2.c2p(xv, yv), color=GREEN_C, radius=0.05))
+        self.play(
+            LaggedStart(*[FadeIn(d) for d in dots_l2], lag_ratio=0.1),
+            run_time=1.2,
+        )
+
+        fit2 = ReferenceLinearFit(x_data=inv_x2_sq, y_data=y_curved2)
+        xf2, yf2 = fit2.position()
+        line2 = ax_lin2.plot_line_graph(
+            x_values=xf2, y_values=yf2,
+            line_color=GREEN, stroke_width=2, add_vertex_dots=False,
+        )
+        self.play(Create(line2), run_time=0.7)
+
+        eq2 = MathTex(
+            r"y = k \cdot (1/x^2), \; k = 10.0",
+            font_size=18, color=GREEN,
+        )
+        eq2.next_to(ax_lin2, DOWN, buff=0.2)
+        self.play(Write(eq2), run_time=0.5)
+
+        self.wait(1.0)

@@ -21,6 +21,14 @@ MEGAPARSEC_IN_KM = 3.085677581e19
 # ---------------------------------------------------------------------------
 # Stellar spectral classification (O B A F G K M)
 # ---------------------------------------------------------------------------
+# NOTE: The CAF (Curriculum and Assessment Framework) consultation draft
+# (June 2026) removes "major spectral classes OBAFGKM" from the core
+# curriculum (Annex 3 lines 4309–4310).  This table is retained as
+# **enrichment material** — useful for teachers who wish to discuss
+# spectral classification beyond the core requirements, but no longer a
+# tested outcome.  The H-R diagram (which uses temperature as its
+# horizontal axis) remains a core requirement.
+#
 # Each entry: (min_temp_K, max_temp_K, colour_name, hex_colour, description)
 SpectralClass = Tuple[int, int, str, str, str]
 

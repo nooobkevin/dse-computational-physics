@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SCENES_DIR="$SCRIPT_DIR/scenes"
 OUTPUT_DIR="$SCRIPT_DIR/output"
-SCENE_NAMES=("superposition_standing" "wave_speed_intensity" "young_slit")
+SCENE_NAMES=("superposition_standing" "wave_speed_intensity" "young_slit" "polarisation" "ultrasound_ranging" "em_spectrum")
 
 # ── Quality flag ─────────────────────────────────────────────────────
 QUALITY="${2:--qh}"

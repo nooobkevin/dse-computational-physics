@@ -12,17 +12,53 @@ All three artifacts consume the same `physics_core` engine (`src/physics_core/as
 
 ---
 
-## Curriculum Learning-Outcome Map
+## Curriculum Learning-Outcome Map (CAF June 2026)
 
-This unit targets the following HKDSE Physics curriculum outcomes:
+This unit targets the following HKDSE Physics curriculum outcomes per the CAF Consultation Draft:
 
-| Sub-topic | Learning outcome(s) | Which artifact(s) deliver it |
+### a. Observing the sky
+
+| Learning outcome(s) | Which artifact(s) deliver it |
+|---|---|
+| **a.3** Determine distance using parallax | Teacher app (`--mode parallax` — apparent shift of near star against background, live d = 1/p); Concept questions (Q i) |
+| **a.4** Light year, AU, parsec as distance units | Teacher app (`--mode parallax` — displays distance in pc and ly); Concept questions (Q i) |
+
+### b. Stars and the universe
+
+| Learning outcome(s) | Which artifact(s) deliver it |
+|---|---|
+| **b.1** Blackbody radiation curves — temperature, colour, luminosity | Manim `HRDiagramScene` (blackbody-curve inset with colour morphing as T sweeps); Engine `hr_diagram.py` (Planck curve, Wien's law); Student exercise `StudentStars` (`peak_wavelength`, `blackbody_curve`) |
+| **b.2** H-R diagram classification | Manim `HRDiagramScene` (log L vs T, main-sequence band, giant and white-dwarf regions, sample stars); Student exercise `StudentStars` (`classify`) |
+| **b.3** Stefan-Boltzmann law L = 4πR²σT⁴ | Engine `hr_diagram.py` (`luminosity`, `radius_from_luminosity`); Student exercise `StudentStars` (`luminosity`, `radius_from_luminosity`) |
+| **b.4** Estimate relative size of stars using H-R diagram | Engine `hr_diagram.py` (`radius_from_luminosity`); Student exercise (radius-from-luminosity hook) |
+| **b.6** Doppler effect (Δλ/λ₀ = vᵣ/c) | Manim `DopplerRedshift`; Teacher app (`--mode doppler`); Student exercise (`observed_frequency`, `redshift`, `velocity_from_z`); Engine `doppler.py` |
+| **b.7** Dark matter from rotation curves | Teacher app (`--mode hubble` — rotation-curve panel with Keplerian vs flat curve, dark matter annotation) |
+| **b.8** Redshift → Big Bang theory | Concept questions (Q h — CMB, redshift, light-element abundances) |
+
+### c. Relativity
+
+| Learning outcome(s) | Which artifact(s) deliver it |
+|---|---|
+| **c.1** Frames of reference / limitations of Newtonian mechanics | Manim `SpacetimeDiagram` (two observers in different inertial frames); Teacher app (`--mode relativity`) |
+| **c.2** Principle of invariant light speed | Engine `relativity.py` (Lorentz transform preserves c); Teacher app self-check verifies invariance |
+| **c.3** Time dilation Δt = Δt₀ / √(1 − v²/c²) | Engine `relativity.py` (`time_dilated`); Teacher app (`--mode relativity` — live gamma and dilated dt); Student exercise `StudentRelativity` (`time_dilated`) |
+| **c.4** Length contraction l = l₀√(1 − v²/c²) | Engine `relativity.py` (`length_contracted`); Teacher app (`--mode relativity` — contracted length display); Student exercise `StudentRelativity` (`length_contracted`) |
+| **c.5** Spacetime diagram | Manim `SpacetimeDiagram` (ct-x diagram, light cones, worldlines, relativity of simultaneity); Teacher app (`--mode relativity` — mini spacetime diagram) |
+| **c.7** Satellite navigation / relativistic effects | Concept questions (Q g — GPS 38 µs/day correction) |
+
+### Computational Physics Activities (CAF-specified)
+
+| Activity | Artifact(s) |
+|---|---|
+| Simulate Doppler effect | Manim `DopplerRedshift`; Teacher app `--mode doppler`; Student exercise |
+| Simulate frames of reference for simultaneity and time dilation | Manim `SpacetimeDiagram`; Teacher app `--mode relativity`; Student exercise `StudentRelativity` |
+
+### Enrichment (beyond CAF core)
+
+| Topic | Where it appears | Status |
 |---|---|---|
-| **Doppler effect — light** (Astrophysics 8a) | Redshift/blueshift; observed frequency formula; `z = Δλ/λ`; low-velocity approximation `z ≈ v/c` | Teacher app (`--mode doppler` — live wave-compression animation with colour shift); Manim `DopplerRedshift` (rest → blueshift → redshift); Student exercise (implement `observed_frequency`, `redshift`, `velocity_from_z`) |
-| **Hubble's law** (Astrophysics 8b) | `v = H₀d`; expanding universe; recession velocity proportional to distance | Teacher app (`--mode hubble` — galaxy scatter plot with theoretical line); Manim `HubbleLawScene` (axes, dots, theory line); Student exercise (implement `hubble_velocity`) |
-| **Big Bang theory and evidence** (Astrophysics 8c) | CMB, galaxy redshifts, light-element abundances as evidence for the Big Bang | Concept questions in `questions.md`; Teacher app (`--mode lifecycles` — cosmic timeline discussed in class) |
-| **Stellar life cycle** (Astrophysics 8d) | Nebula → main sequence → giant/supergiant → white dwarf / neutron star / black hole; spectral classification (O B A F G K M) | Manim `StellarLifecycle` (schematic flow diagram); Teacher app (`--mode lifecycles` — box-and-arrow diagram + spectral class table) |
-| **Special relativity — concepts** (Relativity 8e) | Time dilation, length contraction (conceptual); twin paradox | Concept questions in `questions.md` (twin paradox, time dilation explanation) |
+| Spectral classes O B A F G K M | `SPECTRAL_CLASSES` table in `hubble.py`; Teacher app `--mode lifecycles`; Manim `StellarLifecycle` | **Enrichment** — removed from CAF core (Annex 3 lines 4309–4310); retained as teacher reference |
+| Stellar life cycle (nebula → main sequence → giant → white dwarf / neutron star) | Manim `StellarLifecycle`; Teacher app `--mode lifecycles` | **Enrichment** — useful context for H-R diagram |
 
 ---
 
@@ -32,30 +68,30 @@ This unit targets the following HKDSE Physics curriculum outcomes:
 
 Play the rendered MP4 for the topic you are about to teach:
 
-- **Doppler redshift**: `DopplerRedshift.mp4` — shows a source emitting light waves at rest, then approaching (blueshift, compressed waves), then receding (redshift, stretched waves). The relativistic Doppler formula and redshift *z* are overlaid.
-- **Hubble's law**: `HubbleLawScene.mp4` — shows an expanding-universe scatter plot: galaxy dots with recession velocity proportional to distance (v = H₀·d), along with a theoretical line and axis labels.
-- **Stellar life cycle**: `StellarLifecycle.mp4` — shows a schematic flow diagram of stellar evolution: nebula → main sequence → giant/supergiant → white dwarf / neutron star / black hole, with mass-threshold labels.
+- **Doppler redshift**: `DopplerRedshift.mp4` — shows a source emitting light waves at rest, then approaching (blueshift, compressed waves), then receding (redshift, stretched waves).
+- **Hubble's law**: `HubbleLawScene.mp4` — shows an expanding-universe scatter plot with galaxy dots and the v = H₀·d line.
+- **Stellar life cycle**: `StellarLifecycle.mp4` — shows a schematic flow diagram of stellar evolution (enrichment).
+- **Spacetime diagram**: `SpacetimeDiagram.mp4` — shows a ct-x Minkowski diagram with light cones, two observers' worldlines, and relativity of simultaneity.
+- **H-R diagram**: `HRDiagramScene.mp4` — shows log L vs T axes, main-sequence band, giant and white-dwarf regions, sample stars, and a blackbody-curve inset whose colour morphs with temperature.
 
 ### Step 2: Run the teacher demo app
 
 Open the teacher app in the relevant mode and demonstrate the physics live:
 
-- **Doppler mode** (`--mode doppler`): a sine wave representing light from a source is animated; the source's velocity sweeps sinusoidally through approaching → rest → receding. The wave compresses (blueshift, blue colour) or stretches (redshift, red colour) in real time. Observed frequency, redshift *z*, and wavelength shift are displayed numerically. Use this to discuss: why does approaching give a higher frequency? What is the relationship between `z` and `v`? At what speed is the shift noticeable?
-- **Hubble mode** (`--mode hubble`): a scatter plot of synthetic galaxies at random distances is shown with the theoretical `v = H₀·d` line. Each galaxy dot includes a small peculiar-velocity scatter. Use this to discuss: what does the slope of the line represent? Why are the data points not all on the line? What is the physical meaning of H₀?
-- **Lifecycles mode** (`--mode lifecycles`): a schematic flow diagram of stellar evolution shows boxes and arrows for each stage. The spectral-classification table (O B A F G K M) is displayed at the bottom. Use this to discuss: what determines a star's fate? What is a white dwarf? What happens in a supernova?
+- **Doppler mode** (`--mode doppler`): a sine wave representing light from a source is animated; the source's velocity sweeps sinusoidally through approaching → rest → receding.
+- **Hubble mode** (`--mode hubble`): a scatter plot of synthetic galaxies with the theoretical v = H₀·d line, plus a rotation-curve panel showing Keplerian vs flat rotation curves (dark matter inference).
+- **Lifecycles mode** (`--mode lifecycles`): a schematic flow diagram of stellar evolution with spectral-classification table (enrichment).
+- **Relativity mode** (`--mode relativity`): speed slider from 0 to 0.99c; live gamma, dilated time for a 1-second proper interval, contracted length for a 1 m stick, mini spacetime diagram, and γ-vs-β plot.
+- **Parallax mode** (`--mode parallax`): apparent shift of a near star against distant background as Earth moves ±1 AU; live d = 1/p (arcsec to parsec); Proxima Centauri reference.
 
-### Step 3: Complete the fill-in-the-blank exercise
+### Step 3: Complete the fill-in-the-blank exercises
 
-Students open `astrophysics_exercise.py` and implement the four methods on `StudentDopplerShift`: `observed_frequency`, `redshift`, `velocity_from_z`, and `hubble_velocity`. The auto-grader checks:
+Students open the exercise files and implement the physics hooks:
 
-1. The `NotImplementedError` is replaced (immediate fail if not)
-2. A receding source gives a lower observed frequency (redshift, `f_obs < f0`)
-3. An approaching source gives a higher observed frequency (blueshift, `f_obs > f0`)
-4. The low-velocity redshift `z ≈ v/c` to within 5%
-5. `velocity_from_z(redshift(v))` recovers the original velocity `v` to within 1%
-6. `hubble_velocity(d)` gives `H₀ · d` to within 1%
+1. **`astrophysics_exercise.py`** — `StudentDopplerShift`: `observed_frequency`, `redshift`, `velocity_from_z`, `hubble_velocity`.
+2. **`stars_exercise.py`** — `StudentRelativity`: `lorentz_factor`, `time_dilated`, `length_contracted`. `StudentStars`: `luminosity`, `radius_from_luminosity`, `peak_wavelength`, `classify`.
 
-The concept questions in `questions.md` tie the code to the broader curriculum: meaning of redshift, the `z = Δλ/λ` formula, Hubble's law and the expanding universe, evidence for the Big Bang, stellar life cycles, and time dilation.
+The concept questions in `questions.md` tie the code to the broader curriculum.
 
 ---
 
@@ -74,10 +110,10 @@ uv sync
 ### Engine tests
 
 ```bash
-uv run pytest
+uv run pytest tests/test_astrophysics.py -v
 ```
 
-This runs all unit tests including `tests/test_astrophysics.py` (Doppler shift, Hubble's law). The `pyproject.toml` sets `pythonpath = ["src"]` so `physics_core` is importable.
+This runs all unit tests including Doppler shift, Hubble's law, special relativity, and H-R diagram physics.
 
 ### Teacher app
 
@@ -91,6 +127,12 @@ uv run python units/08_astrophysics/teacher_app/main.py --mode hubble
 # Life cycles mode (fully synthetic)
 uv run python units/08_astrophysics/teacher_app/main.py --mode lifecycles
 
+# Relativity mode (fully synthetic)
+uv run python units/08_astrophysics/teacher_app/main.py --mode relativity
+
+# Parallax mode (fully synthetic)
+uv run python units/08_astrophysics/teacher_app/main.py --mode parallax
+
 # Headless self-check (no window, for CI)
 uv run python units/08_astrophysics/teacher_app/main.py --mode doppler --headless-selfcheck
 ```
@@ -100,38 +142,41 @@ All modes are fully synthetic — no camera required. The `--headless-selfcheck`
 ### Manim render
 
 ```bash
-# Render all three scenes (requires Docker)
+# Render all scenes (requires Docker)
 bash units/08_astrophysics/manim/render.sh
 
 # Render a specific scene
-bash units/08_astrophysics/manim/render.sh doppler_redshift
+bash units/08_astrophysics/manim/render.sh spacetime_diagram
 
 # Low-quality preview (fast)
-bash units/08_astrophysics/manim/render.sh doppler_redshift -ql
+bash units/08_astrophysics/manim/render.sh spacetime_diagram -ql
 ```
 
 The script uses the `manimcommunity/manim:stable` Docker image. Output MP4 files land in `units/08_astrophysics/manim/output/`. The `--disable_caching` flag is set to force re-render on every run.
 
-Available scenes: `doppler_redshift`, `hubble_law`, `stellar_lifecycle`.
+Available scenes: `doppler_redshift`, `hubble_law`, `stellar_lifecycle`, `spacetime_diagram`, `hr_diagram`.
 
 Quality flags: `-qm` (medium, default), `-qh` (high), `-ql` (low, fast preview), `-qk` (4K).
 
 ### Exercise / grader
 
 ```bash
-# Grade the student's exercise (default: astrophysics_exercise.py)
+# Grade the Doppler shift exercise
 uv run pytest units/08_astrophysics/exercises/test_exercise.py -v
 
-# Grade against the solution file (teacher self-check)
-uv run pytest units/08_astrophysics/exercises/test_exercise.py \
-    --override-student=units/08_astrophysics/exercises/astrophysics_solution.py -v
+# Grade the stars & relativity exercise
+uv run pytest units/08_astrophysics/exercises/test_stars_exercise.py -v
 
-# Full self-check: verify grader passes correct answer AND catches wrong one
-uv run pytest units/08_astrophysics/exercises/test_exercise.py --selfcheck \
-    --override-student=units/08_astrophysics/exercises/astrophysics_solution.py -v
+# Grade against the solution file (teacher self-check)
+uv run pytest units/08_astrophysics/exercises/test_stars_exercise.py -v \
+    --override-student-stars=units/08_astrophysics/exercises/stars_solution.py
+
+# Full self-check
+uv run pytest units/08_astrophysics/exercises/test_stars_exercise.py --selfcheck \
+    --override-student-stars=units/08_astrophysics/exercises/stars_solution.py -v
 ```
 
-The solution file (`astrophysics_solution.py`) and teacher answer key (`teacher_key.md`) are gitignored — students must not see them.
+The solution files (`astrophysics_solution.py`, `stars_solution.py`) and teacher answer key (`teacher_key.md`) are gitignored — students must not see them.
 
 ---
 
@@ -143,20 +188,15 @@ The `src/physics_core/astrophysics/` package mirrors the pattern established by 
 src/physics_core/astrophysics/
   __init__.py           ← exports all classes
   doppler.py            ← DopplerShift (abstract) + ReferenceDopplerShift
-  hubble.py             ← HubbleLaw + SPECTRAL_CLASSES table
+  hubble.py             ← HubbleLaw + SPECTRAL_CLASSES table (enrichment)
+  relativity.py         ← RelativityEngine (abstract) + ReferenceRelativityEngine
+  hr_diagram.py         ← HRDiagram (abstract) + ReferenceHRDiagram + SAMPLE_STARS
 ```
 
-The abstract base `DopplerShift` defines four physics **hooks** (raising `NotImplementedError`) that subclasses override:
-
-- `observed_frequency(v)` — relativistic Doppler formula
-- `redshift(v)` — `z = sqrt((1+β)/(1-β)) - 1`
-- `velocity_from_z(z)` — relativistic inverse
-- `hubble_velocity(distance, H0)` — `v = H₀ · d`
-
-The `ReferenceDopplerShift` subclass provides the correct physics using the same formulas students are expected to implement.
+Each abstract base defines physics **hooks** (raising `NotImplementedError`) that subclasses override. The `Reference*` subclasses provide the correct physics using the same formulas students are expected to implement.
 
 ---
 
 ## Synthetic-Only Note
 
-All three modes in the teacher app are **fully synthetic**. Unlike the pendulum mode in Unit 01 (which supported real webcam tracking), there is no camera input — all physics is computed and rendered procedurally. This makes the app deterministic and ideal for classroom projection without any hardware dependency.
+All modes in the teacher app are **fully synthetic**. Unlike the pendulum mode in Unit 01 (which supported real webcam tracking), there is no camera input — all physics is computed and rendered procedurally. This makes the app deterministic and ideal for classroom projection without any hardware dependency.

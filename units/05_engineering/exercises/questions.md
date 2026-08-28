@@ -1,127 +1,115 @@
-# Physics & Engineering Exercise — Concept Questions (M5)
+# Physics & Engineering — Concept Questions
 
-These questions test your understanding of the physics behind the optical
-fibre, transformer, laser, and motor simulations.  Answer them in a few
-sentences each.
+These questions test your understanding of the physics behind the unit's
+simulations.  Answer them in a few sentences each.
 
 ---
 
-## Questions
+## (a) Electromagnetic induction
 
-### (a) Critical angle and total internal reflection
+1. A magnet is pushed into a coil of wire.  Explain:
+   - What happens to the magnetic flux through the coil?
+   - What is the direction of the induced current according to Lenz's law?
+   - If the magnet is pulled out, how does the direction change?
 
-An optical fibre has a core refractive index `n₁ = 1.50` and a cladding
-refractive index `n₂ = 1.45`.
+2. A coil of area `A = 0.02 m²` is placed in a uniform magnetic field
+   `B = 0.3 T`. The angle between the field and the coil normal is `θ = 30°`.
+   Compute the magnetic flux `Φ = BAcosθ`.
 
-1. Compute the critical angle `θ_c` in degrees.
-2. If a ray enters the fibre at an angle of `60°` (relative to the normal),
-   does it undergo total internal reflection?  Explain.
-3. What happens if the cladding index is increased to `n₂ = 1.52`?  Can TIR
-   still occur?
+3. A coil experiences a change in magnetic flux from `0.04 Wb` to `0.01 Wb`
+   in `0.05 s`.  Compute the average induced e.m.f. using `ε = −ΔΦ/Δt`.
 
-### (b) Why is the refractive index defined as n = c/v?
+4. Suggest **two** methods for improving the efficiency of a transformer.
+   Explain the physical principle behind each method (e.g. how do they
+   reduce energy losses?).
 
-1. Explain in one sentence why light travels slower in a medium than in
-   vacuum.
-2. If the speed of light in a certain glass is `v = 2.0 × 10⁸ m/s`, what
-   is the refractive index of the glass?
-3. How does a higher refractive index affect the critical angle?
+5. Describe the **three main stages** of the electrical grid system for
+   power transmission.  Why is each stage necessary?  Include typical
+   voltage levels at each stage.
 
-### (c) Ideal transformer ratios
+## (b) Sensor principles and smart living
 
-An ideal transformer has `Np = 200` turns on the primary and `Ns = 50`
-turns on the secondary.  The primary voltage is `Vp = 240 V`.
+1. A thermistor is used as a temperature sensor.  How does its resistance
+   change with temperature?  Suggest one daily application of a
+   temperature sensor in a smart living environment.
 
-1. Compute the secondary voltage `Vs`.
-2. If the secondary current is `Is = 4 A`, what is the primary current `Ip`?
-3. Verify that power is conserved: `Vp × Ip = Vs × Is`.
-4. Why is an ideal transformer assumed to have no power loss?
+2. An LDR (light-dependent resistor) is used in a smart lighting system.
+   How does its resistance change with light intensity?  Describe how it
+   could be used to switch on outdoor lights automatically at dusk.
 
-### (d) Laser coherence and population inversion
+3. A PIR (passive infrared) sensor detects motion.  Explain in one
+   sentence how it works.  Give one example of a smart-living application.
 
-1. What is a population inversion, and why is it necessary for laser
-   operation?
-2. How does stimulated emission differ from spontaneous emission?
-3. Why is the light from a laser coherent, while light from an LED is not?
+## (c) Household electricity
 
-### (e) Motor effect
+1. A 2000 W hair dryer is connected to a 230 V mains supply.
+   - Compute the operating current.
+   - Which standard fuse rating (3 A, 5 A, or 13 A) should be used?
+   - Explain why the fuse is important for safety.
 
-1. A current-carrying conductor of length `L = 0.2 m` carries a current
-   `I = 3 A` in a magnetic field `B = 0.4 T`.  Compute the force on the
-   conductor.
-2. If the conductor is part of a coil with `N = 10` turns and radius
-   `r = 0.05 m`, what is the maximum torque?
-3. Why does the torque vary with the armature angle `θ`?
+2. The hair dryer in Q1 is used for 30 minutes every day for 30 days.
+   The electricity rate is $1.20 per kWh.
+   - Compute the energy consumed in kWh.
+   - Calculate the total cost for the 30-day period.
 
-### (f) Transformer applications
+3. Explain why thicker power cables reduce energy losses but cost more.
+   What is the trade-off in choosing cable thickness?
 
-1. Why are step-up transformers used in power transmission?
-2. A step-down transformer reduces voltage from 240 V to 12 V.  If the
-   primary has 200 turns, how many turns does the secondary have?
+4. An LED light bulb uses 10 W and lasts 25,000 hours.  A traditional
+   incandescent bulb uses 60 W and lasts 1,000 hours for the same
+   brightness.  Calculate the energy saved over 25,000 hours by using
+   the LED bulb.  Discuss the environmental benefit.
+
+## (d) AC peak vs operating voltage
+
+1. In Hong Kong, the mains supply is rated as 220 V (operating voltage).
+   The peak voltage is related by `V_peak = √2 × V_operating`.
+   Compute the peak voltage.
+
+2. Explain why electrical appliances are labelled with the operating
+   voltage rather than the peak voltage.
+
+3. A student measures the peak voltage of an AC supply as 311 V.
+   What is the operating voltage?
+   (Use the numerical relationship `V_peak / V_operating ≈ 1.414`.)
+
+## (e) Transformer and power transmission
+
+1. A step-up transformer increases voltage from 11 kV to 220 kV for
+   transmission.  If the primary has 100 turns, how many turns does the
+   secondary have?
+
+2. Explain in terms of `P = VI` and `P_loss = I²R` why transmitting
+   power at high voltage reduces energy losses in the cables.
+
 3. What would happen if a transformer were connected to a DC supply?
+   Explain why.
+
+## (f) Satellite applications
+
+1. Name and describe **three** different applications of artificial
+   satellites.  For each application, explain why a satellite is
+   particularly suited to that task (e.g. why are communication
+   satellites placed in geostationary orbit?).
+
+2. A satellite is in a circular orbit at an altitude of 400 km above
+   Earth's surface (Earth radius = 6371 km, mass = 5.97 × 10²⁴ kg,
+   G = 6.67 × 10⁻¹¹ N·m²/kg²).
+   - Calculate the orbital radius.
+   - Calculate the orbital speed.
+   - Calculate the escape speed at this altitude.
+   - Why is the escape speed greater than the orbital speed?
+
+3. Distinguish between **apparent weightlessness** experienced by
+   astronauts in an orbiting spacecraft and true weightlessness in
+   deep space.  Why do astronauts float inside the ISS even though
+   gravity is still about 90% as strong as on Earth's surface?
+
+4. Research task: Briefly describe **one** contribution of China's
+   aerospace programme (e.g. Long March rocket, Tiangong space station,
+   Beidou satellite system, Chang'e lunar missions) and explain its
+   significance.
 
 ---
 
-*The section below contains model answers.  Remove it before distributing
-the questions to students.*
-
----
-
-### (a) Model answer
-
-1. `θ_c = arcsin(n₂/n₁) = arcsin(1.45/1.50) ≈ arcsin(0.9667) ≈ 75.1°`
-2. `60° < 75.1°`, so the ray is below the critical angle — it will NOT
-   undergo TIR.  The ray leaks out through the cladding.
-3. If `n₂ = 1.52 > n₁ = 1.50`, then `n₂/n₁ > 1`, so `arcsin(n₂/n₁)` is
-   undefined.  No TIR is possible because the ray would refract into the
-   cladding rather than reflect.
-
-### (b) Model answer
-
-1. Light interacts with the atoms/molecules in the medium, causing
-   repeated absorption and re-emission that delays the net propagation.
-2. `n = c/v = (3.0 × 10⁸) / (2.0 × 10⁸) = 1.50`
-3. A higher refractive index means light travels slower in that medium,
-   and the critical angle for TIR becomes smaller (since `θ_c = arcsin(n₂/n₁)`
-   decreases as `n₁` increases).
-
-### (c) Model answer
-
-1. `Vs = Vp × Ns/Np = 240 × 50/200 = 60 V`
-2. `Ip = Is × Ns/Np = 4 × 50/200 = 1 A`
-3. `Pp = 240 × 1 = 240 W`, `Ps = 60 × 4 = 240 W` ✓
-4. An ideal transformer assumes no resistive losses in the windings, no
-   eddy currents in the core, and perfect magnetic coupling — all energy
-   is transferred from primary to secondary.
-
-### (d) Model answer
-
-1. Population inversion means more atoms are in the upper energy level
-   than the lower level.  This is necessary because stimulated emission
-   (which produces laser light) requires more atoms to be ready to emit
-   than to absorb.
-2. Stimulated emission is triggered by an existing photon and produces a
-   second photon identical in phase, direction, and energy.  Spontaneous
-   emission occurs randomly without a trigger.
-3. Laser light is coherent because stimulated emission produces photons
-   that are all in phase (same frequency, phase, and direction).  LED
-   light comes from spontaneous emission, which is random in phase and
-   direction.
-
-### (e) Model answer
-
-1. `F = B I L = 0.4 × 3 × 0.2 = 0.24 N`
-2. Maximum torque: `τ_max = N B I L r = 10 × 0.4 × 3 × 0.2 × 0.05 = 0.12 N·m`
-3. Torque `τ = N B I L r cos(θ)` varies with angle because the effective
-   lever arm changes as the coil rotates.  Torque is maximum when the coil
-   is perpendicular to the field (θ = 0) and zero when parallel (θ = 90°).
-
-### (f) Model answer
-
-1. Step-up transformers increase voltage for transmission, which reduces
-   current for the same power (P = VI).  Lower current means less resistive
-   loss (I²R) in the transmission lines.
-2. `Ns = Np × Vs/Vp = 200 × 12/240 = 10 turns`
-3. A transformer requires a changing magnetic flux to induce voltage in
-   the secondary.  DC provides a constant current, so no changing flux is
-   produced — the transformer would act as a short circuit and overheat.
+*Model answers are in `teacher_key.md` (do not distribute to students).*

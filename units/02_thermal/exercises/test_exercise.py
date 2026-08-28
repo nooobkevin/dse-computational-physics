@@ -1,4 +1,4 @@
-"""Auto-grader for the gas fill-in-the-blank exercise (M5).
+"""Auto-graders for the gas and specific heat fill-in-the-blank exercises (M5).
 
 Grading philosophy
 ------------------
@@ -9,8 +9,8 @@ conserve energy (with Verlet), and produce a non-empty speed distribution.
 A wrong implementation will fail one or more of these checks with a
 specific, human-readable message.
 
-Checks
-------
+Gas exercise checks
+-------------------
 1. **NotImplementedError guard** — if the student hasn't filled in the hooks,
    fail immediately with a clear message.
 2. **Pressure** — after running, the measured pressure must be positive.
@@ -19,14 +19,31 @@ Checks
    1% over 1000 steps (Verlet integration, dilute gas).
 5. **Wall bounce** — a particle heading toward a wall must bounce back.
 
+Specific heat exercise checks
+-----------------------------
+1. **NotImplementedError guard** — if the student hasn't filled in the
+   functions, fail immediately.
+2. **specific_heat_from_fit** — correct slope from (Q, delta_T) fit.
+3. **energy_to_heat** — correct Q = m * c * delta_T.
+4. **final_temperature** — correct T_final calculation.
+5. **Error handling** — reasonable error for edge cases.
+
 Usage
 -----
-    # Grade the student's exercise (default)
+    # Grade the student's gas exercise (default)
     uv run pytest units/02_thermal/exercises/test_exercise.py -v
+
+    # Grade the student's specific heat exercise
+    uv run pytest units/02_thermal/exercises/test_exercise.py \
+        -k TestSpecificHeat -v
 
     # Grade against the solution file (teacher self-check)
     uv run pytest units/02_thermal/exercises/test_exercise.py -v \
         --override-student=units/02_thermal/exercises/gas_solution.py
+
+    uv run pytest units/02_thermal/exercises/test_exercise.py -v \
+        --override-student=units/02_thermal/exercises/specific_heat_solution.py \
+        -k TestSpecificHeat
 
     # Full self-check: verify grader passes correct answer AND catches wrong one
     uv run pytest units/02_thermal/exercises/test_exercise.py -v \
@@ -36,6 +53,7 @@ Usage
 from __future__ import annotations
 
 from typing import Any, Dict, Type
+from types import ModuleType
 
 import numpy as np
 import pytest
@@ -256,4 +274,209 @@ def test_selfcheck_runner(
     # Wrong answer: particle passes through wall (position > L)
     assert sim._positions[0, 0] > 10.0, (
         "Self-check setup error: wrong answer fixture unexpectedly bounced"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Specific heat exercise tests
+# ---------------------------------------------------------------------------
+
+
+class TestSpecificHeat:
+    """Auto-grader for the specific heat capacity exercise."""
+
+    # -- Test 1: NotImplementedError guard ---------------------------------
+
+    def test_functions_implemented(
+        self, specific_heat_module: ModuleType
+    ) -> None:
+        """Fail immediately if the student hasn't filled in the functions."""
+        mod = specific_heat_module
+        Q_data = np.array([100.0, 200.0, 300.0])
+        dT_data = np.array([2.0, 4.0, 6.0])
+        try:
+            mod.specific_heat_from_fit(Q_data, dT_data, mass=0.5)
+        except NotImplementedError:
+            pytest.fail(
+                "Your specific_heat_from_fit function is still raising "
+                "NotImplementedError.  Replace the 'raise' line with "
+                "the correct fit computation."
+            )
+        try:
+            mod.energy_to_heat(mass=0.5, c=900.0, delta_T=10.0)
+        except NotImplementedError:
+            pytest.fail(
+                "Your energy_to_heat function is still raising "
+                "NotImplementedError.  Replace the 'raise' line with "
+                "the correct formula."
+            )
+        try:
+            mod.final_temperature(Q=1000.0, mass=0.5, c=900.0, T_initial=300.0)
+        except NotImplementedError:
+            pytest.fail(
+                "Your final_temperature function is still raising "
+                "NotImplementedError.  Replace the 'raise' line with "
+                "the correct computation."
+            )
+
+    # -- Test 2: specific_heat_from_fit -----------------------------------
+
+    def test_specific_heat_from_fit_correct(
+        self, specific_heat_module: ModuleType
+    ) -> None:
+        """Check that the fit returns the correct specific heat capacity."""
+        mod = specific_heat_module
+        # Known data: Q = C * delta_T, where C = mass * c
+        # For c = 900 J/(kg·K), mass = 0.5 kg: C = 450 J/K
+        mass = 0.5
+        c_true = 900.0
+        C_true = mass * c_true
+        delta_T_data = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        Q_data = C_true * delta_T_data
+        # Add small noise
+        rng = np.random.default_rng(42)
+        Q_data += rng.normal(0.0, 1.0, size=len(Q_data))
+
+        C, c, err = mod.specific_heat_from_fit(Q_data, delta_T_data, mass)
+        assert c == pytest.approx(c_true, rel=0.02), (
+            f"c = {c:.2f} J/(kg·K), expected ~{c_true}"
+        )
+        assert C == pytest.approx(C_true, rel=0.02), (
+            f"C = {C:.2f} J/K, expected ~{C_true}"
+        )
+        assert err >= 0.0, "Standard error should be non-negative"
+
+    def test_specific_heat_from_fit_noiseless(
+        self, specific_heat_module: ModuleType
+    ) -> None:
+        """With noiseless data, the fit should be exact."""
+        mod = specific_heat_module
+        mass = 1.0
+        c_true = 4186.0  # water specific heat capacity
+        C_true = mass * c_true
+        delta_T_data = np.array([10.0, 20.0, 30.0, 40.0])
+        Q_data = C_true * delta_T_data
+
+        C, c, err = mod.specific_heat_from_fit(Q_data, delta_T_data, mass)
+        assert c == pytest.approx(c_true, abs=0.1), (
+            f"c = {c:.2f}, expected {c_true}"
+        )
+        assert C == pytest.approx(C_true, abs=0.1)
+        assert err == pytest.approx(0.0, abs=0.01)
+
+    # -- Test 3: energy_to_heat -------------------------------------------
+
+    def test_energy_to_heat_correct(
+        self, specific_heat_module: ModuleType
+    ) -> None:
+        """Check that energy_to_heat returns Q = m * c * delta_T."""
+        mod = specific_heat_module
+        # Water: m=2 kg, c=4186 J/(kg·K), delta_T=10 K
+        Q = mod.energy_to_heat(mass=2.0, c=4186.0, delta_T=10.0)
+        assert Q == pytest.approx(83720.0, rel=0.001), (
+            f"Q = {Q:.2f} J, expected 83720 J"
+        )
+
+    def test_energy_to_heat_zero_delta_t(
+        self, specific_heat_module: ModuleType
+    ) -> None:
+        """Zero temperature change should give zero energy."""
+        mod = specific_heat_module
+        Q = mod.energy_to_heat(mass=1.0, c=900.0, delta_T=0.0)
+        assert Q == pytest.approx(0.0, abs=1e-10)
+
+    # -- Test 4: final_temperature ----------------------------------------
+
+    def test_final_temperature_correct(
+        self, specific_heat_module: ModuleType
+    ) -> None:
+        """Check that final_temperature returns the correct result."""
+        mod = specific_heat_module
+        # Add 10000 J to 0.5 kg of water (c=4186) at 300 K
+        T_final = mod.final_temperature(
+            Q=10000.0, mass=0.5, c=4186.0, T_initial=300.0
+        )
+        expected = 300.0 + 10000.0 / (0.5 * 4186.0)
+        assert T_final == pytest.approx(expected, rel=0.001), (
+            f"T_final = {T_final:.3f} K, expected {expected:.3f} K"
+        )
+
+    def test_final_temperature_zero_heat(
+        self, specific_heat_module: ModuleType
+    ) -> None:
+        """Zero heat should give same temperature."""
+        mod = specific_heat_module
+        T_final = mod.final_temperature(
+            Q=0.0, mass=1.0, c=900.0, T_initial=300.0
+        )
+        assert T_final == pytest.approx(300.0)
+
+
+# ---------------------------------------------------------------------------
+# Specific heat self-check
+# ---------------------------------------------------------------------------
+
+
+def test_specific_heat_selfcheck_correct(
+    specific_heat_module: ModuleType,
+) -> None:
+    """Self-check: the grader must PASS when given the correct solution."""
+    mod = specific_heat_module
+    # Test specific_heat_from_fit
+    mass = 0.5
+    c_true = 900.0
+    C_true = mass * c_true
+    dT = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    Q = C_true * dT
+    C, c, err = mod.specific_heat_from_fit(Q, dT, mass)
+    assert c == pytest.approx(c_true, rel=0.02), (
+        f"Self-check FAILED: specific heat c={c:.2f}"
+    )
+    # Test energy_to_heat
+    Q_calc = mod.energy_to_heat(mass=2.0, c=4186.0, delta_T=10.0)
+    assert Q_calc == pytest.approx(83720.0, rel=0.001)
+    # Test final_temperature
+    T_final = mod.final_temperature(
+        Q=10000.0, mass=0.5, c=4186.0, T_initial=300.0
+    )
+    expected = 300.0 + 10000.0 / (0.5 * 4186.0)
+    assert T_final == pytest.approx(expected, rel=0.001)
+
+
+def test_specific_heat_selfcheck_wrong_fails(
+    wrong_specific_heat_module: ModuleType,
+) -> None:
+    """Self-check: the grader must FAIL when given a deliberately wrong
+    answer (fixed values, not computed)."""
+    mod = wrong_specific_heat_module
+    Q_data = np.array([100.0, 200.0, 300.0])
+    dT_data = np.array([2.0, 4.0, 6.0])
+    C, c, err = mod.specific_heat_from_fit(Q_data, dT_data, mass=0.5)
+    # Wrong answer returns C=100, c=50 — should not match
+    assert C == pytest.approx(100.0) and c == pytest.approx(50.0), (
+        "Self-check setup error: wrong answer unexpectedly correct"
+    )
+    # Wrong answer returns mass, not energy
+    Q_wrong = mod.energy_to_heat(mass=2.0, c=4186.0, delta_T=10.0)
+    assert Q_wrong == pytest.approx(2.0), (
+        "Self-check setup error: wrong answer unexpectedly correct"
+    )
+
+
+def test_specific_heat_selfcheck_runner(
+    request: pytest.FixtureRequest,
+    specific_heat_module: ModuleType,
+    wrong_specific_heat_module: ModuleType,
+) -> None:
+    """Orchestrate the full specific heat self-check with --selfcheck."""
+    if not request.config.getoption("--selfcheck"):
+        pytest.skip("Use --selfcheck to run the full self-check")
+
+    # Verify the wrong answer fixture is indeed wrong
+    mod = wrong_specific_heat_module
+    Q_data = np.array([100.0, 200.0, 300.0])
+    dT_data = np.array([2.0, 4.0, 6.0])
+    C, c, err = mod.specific_heat_from_fit(Q_data, dT_data, mass=0.5)
+    assert C == pytest.approx(100.0) and c == pytest.approx(50.0), (
+        "Self-check setup error: wrong answer unexpectedly correct"
     )

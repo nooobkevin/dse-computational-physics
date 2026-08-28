@@ -427,3 +427,175 @@ class ReferenceGasSim(GasSim):
         else:
             volume = self.L**3
         return self.N * self.kB * self.T / volume
+
+    # ------------------------------------------------------------------
+    # Gas-law helpers — moving-wall compression / heating
+    # ------------------------------------------------------------------
+
+    def set_volume(self, new_L: float) -> None:
+        """Change the box side length, rescaling particle positions.
+
+        This implements a moving-wall compression or expansion.  Particle
+        positions are scaled proportionally so they remain in the same
+        relative positions within the box.  Velocities are unchanged.
+
+        Parameters
+        ----------
+        new_L : float
+            New box side length (must be positive).
+        """
+        if new_L <= 0.0:
+            raise ValueError(f"Box side length must be positive, got {new_L}")
+        scale = new_L / self.L
+        self._positions *= scale
+        self.L = new_L
+
+    def set_temperature(self, new_T: float) -> None:
+        """Rescale velocities to achieve a new temperature.
+
+        Velocities are scaled by sqrt(new_T / self.T) so that the
+        kinetic energy per particle changes proportionally to the
+        temperature (equipartition).  The centre-of-mass drift is
+        removed after rescaling.
+
+        Parameters
+        ----------
+        new_T : float
+            New temperature (must be positive).
+        """
+        if new_T <= 0.0:
+            raise ValueError(f"Temperature must be positive, got {new_T}")
+        if self.T <= 0.0:
+            return
+        scale = math.sqrt(new_T / self.T)
+        self._velocities *= scale
+        # Remove centre-of-mass drift
+        if self.N > 1:
+            self._velocities -= np.mean(self._velocities, axis=0)
+        self.T = new_T
+
+    def gas_law_isothermal_curve(
+        self, V_values: list[float], equilibration_steps: int = 500,
+        sample_steps: int = 200, seed: int = 42,
+    ) -> list[tuple[float, float]]:
+        """Generate an isothermal P-V curve (Boyle's law).
+
+        For each volume in *V_values*, the box side length is set to
+        sqrt(V) (2D) or cbrt(V) (3D), the simulation is equilibrated,
+        and the pressure is sampled.
+
+        Parameters
+        ----------
+        V_values : list of float
+            Volume values to sample.
+        equilibration_steps : int
+            Steps to equilibrate at each volume.  Default 500.
+        sample_steps : int
+            Steps over which to average pressure.  Default 200.
+        seed : int
+            Random seed for reproducibility.  Default 42.
+
+        Returns
+        -------
+        list of (float, float)
+            ``(V, P)`` pairs.
+        """
+        # Save original state
+        orig_L = self.L
+        orig_T = self.T
+
+        # Re-seed for reproducibility
+        rng = np.random.default_rng(seed)
+        self._positions = rng.uniform(0.0, orig_L, size=(self.N, self.dim)).astype(np.float64)
+        sigma = math.sqrt(self.kB * orig_T / self.m)
+        self._velocities = rng.normal(0.0, sigma, size=(self.N, self.dim)).astype(np.float64)
+        if self.N > 1:
+            self._velocities -= np.mean(self._velocities, axis=0)
+        self._t = 0.0
+        self._momentum_transfer = 0.0
+
+        curve: list[tuple[float, float]] = []
+        for V in V_values:
+            if self.dim == 2:
+                L = math.sqrt(V)
+            else:
+                L = V ** (1.0 / 3.0)
+            self.set_volume(L)
+            self._momentum_transfer = 0.0
+            self._t = 0.0
+            for _ in range(equilibration_steps):
+                self.step()
+            self._momentum_transfer = 0.0
+            self._t = 0.0
+            for _ in range(sample_steps):
+                self.step()
+            P = self.pressure()
+            curve.append((V, P))
+
+        # Restore original state
+        self.set_volume(orig_L)
+        self.set_temperature(orig_T)
+        self._t = 0.0
+        self._momentum_transfer = 0.0
+
+        return curve
+
+    def gas_law_isochoric_curve(
+        self, T_values: list[float], equilibration_steps: int = 500,
+        sample_steps: int = 200, seed: int = 42,
+    ) -> list[tuple[float, float]]:
+        """Generate an isochoric P-T curve (pressure law).
+
+        For each temperature in *T_values*, the simulation is
+        equilibrated and the pressure is sampled at constant volume.
+
+        Parameters
+        ----------
+        T_values : list of float
+            Temperature values (in simulation units) to sample.
+        equilibration_steps : int
+            Steps to equilibrate at each temperature.  Default 500.
+        sample_steps : int
+            Steps over which to average pressure.  Default 200.
+        seed : int
+            Random seed for reproducibility.  Default 42.
+
+        Returns
+        -------
+        list of (float, float)
+            ``(T, P)`` pairs.
+        """
+        orig_T = self.T
+        orig_L = self.L
+
+        # Re-seed
+        rng = np.random.default_rng(seed)
+        self._positions = rng.uniform(0.0, orig_L, size=(self.N, self.dim)).astype(np.float64)
+        sigma = math.sqrt(self.kB * orig_T / self.m)
+        self._velocities = rng.normal(0.0, sigma, size=(self.N, self.dim)).astype(np.float64)
+        if self.N > 1:
+            self._velocities -= np.mean(self._velocities, axis=0)
+        self._t = 0.0
+        self._momentum_transfer = 0.0
+
+        curve: list[tuple[float, float]] = []
+        for T in T_values:
+            self.set_temperature(T)
+            self._momentum_transfer = 0.0
+            self._t = 0.0
+            for _ in range(equilibration_steps):
+                self.step()
+            self._momentum_transfer = 0.0
+            self._t = 0.0
+            for _ in range(sample_steps):
+                self.step()
+            P = self.pressure()
+            curve.append((T, P))
+
+        # Restore
+        self.set_temperature(orig_T)
+        self.set_volume(orig_L)
+        self._t = 0.0
+        self._momentum_transfer = 0.0
+
+        return curve

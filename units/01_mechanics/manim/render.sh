@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SCENES_DIR="$SCRIPT_DIR/scenes"
 OUTPUT_DIR="$SCRIPT_DIR/output"
-SCENE_NAMES=("shm_projection" "integrator_convergence" "projectile_dt")
+SCENE_NAMES=("shm_projection" "integrator_convergence" "projectile_dt" "damped_shm" "planet_freefall" "projectile_drag")
 
 # ── Quality flag ─────────────────────────────────────────────────────
 QUALITY="${2:--qh}"
@@ -57,6 +57,9 @@ for scene in "${TARGETS[@]}"; do
     echo "═══════════════════════════════════════════════════════════"
     echo ""
 
+    # Convert host path to Docker-internal path (/work-relative)
+    SCENE_REL="${SCENE_FILE#$REPO_ROOT/}"
+
     docker run --rm \
         -v "$REPO_ROOT":/work \
         -w /work \
@@ -64,7 +67,7 @@ for scene in "${TARGETS[@]}"; do
         --user "$(id -u):$(id -g)" \
         "$IMAGE" \
         manim \
-            "$SCENE_FILE" \
+            "/work/$SCENE_REL" \
             "$QUALITY" \
             --disable_caching \
             --format mp4 \

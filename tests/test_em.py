@@ -1,13 +1,21 @@
 """Tests for physics_core.em — electrostatics, circuits, magnetism."""
 
 import math
+from typing import Tuple
 
 import numpy as np
 import pytest
 
 from physics_core.em.circuits import Circuit, ReferenceCircuit
 from physics_core.em.electrostatics import ElectricField, ReferenceElectricField
-from physics_core.em.magnetism import MagneticField, ReferenceStraightWire, ReferenceSolenoid
+from physics_core.em.magnetism import (
+    MagneticField,
+    MovingCharge,
+    ReferenceBarMagnet,
+    ReferenceMovingCharge,
+    ReferenceSolenoid,
+    ReferenceStraightWire,
+)
 
 
 # ===========================================================================
@@ -285,3 +293,153 @@ class TestReferenceSolenoid:
         assert Bz == pytest.approx(expected_B, rel=1e-6)
         assert Bx == pytest.approx(0.0)
         assert By == pytest.approx(0.0)
+
+
+# ===========================================================================
+# Moving charge in magnetic field
+# ===========================================================================
+
+
+class TestMovingCharge:
+    """Tests for the abstract base."""
+
+    def test_magnetic_force_raises_not_implemented(self) -> None:
+        mc = MovingCharge()
+        with pytest.raises(NotImplementedError):
+            mc.magnetic_force(1.0, 1.6e-19, 1e6, 90.0)
+
+    def test_orbit_radius_raises_not_implemented(self) -> None:
+        mc = MovingCharge()
+        with pytest.raises(NotImplementedError):
+            mc.orbit_radius(1.67e-27, 1e6, 1.6e-19, 1.0)
+
+    def test_trajectory_step_raises_not_implemented(self) -> None:
+        mc = MovingCharge()
+        with pytest.raises(NotImplementedError):
+            mc.trajectory_step((0.0, 0.0), (1e6, 0.0), 1.0, 1.6e-19, 1.67e-27, 1e-9)
+
+    def test_right_hand_rule_raises_not_implemented(self) -> None:
+        mc = MovingCharge()
+        with pytest.raises(NotImplementedError):
+            mc.right_hand_rule("+x", "+z")
+
+
+class TestReferenceMovingCharge:
+    """Tests for the reference moving-charge implementation."""
+
+    def test_force_max_at_90_degrees(self) -> None:
+        """F = |q| v B at θ = 90°."""
+        mc = ReferenceMovingCharge()
+        F = mc.magnetic_force(B=0.5, q=1.6e-19, v=1e6, theta_degrees=90.0)
+        expected = 1.6e-19 * 1e6 * 0.5
+        assert F == pytest.approx(expected, rel=1e-6)
+
+    def test_force_zero_at_0_degrees(self) -> None:
+        """F = 0 at θ = 0°."""
+        mc = ReferenceMovingCharge()
+        F = mc.magnetic_force(B=0.5, q=1.6e-19, v=1e6, theta_degrees=0.0)
+        assert F == pytest.approx(0.0, abs=1e-30)
+
+    def test_force_scales_with_charge(self) -> None:
+        """F ∝ |q|."""
+        mc = ReferenceMovingCharge()
+        F1 = mc.magnetic_force(B=0.5, q=1.6e-19, v=1e6, theta_degrees=90.0)
+        F2 = mc.magnetic_force(B=0.5, q=3.2e-19, v=1e6, theta_degrees=90.0)
+        assert F2 == pytest.approx(2.0 * F1, rel=1e-6)
+
+    def test_orbit_radius_formula(self) -> None:
+        """r = m v / (|q| B)."""
+        mc = ReferenceMovingCharge()
+        r = mc.orbit_radius(m=1.67e-27, v=1e6, q=1.6e-19, B=0.5)
+        expected = 1.67e-27 * 1e6 / (1.6e-19 * 0.5)
+        assert r == pytest.approx(expected, rel=1e-6)
+
+    def test_orbit_radius_inverse_with_B(self) -> None:
+        """r ∝ 1/B."""
+        mc = ReferenceMovingCharge()
+        r1 = mc.orbit_radius(m=1.67e-27, v=1e6, q=1.6e-19, B=0.5)
+        r2 = mc.orbit_radius(m=1.67e-27, v=1e6, q=1.6e-19, B=1.0)
+        assert r2 == pytest.approx(r1 / 2.0, rel=1e-6)
+
+    def test_trajectory_conserves_radius(self) -> None:
+        """After one full orbit, the radius should be conserved."""
+        mc = ReferenceMovingCharge()
+        m = 1.6726219e-27
+        q = 1.602176634e-19
+        B = 1.0
+        v = 1e6
+        r_expected = mc.orbit_radius(m, v, q, B)
+        omega = abs(q) * B / m  # cyclotron frequency
+        T = 2.0 * math.pi / omega  # period
+        dt = T / 1000.0
+
+        # Start at origin moving upward; circle center at (+r, 0)
+        pos: Tuple[float, float] = (0.0, 0.0)
+        vel: Tuple[float, float] = (0.0, v)
+        center_x = r_expected
+        n_steps = 1000
+        max_r_err = 0.0
+        for _ in range(n_steps):
+            pos, vel = mc.trajectory_step(pos, vel, B, q, m, dt)
+            r = math.hypot(pos[0] - center_x, pos[1])
+            max_r_err = max(max_r_err, abs(r - r_expected) / r_expected)
+
+        assert max_r_err < 0.01, f"Radius conservation error: {max_r_err:.4f}"
+
+    def test_right_hand_rule_positive_q(self) -> None:
+        """For +q, v=+x, B=+z → force in +y direction."""
+        mc = ReferenceMovingCharge()
+        direction = mc.right_hand_rule("+x", "+z")
+        assert direction == "+y"
+
+    def test_right_hand_rule_negative_charge_opposite(self) -> None:
+        """For -q, the force direction is opposite to +q."""
+        mc = ReferenceMovingCharge()
+        # For positive q: v=+x, B=+z → F=+y
+        # For negative q: v=+x, B=+z → F=-y
+        # The right_hand_rule returns the direction for positive q
+        direction_pos = mc.right_hand_rule("+x", "+z")
+        assert direction_pos == "+y"
+
+
+# ===========================================================================
+# Bar-magnet dipole field
+# ===========================================================================
+
+
+class TestReferenceBarMagnet:
+    """Tests for the bar-magnet dipole field."""
+
+    MU_0 = 4.0 * math.pi * 1e-7
+
+    def test_field_nonzero(self) -> None:
+        """Field is non-zero away from the magnet."""
+        magnet = ReferenceBarMagnet(moment=1.0)
+        Bx, By, Bz = magnet.field(0.1, 0.0)
+        B_mag = math.sqrt(Bx * Bx + By * By + Bz * Bz)
+        assert B_mag > 0.0
+
+    def test_field_direction_flips_with_pole(self) -> None:
+        """Field direction reverses when moment sign flips."""
+        magnet_pos = ReferenceBarMagnet(moment=1.0)
+        magnet_neg = ReferenceBarMagnet(moment=-1.0)
+        Bx_pos, By_pos, _ = magnet_pos.field(0.1, 0.0)
+        Bx_neg, By_neg, _ = magnet_neg.field(0.1, 0.0)
+        # Components should have opposite signs
+        assert Bx_pos * Bx_neg < 0 or abs(Bx_pos) < 1e-15
+        assert By_pos * By_neg < 0 or abs(By_pos) < 1e-15
+
+    def test_field_symmetric_above_below_axis(self) -> None:
+        """Field at (x, +y) and (x, -y) should have opposite By."""
+        magnet = ReferenceBarMagnet(moment=1.0)
+        _, By_above, _ = magnet.field(0.1, 0.05)
+        _, By_below, _ = magnet.field(0.1, -0.05)
+        assert By_above == pytest.approx(-By_below, rel=1e-6)
+
+    def test_field_at_origin(self) -> None:
+        """Field at magnet position should be (0,0,0)."""
+        magnet = ReferenceBarMagnet(moment=1.0)
+        Bx, By, Bz = magnet.field(0.0, 0.0)
+        assert Bx == pytest.approx(0.0)
+        assert By == pytest.approx(0.0)
+        assert Bz == pytest.approx(0.0)

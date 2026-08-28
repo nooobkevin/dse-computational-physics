@@ -142,5 +142,59 @@ the questions to students.*
    low or percent error is large, confidence is reduced.
 4. No — a large percent error is not a failure.  It is an opportunity to
    identify sources of error, improve the experimental design, and learn
-   about the limitations of the measurement.  Science progresses by
-   understanding and reducing errors.
+about the limitations of the measurement.  Science progresses by
+    understanding and reducing errors.
+
+---
+
+### (g) Critically evaluating AI-generated analysis
+
+You use an AI tool to analyse your pendulum data.  The AI outputs:
+
+```
+Fit: T² = 4.12 × L + 0.08
+g = 4π² / 4.12 = 9.58 m/s²
+Percent error vs 9.81 = 2.34%
+Conclusion: the data strongly supports the theoretical model.
+```
+
+1. The AI claims the data "strongly supports the model."  What additional
+   information would you need to verify this claim?  (Hint: what does the
+   AI not show you?)
+
+2. The intercept is +0.08 s², but theory predicts 0.  Should this change
+   your confidence in the AI's conclusion?  Explain.
+
+3. If you fed the AI raw (L, T) data and it produced the T² vs L plot
+   and fit automatically, what potential pitfalls might you miss?
+
+4. How would you critically evaluate the reliability and scientific accuracy
+   of this AI-generated output?  List at least two steps you would take.
+
+### (h) Safety assessment
+
+You are designing an experiment to measure the acceleration due to gravity
+by dropping a steel ball from a height of 2.0 m and timing its fall with
+a stopwatch.  The experiment will be performed in a school laboratory.
+
+1. Identify **two** potential safety hazards in this experiment.
+
+2. For each hazard, suggest a control measure to reduce the risk.
+
+3. You decide to use a heavier (5 kg) ball instead of a small steel ball
+   to get a more "reliable" measurement.  Is this a safety concern?
+   Explain.
+
+4. Your friend suggests using the school rooftop (height ≈ 10 m) to get
+   a longer fall time and reduce the relative timing error.  What safety
+   concerns does this raise?  How would you address them while still
+   improving measurement accuracy?
+
+---
+
+## Model Answers (teacher only)
+
+*The section below contains model answers.  Remove it before distributing
+the questions to students.*
+
+---

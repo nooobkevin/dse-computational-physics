@@ -6,6 +6,11 @@ import numpy as np
 import pytest
 
 from physics_core.waves.wave_sim import WaveSim, ReferenceWaveSim
+from physics_core.waves.equations import (
+    malus_law,
+    ultrasound_echo_distance,
+    young_slit_intensity,
+)
 
 
 class TestWaveSim:
@@ -141,3 +146,85 @@ class TestReferenceWaveSim:
         for x, t in [(0.5, 0.0), (1.0, 0.2), (1.5, 0.5)]:
             expected = 2.0 * A * math.sin(k * x) * math.cos(omega * t)
             assert sim.standing_wave(x, t) == pytest.approx(expected, abs=1e-12)
+
+
+class TestMalusLaw:
+    """Tests for malus_law()."""
+
+    def test_zero_angle_full_transmission(self) -> None:
+        """cos²(0) = 1 → full transmission."""
+        assert malus_law(1.0, 0.0) == pytest.approx(1.0)
+
+    def test_ninety_degrees_zero(self) -> None:
+        """cos²(π/2) = 0 → zero transmission."""
+        assert malus_law(1.0, math.pi / 2.0) == pytest.approx(0.0, abs=1e-15)
+
+    def test_forty_five_degrees_half(self) -> None:
+        """cos²(π/4) = 0.5."""
+        assert malus_law(1.0, math.pi / 4.0) == pytest.approx(0.5)
+
+    def test_scales_with_intensity(self) -> None:
+        """Doubling I₀ doubles transmitted intensity."""
+        assert malus_law(2.0, math.pi / 3.0) == pytest.approx(
+            2.0 * malus_law(1.0, math.pi / 3.0)
+        )
+
+    def test_crossed_polarisers_zero(self) -> None:
+        """Two crossed polarisers: first at 0°, second at 90° → I=0."""
+        I1 = malus_law(1.0, 0.0)  # first polariser at 0°
+        I2 = malus_law(I1, math.pi / 2.0)  # second at 90°
+        assert I2 == pytest.approx(0.0, abs=1e-15)
+
+
+class TestUltrasoundEcho:
+    """Tests for ultrasound_echo_distance()."""
+
+    def test_known_distance(self) -> None:
+        """d = v * t / 2: speed 1540 m/s, echo 0.0013 s → 1.0 m."""
+        d = ultrasound_echo_distance(1540.0, 0.0013)
+        assert d == pytest.approx(1.001, abs=0.001)
+
+    def test_zero_echo_time_zero_distance(self) -> None:
+        """Zero echo time → zero distance."""
+        assert ultrasound_echo_distance(1540.0, 0.0) == pytest.approx(0.0)
+
+    def test_negative_echo_time_raises(self) -> None:
+        """Negative echo time raises ValueError."""
+        with pytest.raises(ValueError):
+            ultrasound_echo_distance(1540.0, -0.1)
+
+    def test_linear_with_speed(self) -> None:
+        """Doubling speed doubles distance for same echo time."""
+        d1 = ultrasound_echo_distance(100.0, 0.1)
+        d2 = ultrasound_echo_distance(200.0, 0.1)
+        assert d2 == pytest.approx(2.0 * d1)
+
+
+class TestYoungSlitIntensity:
+    """Tests for young_slit_intensity()."""
+
+    def test_central_maximum(self) -> None:
+        """At y=0, I = I₀ (both cos² and sinc² = 1)."""
+        I = young_slit_intensity(0.0, slit_separation=0.1e-3, slit_width=0.02e-3, screen_distance=1.0, wavelength=500e-9)
+        assert I == pytest.approx(1.0)
+
+    def test_first_minimum(self) -> None:
+        """First minimum of interference at y = λD/(2d)."""
+        wavelength = 500e-9
+        d = 0.1e-3
+        D = 1.0
+        y_min = wavelength * D / (2.0 * d)
+        I = young_slit_intensity(y_min, slit_separation=d, slit_width=0.02e-3, screen_distance=D, wavelength=wavelength)
+        assert I == pytest.approx(0.0, abs=1e-12)
+
+    def test_negative_y_symmetric(self) -> None:
+        """Intensity is symmetric: I(-y) = I(y)."""
+        wavelength = 500e-9
+        I_pos = young_slit_intensity(0.005, slit_separation=0.1e-3, slit_width=0.02e-3, screen_distance=1.0, wavelength=wavelength)
+        I_neg = young_slit_intensity(-0.005, slit_separation=0.1e-3, slit_width=0.02e-3, screen_distance=1.0, wavelength=wavelength)
+        assert I_pos == pytest.approx(I_neg)
+
+    def test_negative_wavelength_raises(self) -> None:
+        """Non-positive wavelength raises ValueError."""
+        with pytest.raises(ValueError):
+            young_slit_intensity(0.0, slit_separation=0.1e-3, slit_width=0.02e-3, screen_distance=1.0, wavelength=-1.0)

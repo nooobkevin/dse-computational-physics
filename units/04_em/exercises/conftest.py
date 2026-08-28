@@ -25,12 +25,13 @@ import pytest
 
 from physics_core.em.circuits import Circuit
 from physics_core.em.electrostatics import ElectricField
+from physics_core.em.magnetism import MovingCharge
 
 
 def _load_student_classes_from_path(
     file_path: str,
-) -> Tuple[Type[ElectricField], Type[Circuit]]:
-    """Import ``StudentElectricField`` and ``StudentCircuit`` from a Python file."""
+) -> Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]:
+    """Import ``StudentElectricField``, ``StudentCircuit``, and ``StudentMagnetism`` from a Python file."""
     path = Path(file_path).resolve()
     if not path.exists():
         raise FileNotFoundError(f"Student file not found: {path}")
@@ -53,7 +54,13 @@ def _load_student_classes_from_path(
     if not issubclass(ckt_cls, Circuit):
         raise TypeError(f"StudentCircuit in {path} must subclass Circuit")
 
-    return ef_cls, ckt_cls
+    mag_cls = getattr(mod, "StudentMagnetism", None)
+    if mag_cls is None:
+        raise AttributeError(f"{path} does not define a class named StudentMagnetism")
+    if not issubclass(mag_cls, MovingCharge):
+        raise TypeError(f"StudentMagnetism in {path} must subclass MovingCharge")
+
+    return ef_cls, ckt_cls, mag_cls
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -74,8 +81,8 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 @pytest.fixture(scope="session")
 def student_classes(
     request: pytest.FixtureRequest,
-) -> Tuple[Type[ElectricField], Type[Circuit]]:
-    """Return the ``StudentElectricField`` and ``StudentCircuit`` classes under test."""
+) -> Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]:
+    """Return the ``StudentElectricField``, ``StudentCircuit``, and ``StudentMagnetism`` classes under test."""
     override = request.config.getoption("--override-student")
     if override:
         return _load_student_classes_from_path(override)
@@ -96,6 +103,7 @@ import math
 import numpy as np
 from physics_core.em.electrostatics import ElectricField
 from physics_core.em.circuits import Circuit
+from physics_core.em.magnetism import MovingCharge
 
 class StudentElectricField(ElectricField):
     \"\"\"Wrong: uses +q/4πε₀r instead of +q/4πε₀r².\"\"\"
@@ -160,14 +168,21 @@ class StudentCircuit(Circuit):
             else:
                 branch_i = 0.0
             self._currents[str(i)] = branch_i
+
+class StudentMagnetism(MovingCharge):
+    \"\"\"Wrong: uses F = qvB (no abs, no sin).\"\"\"
+    def magnetic_force(self, B, q, v, theta_degrees):
+        return q * v * B
+    def orbit_radius(self, m, v, q, B):
+        return m * v / (q * B)  # no abs(q)
 """
 
 
 @pytest.fixture(scope="session")
 def wrong_student_classes() -> (
-    Generator[Tuple[Type[ElectricField], Type[Circuit]], None, None]
+    Generator[Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]], None, None]
 ):
-    """Return deliberately WRONG ``StudentElectricField`` / ``StudentCircuit``."""
+    """Return deliberately WRONG ``StudentElectricField`` / ``StudentCircuit`` / ``StudentMagnetism``."""
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".py", delete=False, prefix="_wrong_em_"
     ) as f:

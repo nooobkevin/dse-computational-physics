@@ -71,3 +71,44 @@ Earth has aged more than 1 year.
    differently, and which twin is younger on the return.
 3. Does time dilation only apply to moving clocks, or does it also apply
    to moving biological processes such as ageing?  Explain briefly.
+
+### (g) GPS and relativity
+
+Global Positioning System (GPS) satellites orbit Earth at about 20,200 km
+altitude, moving at roughly 3.9 km/s relative to the Earth's surface.
+
+1. GPS satellites experience both special-relativistic time dilation (due
+   to their orbital speed) and general-relativistic gravitational time
+   dilation (due to being in a weaker gravitational field than the surface).
+   Which effect makes the satellite clock run *faster* relative to the
+   surface, and which makes it run *slower*?
+2. The net relativistic correction for GPS is about **38 microseconds per
+   day** (the combined SR + GR effect).  Without this correction, GPS
+   positions would drift by about 10 km per day.  In one sentence, explain
+   why this correction is essential for satellite navigation.
+3. Does the existence of this correction confirm or contradict the
+   predictions of Einstein's theories of relativity?
+
+### (h) Evidence for the Big Bang
+
+List three pieces of observational evidence that support the Big Bang
+theory, and state in one sentence each what each piece shows.
+
+### (i) Structure of the universe
+
+1. Arrange the following celestial structures in order of increasing size:
+   star, galaxy, solar system, cluster of galaxies, star cluster, nebula.
+2. What is the approximate diameter of the Milky Way galaxy in light-years?
+3. A parsec (pc) is defined as the distance at which 1 AU subtends an angle
+   of 1 arcsecond.  Explain in one sentence how astronomers use parallax
+   to measure the distance to nearby stars.
+
+### (j) Stellar life cycle
+
+A star with a mass of about `1 M☉` (like the Sun) follows a sequence of
+stages.  A star with `20 M☉` eventually meets a very different fate.
+
+1. List the main stages of the Sun's life cycle, starting from formation.
+2. What are the two possible end-states of a high-mass star?
+3. What physical factor — mass or luminosity — determines the eventual
+   fate of a star?  Give the approximate mass threshold.

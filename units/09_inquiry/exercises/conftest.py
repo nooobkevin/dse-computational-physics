@@ -61,6 +61,18 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         default=False,
         help="Run grader against correct solution (expect pass) and wrong answer (expect fail)",
     )
+    parser.addoption(
+        "--override-design-student",
+        action="store",
+        default=None,
+        help="Path to a Python file with solution design functions",
+    )
+    parser.addoption(
+        "--override-data-student",
+        action="store",
+        default=None,
+        help="Path to a Python file with solution data analysis functions",
+    )
 
 
 @pytest.fixture(scope="session")

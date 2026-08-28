@@ -14,19 +14,26 @@ All three artifacts consume the same `physics_core` engine (`src/physics_core/wa
 
 ---
 
-## Curriculum Learning-Outcome Map
+## Curriculum Learning-Outcome Map (CAF Consultation Draft alignment)
 
-This unit targets the following HKDSE Physics curriculum outcomes:
+This unit targets the following HKDSE Physics curriculum outcomes per the June 2026 CAF Consultation Draft (lines 1563–1842):
 
-| Sub-topic | Learning outcome(s) | Which artifact(s) deliver it |
-|---|---|---|
-| **Nature of waves** (Wave Motion a) | Amplitude, wavelength, frequency, wave speed v = fλ; transverse vs longitudinal waves; energy ∝ amplitude² | Teacher app (traveling mode — sine curve with moving particle, phase display); Manim `WaveSpeedIntensity` (three amplitudes, intensity bar chart) |
-| **Superposition and interference** (Wave Motion b) | Principle of superposition; constructive/destructive interference; standing/stationary waves (transverse only) | Manim `SuperpositionStanding` (two counter-propagating waves → standing wave with nodes); Teacher app (standing mode — two waves + result overlay) |
-| **Young's double-slit** (Wave Motion c) | d sin θ = n λ; bright/dark fringes; fringe spacing Δy = λD/d | Manim `YoungSlit` (fringe pattern with order labels); Teacher app (interference mode — slit geometry, fringe positions, formula display) |
-| **Diffraction and polarisation** (Wave Motion d) | Diffraction grating; polarisation as evidence for transverse waves | Student exercise concept questions (polarisation, diffraction grating) |
-| **Wave phenomena** (Wave Motion e) | Reflection, refraction, diffraction; intensity and inverse-square law | Teacher app (traveling mode — displacement vs time graph); Manim `WaveSpeedIntensity` (I ∝ A² bar chart) |
-| **Sound waves** (Wave Motion f) | Musical notes, resonance, standing waves on strings | Student exercise concept questions (standing waves on strings, harmonics) |
-| **Building computational models** (Scientific Inquiry) | Translate physics equations into code; modify a simulation and observe the effect | Student exercise (fill in `displacement`); Manim scenes (analytical wave solutions) |
+| Item | Content | Learning outcome(s) | Artifact(s) |
+|------|---------|---------------------|-------------|
+| **a. Nature of waves** | Wave motion and propagation; Traveling and stationary waves | Amplitude, wavelength, frequency, wave speed v = fλ; transverse vs longitudinal; energy ∝ A²; superposition → standing waves; interpret d-t graphs | Manim `SuperpositionStanding`, `WaveSpeedIntensity`; Teacher app (traveling, standing modes) |
+| **b. Properties of waves** | Reflection, refraction, diffraction, interference; Young's double-slit; intensity distribution | d sin θ = n λ; bright/dark fringes; fringe spacing Δy = λD/d; I(y) double-slit intensity profile; path difference | Manim `YoungSlit` (fringe pattern + intensity panel); Teacher app (interference mode) |
+| **c. Light waves / EM spectrum** | EM spectrum; speed of light; polarisation; intensity concepts; inverse-square law | c = 3.0×10⁸ m/s; EM spectrum bands (radio → gamma); visible ROYGBIV (400–700 nm); polarisation as transverse-wave evidence; Malus's law I = I₀ cos²θ; intensity ∝ 1/r²; data analysis on log-log plot | Manim `EMSpectrum`, `Polarisation`; Teacher app (inverse-square mode) |
+| **d. Sound waves** | Ultrasound; musical notes; resonance | Pulse-echo ranging d = v×t/2; ultrasound imaging; frequency → pitch; amplitude → loudness; resonance | Manim `UltrasoundRanging` (pulse-echo + medical imaging strip); Student exercise concept questions |
+
+### Removed content (CAF Annex 3 compliance)
+
+- **Geometrical optics** (ray diagrams, lenses, lens formula) — REMOVED from core. No artifacts cover this topic. If any existing code references ray diagrams, it is labelled "beyond CAF core" and kept for reference only.
+- **Noise** — REMOVED from core. No artifacts cover this topic.
+- **Longitudinal wave d-t/d-d graphs** — REMOVED for traveling waves. The unit's d-t graph is transverse-only, which remains in the curriculum.
+
+### Cross-unit references
+
+- **Total internal reflection / optical fibres** — now live in **Unit 05 (Physics & Engineering)**. The wave nature of TIR is introduced conceptually in Unit 03 (c.5) and applied in Unit 05.
 
 ---
 
@@ -36,17 +43,21 @@ This unit targets the following HKDSE Physics curriculum outcomes:
 
 Play the rendered MP4 for the topic you are about to teach:
 
-- **Superposition / standing waves**: `SuperpositionStanding.mp4` — shows two counter-propagating traveling waves (blue and orange) and their superposition (green) forming a standing wave with fixed nodes (red markers). Pause to identify node and anti-node positions.
-- **Wave speed and intensity**: `WaveSpeedIntensity.mp4` — shows three traveling waves with different amplitudes side by side, with a bar chart showing the corresponding intensities (I ∝ A²). Use this to discuss the relationship between amplitude and energy.
-- **Young's double-slit**: `YoungSlit.mp4` — shows the double-slit geometry with bright fringes labelled by order n, the formula d sin θ = n λ, and animated rays sweeping across the screen to show the path difference.
+- **Superposition / standing waves**: `SuperpositionStanding.mp4` — two counter-propagating traveling waves (blue and orange) and their superposition (green) forming a standing wave with fixed nodes (red markers).
+- **Wave speed and intensity**: `WaveSpeedIntensity.mp4` — three traveling waves with different amplitudes, bar chart showing I ∝ A².
+- **Young's double-slit**: `YoungSlit.mp4` — double-slit geometry with bright fringes labelled by order n, formula d sin θ = n λ, animated rays sweeping the screen, and an I(y) intensity-distribution panel with maxima/minima labelled.
+- **Polarisation**: `Polarisation.mp4` — transverse wave passing through a polariser slit at angle θ, transmitted amplitude A cos(θ), Malus's law I = I₀ cos²(θ) shown live; two crossed polarisers go to zero.
+- **Ultrasound ranging**: `UltrasoundRanging.mp4` — pulse emitted from a transducer, reflects off a target at distance d, echo returns; d = v×t/2 live readout; medical imaging strip at the end.
+- **EM Spectrum**: `EMSpectrum.mp4` — electromagnetic spectrum infographic (radio → gamma) with wavelength/frequency bands, progressive reveal left to right, visible light zoomed into ROYGBIV, scanning cursor.
 
 ### Step 2: Run the teacher demo app
 
 Open the teacher app in the relevant mode and demonstrate the physics live:
 
-- **Traveling wave mode** (`--mode traveling`): shows a sine wave with a moving particle on it. The particle oscillates vertically as the wave passes. The displacement-vs-time graph builds in real time. Use this to discuss amplitude, wavelength, frequency, phase, and wave speed.
-- **Standing wave mode** (`--mode standing`): shows two counter-propagating waves (thin lines) and their superposition (thick green line) forming a standing wave. Nodes are marked in red. Use this to discuss superposition, nodes, anti-nodes, and how standing waves form.
-- **Interference mode** (`--mode interference`): shows Young's double-slit geometry with bright fringes on the screen labelled by order n. The formula d sin θ = n λ is displayed. Use this to discuss interference conditions, fringe spacing, and the wave nature of light.
+- **Traveling wave mode** (`--mode traveling`): sine wave with moving particle, displacement-vs-time graph builds in real time. Discuss amplitude, wavelength, frequency, phase, wave speed.
+- **Standing wave mode** (`--mode standing`): two counter-propagating waves (thin lines) and their superposition (thick green) forming a standing wave. Nodes marked in red.
+- **Interference mode** (`--mode interference`): Young's double-slit geometry with bright fringes labelled by order n, formula d sin θ = n λ displayed.
+- **Inverse-square law mode** (`--mode inverse_square`): point source + detector at distance r; live I vs r plot building data points as r changes; log-log inset showing the straight line of slope -2. Designed as a data-analysis CP activity matching CAF §2.2.2.
 
 ### Step 3: Complete the fill-in-the-blank exercise
 
@@ -57,7 +68,7 @@ Students open `wave_exercise.py` and implement the single method `displacement(s
 3. Superposition behaviour is correct (standing wave node check)
 4. Intensity scales as amplitude squared (I ∝ A²)
 
-The concept questions in `questions.md` cover superposition, standing vs traveling waves, intensity, inverse-square law, interference, and polarisation.
+The concept questions in `questions.md` cover superposition, standing vs traveling waves, intensity, inverse-square law, interference, polarisation, and ultrasound.
 
 ---
 
@@ -79,7 +90,7 @@ uv sync
 uv run pytest
 ```
 
-This runs the unit tests in `tests/` (including the new `test_waves.py`). The `pyproject.toml` sets `pythonpath = ["src"]` so `physics_core` is importable.
+This runs the unit tests in `tests/` (including `test_waves.py`). The `pyproject.toml` sets `pythonpath = ["src"]` so `physics_core` is importable.
 
 ### Teacher app
 
@@ -93,8 +104,11 @@ uv run python units/03_waves/teacher_app/main.py --mode standing
 # Interference / Young's double-slit mode (synthetic)
 uv run python units/03_waves/teacher_app/main.py --mode interference
 
+# Inverse-square law mode (synthetic) — CAF-named data-analysis CP activity
+uv run python units/03_waves/teacher_app/main.py --mode inverse_square
+
 # Headless self-check (no window, for CI)
-uv run python units/03_waves/teacher_app/main.py --mode standing --headless-selfcheck
+uv run python units/03_waves/teacher_app/main.py --mode inverse_square --headless-selfcheck
 ```
 
 The teacher app is fully synthetic — no webcam is needed. The `--headless-selfcheck` flag runs a few frames without opening a window and exits — useful for CI or testing.
@@ -102,19 +116,19 @@ The teacher app is fully synthetic — no webcam is needed. The `--headless-self
 ### Manim render
 
 ```bash
-# Render all three scenes (requires Docker)
+# Render all scenes (requires Docker)
 bash units/03_waves/manim/render.sh
 
 # Render a specific scene
-bash units/03_waves/manim/render.sh superposition_standing
+bash units/03_waves/manim/render.sh polarisation
 
 # Low-quality preview (fast)
-bash units/03_waves/manim/render.sh superposition_standing -ql
+bash units/03_waves/manim/render.sh polarisation -ql
 ```
 
 The script uses the `manimcommunity/manim:stable` Docker image. Output MP4 files land in `units/03_waves/manim/output/`. The `--disable_caching` flag is set to force re-render on every run.
 
-Available scenes: `superposition_standing`, `wave_speed_intensity`, `young_slit`.
+Available scenes: `superposition_standing`, `wave_speed_intensity`, `young_slit`, `polarisation`, `ultrasound_ranging`, `em_spectrum`.
 
 Quality flags: `-qh` (high, default), `-ql` (low, fast preview), `-qk` (4K).
 
@@ -148,15 +162,41 @@ The `WaveSpeedIntensity` Manim scene demonstrates the relationship between ampli
 
 ### dt-clamp in Manim updaters
 
-All three Manim scenes use the same dt-clamp pattern in their updater functions:
-
-```python
-h = min(dt, 1.0 / config.frame_rate)
-```
-
-This prevents a Manim edge-case where `dt` can be 0 on frame boundaries, which would cause the simulation to stall. The clamp ensures the physics step never exceeds one frame's worth of time.
+All Manim scenes use the same pattern in their updater functions — reading `self.time` rather than accumulating `dt`. This prevents a Manim edge-case where `dt` can be 0 on frame boundaries, which would cause the simulation to stall.
 
 ### Rendering notes
 
 - The `render.sh` script passes `--disable_caching` to force a fresh render every time (cached frames from a previous run with different parameters would be stale).
 - Output MP4s are flattened from the nested `videos/` directory into the flat `output/` directory by the script.
+
+---
+
+## Engine API Reference (`src/physics_core/waves/`)
+
+### equations.py
+
+| Function | Description |
+|----------|-------------|
+| `wave_speed(f, λ)` | v = fλ |
+| `angular_frequency(f)` | ω = 2πf |
+| `wave_number(λ)` | k = 2π/λ |
+| `intensity(A)` | I ∝ A² |
+| `intensity_inverse_square(r, I₀)` | I = I₀ / r² |
+| `young_slit_dsin(d, θ, n)` | d sin θ = nλ → λ |
+| `young_slit_angle(λ, d, n)` | d sin θ = nλ → θ |
+| `diffraction_grating_angle(λ, d, n)` | d sin θ = nλ for grating |
+| `malus_law(I₀, θ)` | I = I₀ cos²θ |
+| `ultrasound_echo_distance(v, t)` | d = v×t/2 |
+| `young_slit_intensity(y, d, a, D, λ)` | I(y) = I₀ cos²(πdy/λD) · sinc²(πay/λD) |
+
+### wave_sim.py
+
+| Class / Method | Description |
+|----------------|-------------|
+| `WaveSim` | Abstract base with `displacement()` hook |
+| `ReferenceWaveSim` | Correct analytical physics: `y = A sin(kx - ωt)` |
+| `.displacement(x, t)` | Single-point displacement |
+| `.field(x_arr, t)` | Array displacement |
+| `.standing_wave(x, t)` | Standing wave via superposition |
+| `.step(dt)` | Advance time |
+| `.energy()` | Returns `{"total": A²}` |

@@ -32,6 +32,7 @@ from bisect import bisect_right
 import numpy as np
 from manim import (
     Axes,
+    BLUE,
     BLUE_B,
     Circle,
     DashedLine,
@@ -39,6 +40,7 @@ from manim import (
     DOWN,
     GRAY,
     GRAY_A,
+    GREEN,
     GREY_D,
     LEFT,
     Line,
@@ -235,6 +237,90 @@ class ShmProjection(Scene):
         legend_text.next_to(axes, DOWN, buff=0.3)
 
         # ------------------------------------------------------------------
+        # Velocity panel — v(t) = -R·ω·sin(ωt)
+        # ------------------------------------------------------------------
+        v_axes = Axes(
+            x_range=[0, int(total_time) + 1, 2],
+            y_range=[-radius * omega * 1.3, radius * omega * 1.3, 1.0],
+            x_length=5.5,
+            y_length=1.5,
+            axis_config={
+                "color": GREY_D,
+                "include_numbers": True,
+                "font_size": 16,
+            },
+        )
+        v_axes.next_to(legend_text, DOWN, buff=0.3, aligned_edge=LEFT)
+        v_axes.shift(RIGHT * 0.5)
+
+        v_t_label = MathTex("t", font_size=20).next_to(
+            v_axes.x_axis.get_end(), DOWN
+        )
+        v_label_graph = MathTex("v", color=GREEN, font_size=20).next_to(
+            v_axes.y_axis.get_end(), LEFT
+        )
+
+        v_trace_scr = [
+            v_axes.c2p(t_i, -radius * omega * math.sin(omega * t_i))
+            for t_i in trace_ts
+        ]
+        v_trace = always_redraw(lambda: _build_curve(v_trace_scr, trace_ts, t, GREEN, 2.5))
+
+        v_current_dot = always_redraw(
+            lambda: Dot(
+                v_axes.c2p(t[0], -radius * omega * math.sin(omega * t[0])),
+                color=GREEN, radius=0.08,
+            )
+        )
+
+        v_formula = MathTex(
+            "v = -R\\omega\\sin(\\omega t)", font_size=18, color=GREEN,
+        )
+        v_formula.next_to(v_axes, DOWN, buff=0.15)
+
+        # ------------------------------------------------------------------
+        # Acceleration panel — a(t) = -R·ω²·cos(ωt)
+        # ------------------------------------------------------------------
+        a_axes = Axes(
+            x_range=[0, int(total_time) + 1, 2],
+            y_range=[-radius * omega**2 * 1.3, radius * omega**2 * 1.3, 1.0],
+            x_length=5.5,
+            y_length=1.5,
+            axis_config={
+                "color": GREY_D,
+                "include_numbers": True,
+                "font_size": 16,
+            },
+        )
+        a_axes.next_to(v_formula, DOWN, buff=0.2, aligned_edge=LEFT)
+        a_axes.shift(RIGHT * 0.5)
+
+        a_t_label = MathTex("t", font_size=20).next_to(
+            a_axes.x_axis.get_end(), DOWN
+        )
+        a_label_graph = MathTex("a", color=BLUE, font_size=20).next_to(
+            a_axes.y_axis.get_end(), LEFT
+        )
+
+        a_trace_scr = [
+            a_axes.c2p(t_i, -radius * omega**2 * math.cos(omega * t_i))
+            for t_i in trace_ts
+        ]
+        a_trace = always_redraw(lambda: _build_curve(a_trace_scr, trace_ts, t, BLUE, 2.5))
+
+        a_current_dot = always_redraw(
+            lambda: Dot(
+                a_axes.c2p(t[0], -radius * omega**2 * math.cos(omega * t[0])),
+                color=BLUE, radius=0.08,
+            )
+        )
+
+        a_formula = MathTex(
+            "a = -R\\omega^2\\cos(\\omega t)", font_size=18, color=BLUE,
+        )
+        a_formula.next_to(a_axes, DOWN, buff=0.15)
+
+        # ------------------------------------------------------------------
         # Physics driver — publishes the authoritative video time
         # ------------------------------------------------------------------
         def physics_updater(_mob: Mobject, dt: float) -> None:
@@ -250,6 +336,25 @@ class ShmProjection(Scene):
         self.add(radius_line, tip_dot, proj_dot, drop_line, x_label_circle)
         self.add(axes, t_label, x_label_graph)
         self.add(trace, current_dot, alignment_line, legend_text)
+        self.add(v_axes, v_t_label, v_label_graph)
+        self.add(v_trace, v_current_dot, v_formula)
+        self.add(a_axes, a_t_label, a_label_graph)
+        self.add(a_trace, a_current_dot, a_formula)
         self.add(driver)
 
         self.wait(total_time)
+
+
+def _build_curve(
+    scr: list[np.ndarray],
+    ts: list[float],
+    t_ref: list[float],
+    color: str,
+    width: float,
+) -> VMobject:
+    """Revealed prefix of a precomputed (time, value) curve."""
+    vm = VMobject(color=color, stroke_width=width)
+    n = bisect_right(ts, t_ref[0])
+    if n >= 2:
+        vm.set_points_as_corners(list(scr[:n]))
+    return vm

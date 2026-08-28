@@ -159,3 +159,66 @@ class TestReferencePendulumSim:
         assert abs(e_final - e0) / e0 > 0.05, (
             f"Euler drift {(e_final - e0) / e0 * 100:.3f}% — expected > 5%"
         )
+
+
+class TestDampedPendulumSim:
+    """Tests for damping behaviour."""
+
+    def test_b_zero_gives_undamped_motion(self) -> None:
+        """b=0 (default) should conserve energy like the undamped reference."""
+        sim = ReferencePendulumSim(
+            length=1.0, g=9.81, theta0=0.1, dt=0.001, scheme="verlet",
+            damping_coefficient=0.0,
+        )
+        e0 = sim.energy()["total"]
+        e_min, e_max = e0, e0
+        for _ in range(10_000):
+            sim.step()
+            e = sim.energy()["total"]
+            e_min = min(e_min, e)
+            e_max = max(e_max, e)
+        drift = (e_max - e_min) / e0
+        assert drift < 0.001, f"b=0 should conserve energy, drift={drift*100:.3f}%"
+
+    def test_damped_amplitude_decays(self) -> None:
+        """With b>0, the oscillation amplitude should decay over time."""
+        sim = ReferencePendulumSim(
+            length=1.0, g=9.81, theta0=0.3, dt=0.001, scheme="verlet",
+            damping_coefficient=0.5,
+        )
+        # Record peak amplitudes in first and last quarters of 10 periods
+        period = sim.period_from_formula
+        n_steps = int(10 * period / sim.dt)
+
+        amplitudes: list[float] = []
+        prev_theta = sim.state["theta"]
+        for i in range(n_steps):
+            sim.step()
+            theta = sim.state["theta"]
+            if prev_theta > 0 and theta <= 0:
+                amplitudes.append(abs(sim.state["theta"]))
+            prev_theta = theta
+
+        assert len(amplitudes) >= 4, f"Expected >=4 zero-crossings, got {len(amplitudes)}"
+        # Final amplitude should be less than half of initial
+        half_idx = len(amplitudes) // 2
+        # Check that amplitude trend is clearly downward
+        assert amplitudes[-1] < amplitudes[0] * 0.5, (
+            f"Damped amplitude did not decay: initial={amplitudes[0]:.4f}, "
+            f"final={amplitudes[-1]:.4f}"
+        )
+
+    def test_damped_energy_decreases(self) -> None:
+        """Total energy should decrease over time when b>0."""
+        sim = ReferencePendulumSim(
+            length=1.0, g=9.81, theta0=0.3, dt=0.001, scheme="verlet",
+            damping_coefficient=0.5,
+        )
+        e0 = sim.energy()["total"]
+        for _ in range(5_000):
+            sim.step()
+        e_final = sim.energy()["total"]
+        assert e_final < e0 * 0.5, (
+            f"Damped energy did not decay enough: e0={e0:.6f}, "
+            f"e_final={e_final:.6f}"
+        )

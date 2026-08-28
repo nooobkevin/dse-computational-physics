@@ -14,14 +14,42 @@ All three artifacts consume the same `physics_core` engine (`src/physics_core/so
 
 ## Curriculum Learning-Outcome Map
 
-This unit targets the following HKDSE Physics curriculum outcomes:
+This unit targets the following HKDSE Physics curriculum outcomes (CAF Consultation Draft June 2026):
+
+### 6a. Radiation and radioactivity
 
 | Sub-topic | Learning outcome(s) | Which artifact(s) deliver it |
 |---|---|---|
-| **Radioactive decay** (Society 6a) | Exponential decay law `N = N₀·2^(-t/T)`; half-life concept; Monte Carlo simulation of decay | Teacher app (`--mode decay` — N vs t curve, analytic overlay, half-life marker); Manim `RadioactiveDecay` (decay curve + Monte Carlo dots); Student exercise (implement `decay_probability`) |
-| **Alpha, beta, gamma radiation** (Society 6b) | Ionising power (α > β > γ); penetrating power (γ > β > α); absorption by paper/aluminium/lead | Teacher app (`--mode radiation` — bar charts of ionising/penetrating power); Manim `RadiationPenetration` (schematic of shielding) |
-| **Nuclear fission and chain reactions** (Society 6c) | Neutron multiplication factor k; critical mass; subcritical/critical/supercritical regimes | Teacher app (`--mode reactor` — neutron population vs generation for k=0.6, 1.0, 1.5); Manim `ChainReaction` (fission schematic + chain reaction generations) |
-| **Building computational models** (Scientific Inquiry) | Translate physics equations into code; use Monte Carlo methods to simulate random processes | Student exercise (fill in `decay_probability`); Manim `RadioactiveDecay` (Monte Carlo dots overlaid on analytic curve) |
+| **Radioactive decay** (6a.7–6a.10) | Random nature of decay; activity A ∝ N; half-life definition (factor of one-half); determine half-life from decay graph or numerical data | Teacher app (`--mode decay` — N vs t curve, analytic overlay, half-life marker, activity display); Manim `RadioactiveDecay` (decay curve + Monte Carlo dots); Student exercise (implement `decay_probability`); Decay analysis exercise (fit decay data → half-life) |
+| **Alpha, beta, gamma radiation** (6a.4–6a.5) | Origin and nature; compare penetrating power, ranges, ionising power | Teacher app (`--mode radiation` — bar charts of ionising/penetrating power); Manim `RadiationPenetration` (schematic of shielding) |
+| **Radioactive isotopes — uses** (6a.19) | Radiotherapy, thickness inspection, tracers, medical imaging | Manim `RadioisotopeUses` (gamma camera, radiotherapy, thickness gauge) |
+| **Nuclear fission and chain reactions** (6a.20) | Neutron multiplication factor k; critical mass; subcritical/critical/supercritical regimes | Teacher app (`--mode reactor` — neutron population vs generation for k=0.6, 1.0, 1.5); Manim `ChainReaction` (fission schematic + chain reaction generations) |
+
+### 6b. Energy sources and sustainable development
+
+| Sub-topic | Learning outcome(s) | Which artifact(s) deliver it |
+|---|---|---|
+| **Mass-energy relationship** (6b.3–6b.5) | ΔE = Δmc²; electron-volt and atomic mass unit; apply to nuclear reactions | Engine `energy.py` (`mass_energy_delta`); Manim `EnergySources` (ΔE = Δmc² annotation); Teacher app (`--mode energy` — fission mass-defect panel); Student exercise (implement `mass_energy_delta`) |
+| **Solar power** (6b.9–6b.10) | Solar constant definition; photovoltaic effect; P = S·A·η | Engine `energy.py` (`solar_power`, `photovoltaic_power`); Manim `EnergySources` (solar panel); Teacher app (`--mode energy` — solar info); Student exercise (implement `solar_power`) |
+| **Wind turbine power** (6b.11) | P = ½ηρAv³; solve problems | Engine `energy.py` (`wind_power`); Manim `EnergySources` (P vs v³ curve); Teacher app (`--mode energy` — interactive sliders, cubic curve); Student exercise (implement `wind_power`) |
+| **Nuclear fission and fusion** (6b.2, 6b.8) | Energy release in fission and fusion; fusion as source of solar energy | Manim `EnergySources` (fission/fusion comparison); Teacher app (`--mode energy` — mass-defect readout) |
+| **Carbon neutrality** (6b.13) | Daily habits; climate change mitigation; HK energy consumption | Concept questions in `questions.md` (STSE carbon-neutrality trade-offs) |
+
+### 6c. Physics for recent and future
+
+| Sub-topic | Learning outcome(s) | Which artifact(s) deliver it |
+|---|---|---|
+| **Physics-related careers** (6c.1–6c.2) | Role of physicists and engineers in sustainable society; professions applying physical models | Concept questions in `questions.md`; README notes |
+| **Physics and I&T** (6c.3) | Impact of physics discoveries on modern technologies | Manim `RadioisotopeUses` (medical imaging, industrial applications) |
+
+### Computational Physics (per §2.2.2)
+
+| CP activity | Which artifact(s) deliver it |
+|---|---|
+| Simulate radioactive decay process (line 2621) | Teacher app (`--mode decay`); Manim `RadioactiveDecay`; Student exercise (Monte Carlo) |
+| Monte Carlo method for probabilistic phenomena (line 642) | Decay simulation (Monte Carlo step) |
+| Build computational models: translate physics to code (line 629) | Student exercises (fill-in-the-blank hooks) |
+| Computer-assisted data analysis (line 659) | Decay analysis exercise (fit decay curve → half-life) |
 
 ---
 
@@ -31,28 +59,30 @@ This unit targets the following HKDSE Physics curriculum outcomes:
 
 Play the rendered MP4 for the topic you are about to teach:
 
-- **Radioactive decay**: `RadioactiveDecay.mp4` — shows the exponential decay curve `N = N₀·2^(-t/T)` with the analytic curve in green and Monte Carlo simulation dots in orange. The half-life is marked with red dashed lines at `N = N₀/2`. Pause to discuss: why does the Monte Carlo scatter around the analytic curve? What happens if we increase N₀?
-- **Radiation penetration**: `RadiationPenetration.mp4` — shows a schematic of alpha, beta, and gamma radiation passing through paper, aluminium, and lead barriers. The key takeaway: penetrating power γ > β > α, ionising power α > β > γ.
-- **Chain reaction**: `ChainReaction.mp4` — shows a fission schematic (neutron + U-235 → fission fragments + neutrons + energy) and chain reaction generations. The critical mass concept and neutron multiplication factor k are explained.
+- **Radioactive decay**: `RadioactiveDecay.mp4` — shows the decay curve `N = N₀·2^(-t/T)` with the analytic curve in green and Monte Carlo simulation dots in orange. The half-life is marked with red dashed lines at `N = N₀/2`. Pause to discuss: why does the Monte Carlo scatter around the analytic curve? What happens if we increase N₀?
+- **Radiation penetration**: `RadiationPenetration.mp4` — shows a schematic of alpha, beta, and gamma radiation passing through paper, aluminium, and lead barriers.
+- **Chain reaction**: `ChainReaction.mp4` — shows a fission schematic and chain reaction generations with the critical mass concept.
+- **Energy sources**: `EnergySources.mp4` — compares fission/fusion (ΔE = Δmc²), solar power (P = S·A·η), and wind power (P ∝ v³) with a bar chart comparison.
+- **Radioisotope uses**: `RadioisotopeUses.mp4` — shows three applications: medical imaging (gamma camera), radiotherapy, and industrial thickness gauge.
 
 ### Step 2: Run the teacher demo app
 
 Open the teacher app in the relevant mode and demonstrate the physics live:
 
-- **Decay mode** (`--mode decay`): shows a Monte Carlo decay simulation with the analytic curve overlaid. The N vs t graph builds in real time as nuclei decay. The estimated half-life is marked with a red dashed line. Use this to discuss: why does the Monte Carlo curve fluctuate? How does increasing N₀ reduce fluctuations? How does the estimated half-life compare to the true value?
-- **Radiation mode** (`--mode radiation`): shows bar charts of penetrating power and ionising power for alpha, beta, and gamma radiation. Discuss the inverse relationship and shielding requirements.
-- **Reactor mode** (`--mode reactor`): shows neutron population vs generation for three values of k (0.6, 1.0, 1.5). Discuss subcritical, critical, and supercritical regimes. Link to nuclear reactor control.
+- **Decay mode** (`--mode decay`): shows a Monte Carlo decay simulation with the analytic curve overlaid. The N vs t graph builds in real time. Activity (A = λN) is displayed. The estimated half-life is marked with a red dashed line.
+- **Radiation mode** (`--mode radiation`): shows bar charts of penetrating power and ionising power for alpha, beta, and gamma radiation.
+- **Reactor mode** (`--mode reactor`): shows neutron population vs generation for three values of k (0.6, 1.0, 1.5).
+- **Energy mode** (`--mode energy`): interactive wind turbine with radius and wind-speed sliders, live P = ½ηρAv³ with the P-vs-v cubic curve; fission panel with mass-defect readout; solar power reference.
 
-### Step 3: Complete the fill-in-the-blank exercise
+### Step 3: Complete the fill-in-the-blank exercises
 
-Students open `society_exercise.py` and implement the single method `decay_probability(self, dt)`. The auto-grader checks:
+Students complete one or more of the following exercises:
 
-1. The `NotImplementedError` is replaced (immediate fail if not)
-2. The decay probability is in [0, 1] for all dt
-3. The Monte Carlo simulation approximates the analytic curve to within 5%
-4. The estimated half-life is within 10% of the true value
+1. **Society exercise** (`society_exercise.py`): implement `decay_probability`.
+2. **Energy exercise** (`energy_exercise.py`): implement `mass_energy_delta`, `solar_power`, `wind_power`, `photovoltaic_power`.
+3. **Decay analysis exercise** (`decay_analysis_exercise.py`): implement `half_life_from_fit` (log-linear fit), `background_subtracted_rate`, `remaining_fraction`.
 
-The Monte Carlo vs analytic discussion from Step 1 feeds directly into the concept questions in `questions.md`: why exponential decay, Monte Carlo vs analytic methods, alpha/beta/gamma properties, critical mass, and radiation safety.
+Each auto-grader measures numerical behaviour — any correct implementation passes.
 
 ---
 
@@ -71,15 +101,15 @@ uv sync
 ### Engine tests
 
 ```bash
-uv run pytest
+uv run pytest tests/test_society.py -v
 ```
 
-This runs all unit tests including `tests/test_society.py` (decay simulation, radiation properties). The `pyproject.toml` sets `pythonpath = ["src"]` so `physics_core` is importable.
+This runs all unit tests for the society domain (decay simulation, radiation properties, energy sources).
 
 ### Teacher app
 
 ```bash
-# Decay mode (Monte Carlo simulation)
+# Decay mode (Monte Carlo simulation + activity display)
 uv run python units/06_society/teacher_app/main.py --mode decay
 
 # Radiation mode (alpha/beta/gamma properties)
@@ -87,6 +117,9 @@ uv run python units/06_society/teacher_app/main.py --mode radiation
 
 # Reactor mode (chain reaction / critical mass)
 uv run python units/06_society/teacher_app/main.py --mode reactor
+
+# Energy mode (wind turbine + fission mass-defect)
+uv run python units/06_society/teacher_app/main.py --mode energy
 
 # Headless self-check (no window, for CI)
 uv run python units/06_society/teacher_app/main.py --mode decay --headless-selfcheck
@@ -97,37 +130,45 @@ All modes are fully synthetic — no camera required. The `--headless-selfcheck`
 ### Manim render
 
 ```bash
-# Render all three scenes (requires Docker)
+# Render all scenes (requires Docker)
 bash units/06_society/manim/render.sh
 
 # Render a specific scene
-bash units/06_society/manim/render.sh radioactive_decay
+bash units/06_society/manim/render.sh energy_sources
 
 # Low-quality preview (fast)
-bash units/06_society/manim/render.sh radioactive_decay -ql
+bash units/06_society/manim/render.sh energy_sources -ql
 ```
 
 The script uses the `manimcommunity/manim:stable` Docker image. Output MP4 files land in `units/06_society/manim/output/`. The `--disable_caching` flag is set to force re-render on every run.
 
-Available scenes: `radioactive_decay`, `radiation_penetration`, `chain_reaction`.
+Available scenes: `radioactive_decay`, `radiation_penetration`, `chain_reaction`, `energy_sources`, `radioisotope_uses`.
 
 Quality flags: `-qh` (high, default), `-ql` (low, fast preview), `-qk` (4K).
 
 ### Exercise / grader
 
 ```bash
-# Grade the student's exercise (default: society_exercise.py)
+# Grade the decay exercise (default: society_exercise.py)
 uv run pytest units/06_society/exercises/test_exercise.py -v
 
 # Grade against the solution file (teacher self-check)
-uv run pytest units/06_society/exercises/test_exercise.py \
-    --override-student=units/06_society/exercises/society_solution.py -v
+uv run pytest units/06_society/exercises/test_exercise.py -v \
+    --override-student=units/06_society/exercises/society_solution.py
+
+# Grade the energy exercise
+uv run pytest units/06_society/exercises/test_energy_exercise.py -v \
+    --override-student-energy=units/06_society/exercises/energy_solution.py
+
+# Grade the decay analysis exercise
+uv run pytest units/06_society/exercises/test_decay_analysis_exercise.py -v \
+    --override-student-decay-analysis=units/06_society/exercises/decay_analysis_solution.py
 
 # Full self-check: verify grader passes correct answer AND catches wrong one
 uv run pytest units/06_society/exercises/test_exercise.py --selfcheck -v
 ```
 
-The solution file (`society_solution.py`) and teacher answer key (`teacher_key.md`) are gitignored — students must not see them.
+Solution files (`society_solution.py`, `energy_solution.py`, `decay_analysis_solution.py`) and teacher answer key (`teacher_key.md`) are gitignored — students must not see them.
 
 ---
 
@@ -139,9 +180,20 @@ The `src/physics_core/society/` package follows the same pattern as `mechanics/`
 src/physics_core/society/
   __init__.py           ← exports all classes
   decay.py              ← DecaySim (abstract) + ReferenceDecaySim
+  energy.py             ← EnergySim (abstract) + ReferenceEnergySim
 ```
 
-The abstract base `DecaySim` defines one physics **hook** (`decay_probability(self, dt)`) that raises `NotImplementedError`. The `ReferenceDecaySim` subclass provides the correct physics using both analytic and Monte Carlo methods.
+The abstract base defines physics **hooks** that raise `NotImplementedError`. The `Reference` subclass provides the correct physics. All three front-ends import the Reference implementation; the student exercise subclasses the base directly.
+
+### Physics hooks
+
+| Engine | Hook(s) | Physics |
+|---|---|---|
+| `DecaySim` | `decay_probability(dt)` | p = 1 − exp(−λ dt), λ = ln(2)/T |
+| `EnergySim` | `mass_energy_delta(dm)` | ΔE = Δm·c², 1 amu ≈ 931.5 MeV |
+| `EnergySim` | `solar_power(area, S, η)` | P = S·A·η |
+| `EnergySim` | `wind_power(r, v, ρ, η)` | P = ½ηρπr²v³ |
+| `EnergySim` | `photovoltaic_power(area, S, η)` | P = S·A·η (default η = 0.20) |
 
 ### dt-clamp in Manim updaters
 
@@ -162,4 +214,33 @@ This prevents a Manim edge-case where `dt` can be 0 on frame boundaries, which w
 
 ## Synthetic-Only Note
 
-All three modes in the teacher app are **fully synthetic**. Unlike the pendulum mode in Unit 01 (which supported real webcam tracking), there is no camera input — all physics is computed and rendered procedurally. This makes the app deterministic and ideal for classroom projection without any hardware dependency.
+All modes in the teacher app are **fully synthetic**. Unlike the pendulum mode in Unit 01 (which supported real webcam tracking), there is no camera input — all physics is computed and rendered procedurally. This makes the app deterministic and ideal for classroom projection without any hardware dependency.
+
+---
+
+## CAF Compliance Notes
+
+### Half-life wording
+
+The CAF (June 2026) removes the formal "exponential decay law" as named content. The current unit uses `N = N₀·2^(-t/T)` (powers of two) rather than the natural exponential form `N = N₀·e^(-λt)`. This is consistent with the CAF: half-life is presented as the quantity read from the decay curve, not derived from an exponential law. The `decay_probability` hook uses `p = 1 − exp(−λ dt)` internally, which is a computational implementation detail, not a curriculum outcome.
+
+### Removed content
+
+- **Exponential law of decay**: Removed per Annex 3, line 4296–4297. The unit uses the half-life form `N = N₀·2^(-t/T)` which is consistent.
+- **Transmutation**: Removed per Annex 3, line 4303. Not covered in this unit.
+
+### Integrated content (Annex 3)
+
+- **Medical imaging applications of radioisotopes** (from Medical Physics): Covered by `RadioisotopeUses` Manim scene.
+- **Energy sources and sustainable development** (from Energy and Use of Energy): Covered by `energy.py` engine, `EnergySources` scene, `--mode energy` app, and `energy_exercise.py`.
+
+### Out-of-scope (teacher-led activities)
+
+The following CAF-suggested activities are hands-on/experiential and outside the computational toolkit's scope:
+- GM counter measurements of background radiation
+- Radon concentration investigation
+- Smoke detector specification review
+- Radioactive waste handling research
+- Power plant visits and guest talks
+
+These should be delivered as complementary teacher-led activities.

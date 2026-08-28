@@ -84,6 +84,58 @@ The Maxwell-Boltzmann distribution has a different functional form in
 
 ---
 
+## Additional Questions (CAF-aligned)
+
+### (g) Average kinetic energy and the Kelvin scale
+
+The CAF curriculum states that the average kinetic energy of gas molecules
+is given by:
+
+    KE_avg = 3RT / (2N_A)
+
+where *R* is the universal gas constant (8.314 J/(mol·K)) and *N_A* is
+Avogadro's number (6.022 × 10²³ mol⁻¹).
+
+1. Show that KE_avg = 3RT/(2N_A) is equivalent to (3/2)kT, where
+   k = R/N_A is the Boltzmann constant.
+2. Why must the temperature *T* in this formula be expressed in Kelvin
+   rather than Celsius?  What would happen if you used Celsius?
+3. At T = 0 K (absolute zero), what is the average kinetic energy of
+   an ideal gas?  Is this physically possible for a real gas?
+4. Calculate KE_avg for a gas molecule at room temperature (T = 293 K).
+   Express your answer in joules and in electronvolts (1 eV = 1.602 × 10⁻¹⁹ J).
+
+### (h) Why Kelvin?
+
+The three empirical gas laws (Boyle's, Charles', pressure law) can be
+combined into the general gas law pV/T = constant.
+
+1. If you measured temperature in Celsius instead of Kelvin, would
+   pV/T still be constant?  Explain why or why not.
+2. Charles' law states that V ∝ T at constant pressure.  If you plot
+   V vs T (in Celsius), what does the intercept on the temperature
+   axis represent?
+3. Explain why the Kelvin scale is called an *absolute* temperature
+   scale, and why it is essential for the kinetic theory of gases.
+
+### (i) Zeroth law of thermodynamics
+
+The zeroth law of thermodynamics is a fundamental concept that underpins
+the measurement of temperature.
+
+1. State the zeroth law of thermodynamics in your own words.
+2. Explain how the zeroth law justifies the use of a thermometer to
+   measure temperature.  What assumption does a thermometer make about
+   thermal equilibrium?
+3. If object A is in thermal equilibrium with object B, and object B is
+   in thermal equilibrium with object C, what can you conclude about
+   objects A and C?
+4. How does the zeroth law relate to the concept of temperature as a
+   quantity associated with the average kinetic energy of random
+   molecular motion?
+
+---
+
 ## Model Answers (teacher only)
 
 *The section below contains model answers.  Remove it before distributing

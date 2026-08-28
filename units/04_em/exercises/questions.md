@@ -138,3 +138,33 @@ Equivalent resistance: `R_eq = R₁ + R₂ = 4 + 6 = 10 Ω`
 Current: `I = V / R_eq = 12 / 10 = 1.2 A`
 Voltage drops: `V_R₁ = 1.2 × 4 = 4.8 V`, `V_R₂ = 1.2 × 6 = 7.2 V`
 KVL check: `+12 V (battery rise) - 4.8 V - 7.2 V = 0 V` ✓
+
+---
+
+### (g) Lorentz force on a moving charge
+
+A proton (`q = +1.6×10⁻¹⁹ C`, `m = 1.67×10⁻²⁷ kg`) moves with speed `v = 2.0×10⁶ m/s` at an angle of `30°` to a uniform magnetic field of strength `B = 0.5 T`.
+
+1. Compute the magnitude of the magnetic force on the proton.
+2. What is the force when the angle is `0°`? When it is `90°`?
+3. Determine the radius of the circular path if the velocity is perpendicular to the field.
+4. If the particle were an electron (same speed, opposite charge), how would the force magnitude and direction change?
+
+### (h) Right-hand rule
+
+A positively charged particle enters a uniform magnetic field pointing out of the page (⊙). The particle is moving to the right (+x direction).
+
+1. Use the right-hand rule to determine the direction of the magnetic force.
+2. Describe the resulting trajectory (shape, plane of motion).
+3. How would the trajectory change if the particle were negatively charged?
+
+### (i) Circular motion in a magnetic field
+
+A particle of mass `m` and charge `q` moves in a uniform magnetic field `B` with velocity perpendicular to the field.
+
+1. Derive the expression for the orbital radius `r = mv/(qB)` by equating the magnetic force to the centripetal force.
+2. If the magnetic field strength is doubled, how does the radius change?
+3. If the particle's speed is doubled (and the field is constant), how does the radius change?
+4. Show that the orbital period `T = 2πm/(qB)` is independent of velocity.
+
+---

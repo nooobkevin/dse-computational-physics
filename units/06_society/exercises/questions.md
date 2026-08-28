@@ -51,6 +51,23 @@ A radioactive isotope has a half-life of 2.0 years.
 3. Explain the principle of shielding: why are different materials needed for different types of radiation?
 4. What factors determine the risk from a radioactive source?
 
+### (g) Energy sources and mass-energy equivalence
+
+1. Calculate the energy released (in MeV) when a mass defect of 0.2 amu occurs in a nuclear fission reaction.
+2. A solar panel with an area of 1.5 m² receives solar radiation of 1000 W/m². If the panel efficiency is 18%, what is the electrical power output?
+3. A wind turbine has a rotor radius of 10 m. The wind speed is 8 m/s, air density is 1.2 kg/m³, and the turbine efficiency is 0.35. Calculate the mechanical power output.
+4. Explain why doubling the wind speed increases the wind turbine power by a factor of 8.
+
+### (h) Carbon neutrality and energy trade-offs (STSE)
+
+1. Hong Kong aims to achieve carbon neutrality before 2050. List two advantages and two challenges of using nuclear power as a low-carbon energy source.
+2. Compare solar power and wind power in terms of:
+   - Land use requirements
+   - Intermittency (dependence on weather)
+   - Suitability for Hong Kong's geography
+3. Explain how individual daily habits (e.g., reducing electricity consumption, choosing public transport) contribute to achieving carbon neutrality.
+4. Discuss the environmental impact of extracting, converting, and distributing fossil fuels compared to renewable energy sources.
+
 ---
 
 *The section below contains model answers.  Remove it before distributing

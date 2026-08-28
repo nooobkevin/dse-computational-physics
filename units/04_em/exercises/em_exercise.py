@@ -90,6 +90,7 @@ from typing import Dict, List, Tuple
 
 from physics_core.em.circuits import Circuit
 from physics_core.em.electrostatics import ElectricField
+from physics_core.em.magnetism import MovingCharge
 
 
 # ===========================================================================
@@ -188,4 +189,54 @@ class StudentCircuit(Circuit):
         raise NotImplementedError(
             "You must implement resolve(self) in StudentCircuit. "
             "See the docstring for the nodal analysis algorithm."
+        )
+
+
+# ===========================================================================
+# Part 3: Magnetism — Lorentz force on a moving charge
+# ===========================================================================
+
+
+class StudentMagnetism(MovingCharge):
+    """Student implementation of Lorentz force physics.
+
+    Override :meth:`magnetic_force` and :meth:`orbit_radius` with the
+    correct formulas.  Everything else is inherited from :class:`MovingCharge`.
+
+    Physics (fill this in):
+        magnetic_force(B, q, v, theta_degrees):
+            theta = radians(theta_degrees)
+            return abs(q) * v * B * sin(theta)
+
+        orbit_radius(m, v, q, B):
+            return m * v / (abs(q) * B)
+
+    Parameters
+    ----------
+    m : float
+        Particle mass (kg).  Default 1.67e-27 (proton mass).
+    q : float
+        Charge (C).  Default 1.60e-19 (elementary charge).
+    """
+
+    def magnetic_force(self, B: float, q: float, v: float, theta_degrees: float) -> float:
+        """Magnitude of the Lorentz force ``F = |q| v B sinθ``.
+
+        Replace NotImplementedError with the correct formula.
+        """
+        # TODO: Replace this NotImplementedError with the correct physics.
+        raise NotImplementedError(
+            "You must implement magnetic_force(self, B, q, v, theta_degrees). "
+            "Use F = |q| * v * B * sin(theta)."
+        )
+
+    def orbit_radius(self, m: float, v: float, q: float, B: float) -> float:
+        """Orbital radius ``r = m v / (|q| B)`` for circular motion in uniform B.
+
+        Replace NotImplementedError with the correct formula.
+        """
+        # TODO: Replace this NotImplementedError with the correct physics.
+        raise NotImplementedError(
+            "You must implement orbit_radius(self, m, v, q, B). "
+            "Use r = m * v / (|q| * B)."
         )

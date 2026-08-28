@@ -43,6 +43,7 @@ import pytest
 
 from physics_core.em.circuits import Circuit, ReferenceCircuit
 from physics_core.em.electrostatics import ElectricField, ReferenceElectricField
+from physics_core.em.magnetism import MovingCharge, ReferenceMovingCharge
 
 EPS_0 = 8.854187817e-12
 
@@ -56,10 +57,10 @@ class TestElectricFieldExercise:
     """Auto-grader for the student electric field exercise."""
 
     def test_physics_implemented(
-        self, student_classes: Tuple[Type[ElectricField], Type[Circuit]]
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
     ) -> None:
         """Fail immediately if the student hasn't filled in the hooks."""
-        ef_cls, _ = student_classes
+        ef_cls, _, _ = student_classes
         sim = ef_cls()
         try:
             sim.field(1.0, 0.0)
@@ -79,10 +80,10 @@ class TestElectricFieldExercise:
             )
 
     def test_coulomb_field_magnitude(
-        self, student_classes: Tuple[Type[ElectricField], Type[Circuit]]
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
     ) -> None:
         """E = q/(4πε₀ r²) at distance r from point charge."""
-        ef_cls, _ = student_classes
+        ef_cls, _ckt, _mag = student_classes
         q = 1e-9
         student = ef_cls(q=q)
         Ex, Ey = student.field(1.0, 0.0)
@@ -97,10 +98,10 @@ class TestElectricFieldExercise:
             )
 
     def test_coulomb_potential(
-        self, student_classes: Tuple[Type[ElectricField], Type[Circuit]]
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
     ) -> None:
         """V = q/(4πε₀ r) at distance r from point charge."""
-        ef_cls, _ = student_classes
+        ef_cls, _ckt, _mag = student_classes
         q = 1e-9
         student = ef_cls(q=q)
         V = student.potential(2.0, 0.0)
@@ -115,10 +116,10 @@ class TestElectricFieldExercise:
             )
 
     def test_field_radial_direction(
-        self, student_classes: Tuple[Type[ElectricField], Type[Circuit]]
+self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
     ) -> None:
-        """Field points radially outward for positive q."""
-        ef_cls, _ = student_classes
+        """Fail immediately if the student hasn't filled in the hooks."""
+        ef_cls, _, _ = student_classes
         student = ef_cls(q=1e-9)
         Ex, Ey = student.field(1.0, 1.0)
         # The field should point in the (1,1)/√2 direction
@@ -139,10 +140,10 @@ class TestCircuitExercise:
     """Auto-grader for the student circuit exercise."""
 
     def test_resolve_implemented(
-        self, student_classes: Tuple[Type[ElectricField], Type[Circuit]]
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
     ) -> None:
         """Fail immediately if the student hasn't filled in resolve()."""
-        _, ckt_cls = student_classes
+        _, ckt_cls, _ = student_classes
         branches = [(0, 1, 5.0, 10.0), (1, 0, 3.0, 0.0)]
         sim = ckt_cls(branches)
         try:
@@ -154,10 +155,10 @@ class TestCircuitExercise:
             )
 
     def test_kirchhoff_current_law(
-        self, student_classes: Tuple[Type[ElectricField], Type[Circuit]]
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
     ) -> None:
         """KCL: ΣI_in = ΣI_out at nodes."""
-        _, ckt_cls = student_classes
+        _, ckt_cls, _ = student_classes
         branches = [
             (0, 1, 0.001, 12.0),
             (1, 0, 20.0, 0.0),
@@ -177,10 +178,10 @@ class TestCircuitExercise:
             )
 
     def test_kirchhoff_voltage_law(
-        self, student_classes: Tuple[Type[ElectricField], Type[Circuit]]
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
     ) -> None:
         """KVL: ΣV = 0 around a closed loop."""
-        _, ckt_cls = student_classes
+        _, ckt_cls, _ = student_classes
         branches = [
             (0, 1, 2.0, 9.0),
             (1, 0, 4.0, 0.0),
@@ -198,10 +199,10 @@ class TestCircuitExercise:
             )
 
     def test_power_dissipated(
-        self, student_classes: Tuple[Type[ElectricField], Type[Circuit]]
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
     ) -> None:
         """P = I²R consistent with circuit."""
-        _, ckt_cls = student_classes
+        _, ckt_cls, _ = student_classes
         branches = [
             (0, 1, 5.0, 10.0),
             (1, 0, 3.0, 0.0),
@@ -219,15 +220,107 @@ class TestCircuitExercise:
 
 
 # ===========================================================================
+# Tests — Magnetism
+# ===========================================================================
+
+
+class TestMagnetismExercise:
+    """Auto-grader for the student magnetism exercise."""
+
+    def test_magnetism_implemented(
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
+    ) -> None:
+        """Fail immediately if the student hasn't filled in the hooks."""
+        _, _, mag_cls = student_classes
+        sim = mag_cls()
+        try:
+            sim.magnetic_force(0.5, 1.6e-19, 1e6, 90.0)
+        except NotImplementedError:
+            pytest.fail(
+                "Your magnetic_force() method is still raising NotImplementedError. "
+                "Replace the 'raise' line with F = |q| * v * B * sin(theta)."
+            )
+        try:
+            sim.orbit_radius(1.67e-27, 1e6, 1.6e-19, 0.5)
+        except NotImplementedError:
+            pytest.fail(
+                "Your orbit_radius() method is still raising NotImplementedError. "
+                "Replace the 'raise' line with r = m * v / (|q| * B)."
+            )
+
+    def test_force_max_at_90_degrees(
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
+    ) -> None:
+        """F = |q| v B at θ = 90°."""
+        _, _, mag_cls = student_classes
+        sim = mag_cls()
+        F = sim.magnetic_force(B=0.5, q=1.6e-19, v=1e6, theta_degrees=90.0)
+        expected = 1.6e-19 * 1e6 * 0.5
+        rel_err = abs(F - expected) / expected
+        if rel_err > 0.01:
+            pytest.fail(
+                f"Your force at 90° is {F:.4e} N, "
+                f"expected {expected:.4e} N "
+                f"(relative error {rel_err*100:.2f}%). "
+                f"Use F = |q| * v * B * sin(theta)."
+            )
+
+    def test_force_zero_at_0_degrees(
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
+    ) -> None:
+        """F = 0 at θ = 0°."""
+        _, _, mag_cls = student_classes
+        sim = mag_cls()
+        F = sim.magnetic_force(B=0.5, q=1.6e-19, v=1e6, theta_degrees=0.0)
+        if abs(F) > 1e-20:
+            pytest.fail(
+                f"Your force at 0° is {F:.4e} N, "
+                f"expected 0.0 N. sin(0) = 0, so F should be 0."
+            )
+
+    def test_orbit_radius_formula(
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
+    ) -> None:
+        """r = m v / (|q| B)."""
+        _, _, mag_cls = student_classes
+        sim = mag_cls()
+        r = sim.orbit_radius(m=1.67e-27, v=1e6, q=1.6e-19, B=0.5)
+        expected = 1.67e-27 * 1e6 / (1.6e-19 * 0.5)
+        rel_err = abs(r - expected) / expected
+        if rel_err > 0.01:
+            pytest.fail(
+                f"Your orbit radius is {r:.4e} m, "
+                f"expected {expected:.4e} m "
+                f"(relative error {rel_err*100:.2f}%). "
+                f"Use r = m * v / (|q| * B)."
+            )
+
+    def test_radius_inverse_with_B(
+        self, student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]]
+    ) -> None:
+        """r ∝ 1/B."""
+        _, _, mag_cls = student_classes
+        sim = mag_cls()
+        r1 = sim.orbit_radius(m=1.67e-27, v=1e6, q=1.6e-19, B=0.5)
+        r2 = sim.orbit_radius(m=1.67e-27, v=1e6, q=1.6e-19, B=1.0)
+        if abs(r2 - r1 / 2.0) / (r1 / 2.0) > 0.02:
+            pytest.fail(
+                f"Doubling B should halve the radius. "
+                f"r(B=0.5) = {r1:.4e}, r(B=1.0) = {r2:.4e}. "
+                f"Expected r(B=1.0) = {r1 / 2.0:.4e}."
+            )
+
+
+# ===========================================================================
 # Self-check
 # ===========================================================================
 
 
 def test_selfcheck_correct_passes(
-    student_classes: Tuple[Type[ElectricField], Type[Circuit]],
+    student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]],
 ) -> None:
     """Self-check: the grader must PASS when given the correct solution."""
-    ef_cls, ckt_cls = student_classes
+    ef_cls, ckt_cls, _ = student_classes
 
     # Check field
     ef = ef_cls(q=1e-9)
@@ -259,10 +352,10 @@ def test_selfcheck_correct_passes(
 
 
 def test_selfcheck_wrong_fails(
-    wrong_student_classes: Tuple[Type[ElectricField], Type[Circuit]],
+    wrong_student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]],
 ) -> None:
     """Self-check: the grader must FAIL when given a deliberately wrong answer."""
-    ef_cls, ckt_cls = wrong_student_classes
+    ef_cls, ckt_cls, _ = wrong_student_classes
 
     # Wrong electric field should give wrong magnitude (E ∝ 1/r instead of 1/r²)
     ef = ef_cls(q=1e-9)
@@ -295,14 +388,14 @@ def test_selfcheck_wrong_fails(
 
 def test_selfcheck_runner(
     request: pytest.FixtureRequest,
-    student_classes: Tuple[Type[ElectricField], Type[Circuit]],
-    wrong_student_classes: Tuple[Type[ElectricField], Type[Circuit]],
+    student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]],
+    wrong_student_classes: Tuple[Type[ElectricField], Type[Circuit], Type[MovingCharge]],
 ) -> None:
     """Orchestrate the full self-check when ``--selfcheck`` is passed."""
     if not request.config.getoption("--selfcheck"):
         pytest.skip("Use --selfcheck to run the full self-check")
 
-    ef_cls, _ = student_classes
+    ef_cls, _ckt, _mag = student_classes
     ef = ef_cls()
     # Verify it's not the wrong answer
     a = ef.field(1.0, 0.0)

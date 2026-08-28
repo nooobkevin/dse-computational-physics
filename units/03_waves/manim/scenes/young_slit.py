@@ -42,13 +42,16 @@ from manim import (
     RED,
     RIGHT,
     Scene,
+    Text,
     UP,
     VGroup,
+    VMobject,
     YELLOW,
     always_redraw,
+    Axes,
 )
 
-from physics_core.waves.equations import young_slit_angle
+from physics_core.waves.equations import young_slit_angle, young_slit_intensity
 
 
 class YoungSlit(Scene):
@@ -129,12 +132,12 @@ class YoungSlit(Scene):
             fringes.add(fringe_mark)
 
             # Label
-            label = MathTex(f"n={n}", font_size=16, color=YELLOW)
+            label = Text(f"n={n}", font_size=16, color=YELLOW)
             label.next_to(fringe_pos, RIGHT, buff=0.1)
             fringe_labels.add(label)
 
         # Central maximum label
-        central_label = MathTex("n=0", font_size=18, color=GREEN)
+        central_label = Text("n=0", font_size=18, color=GREEN)
         central_label.next_to(screen_x * RIGHT, RIGHT, buff=0.1)
 
         # ------------------------------------------------------------------
@@ -184,6 +187,83 @@ class YoungSlit(Scene):
         path_label = always_redraw(path_difference_text)
 
         # ------------------------------------------------------------------
+        # Intensity distribution panel (additive — keeps all existing content)
+        # ------------------------------------------------------------------
+        slit_width: float = 0.02e-3  # 0.02 mm slit width for diffraction envelope
+
+        intensity_axes = Axes(
+            x_range=[-screen_half_height, screen_half_height, 1],
+            y_range=[0, 1.1, 0.2],
+            x_length=3.0,
+            y_length=2.0,
+            axis_config={
+                "color": GREY_D,
+                "include_numbers": True,
+                "font_size": 12,
+            },
+        )
+        intensity_axes.to_corner(DOWN + RIGHT, buff=0.5)
+
+        intensity_title = MathTex(
+            "\\text{Intensity } I(y)", font_size=18,
+        ).next_to(intensity_axes, UP, buff=0.1)
+
+        def intensity_curve() -> VMobject:
+            """Build the I(y) curve as a single VMobject."""
+            n_pts = 200
+            ys = np.linspace(-screen_half_height, screen_half_height, n_pts)
+            # Convert scene y to physical y: scale factor
+            phys_scale = screen_half_height * 2.0  # maps scene coords to physical
+            intensities = [
+                young_slit_intensity(
+                    y * fringe_spacing / phys_scale,
+                    slit_separation=slit_sep,
+                    slit_width=slit_width,
+                    screen_distance=screen_dist,
+                    wavelength=wavelength,
+                )
+                for y in ys
+            ]
+            pts = [
+                intensity_axes.c2p(float(y), float(I))
+                for y, I in zip(ys, intensities)
+            ]
+            vm = VMobject(color=YELLOW, stroke_width=2)
+            vm.set_points_as_corners(pts)
+            return vm
+
+        intensity_curve_mob = always_redraw(intensity_curve)
+
+        # Maxima/minima labels (static — computed once)
+        max_min_labels = VGroup()
+        for n in range(-n_orders, n_orders + 1):
+            y_pos = n * fringe_spacing
+            y_scene = y_pos / (screen_half_height * 2) * screen_half_height * 2
+            if abs(y_scene) > screen_half_height:
+                continue
+            I_val = young_slit_intensity(
+                y_pos,
+                slit_separation=slit_sep,
+                slit_width=slit_width,
+                screen_distance=screen_dist,
+                wavelength=wavelength,
+            )
+            if I_val > 0.5:
+                label = Text(
+                    f"max n={n}", font_size=10, color=YELLOW,
+                )
+            else:
+                label = Text(
+                    f"min n={n}", font_size=10, color=GRAY,
+                )
+            label.next_to(
+                intensity_axes.c2p(float(y_scene), float(I_val)),
+                UP if I_val > 0.5 else DOWN,
+                buff=0.05,
+            )
+            max_min_labels.add(label)
+
+        # ------------------------------------------------------------------
         # Physics driver — sets authoritative time from the scene clock
         # ------------------------------------------------------------------
         def updater(_mob: Mobject, dt: float) -> None:
@@ -200,6 +280,7 @@ class YoungSlit(Scene):
         self.add(slit_dots, screen_line)
         self.add(fringes, fringe_labels, central_label)
         self.add(rays, path_label)
+        self.add(intensity_axes, intensity_title, intensity_curve_mob, max_min_labels)
         self.add(driver)
 
         self.wait(8.0)

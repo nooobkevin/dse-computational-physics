@@ -22,14 +22,27 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SCENES_DIR="$SCRIPT_DIR/scenes"
 OUTPUT_DIR="$SCRIPT_DIR/output"
-SCENE_NAMES=("linearisation" "uncertainty" "conclusion")
+SCENE_NAMES=("linearisation" "linearisation_transforms" "uncertainty" "uncertainty_repeated" "conclusion" "epidemic" "engineering_design")
+
+# Map scene name to scene file (some scenes share a file)
+scene_file() {
+    case "$1" in
+        linearisation_transforms) echo "linearisation" ;;
+        uncertainty_repeated)     echo "uncertainty" ;;
+        *)                        echo "$1" ;;
+    esac
+}
 
 # Map scene name to scene class name
 scene_class() {
     case "$1" in
-        linearisation) echo "Linearisation" ;;
-        uncertainty)   echo "Uncertainty" ;;
-        conclusion)    echo "Conclusion" ;;
+linearisation) echo "Linearisation" ;;
+    linearisation_transforms) echo "LinearisationTransforms" ;;
+    uncertainty)   echo "Uncertainty" ;;
+    uncertainty_repeated) echo "UncertaintyRepeated" ;;
+    conclusion)    echo "Conclusion" ;;
+    epidemic)      echo "EpidemicSpread" ;;
+    engineering_design) echo "EngineeringDesign" ;;
         *)             echo "$1" ;;
     esac
 }
@@ -52,7 +65,7 @@ fi
 
 # ── Render each scene ────────────────────────────────────────────────
 for scene in "${TARGETS[@]}"; do
-    SCENE_FILE="$SCENES_DIR/${scene}.py"
+    SCENE_FILE="$SCENES_DIR/$(scene_file "$scene").py"
 
     if [ ! -f "$SCENE_FILE" ]; then
         echo "ERROR: Scene file not found: $SCENE_FILE"

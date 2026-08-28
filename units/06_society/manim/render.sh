@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SCENES_DIR="$SCRIPT_DIR/scenes"
 OUTPUT_DIR="$SCRIPT_DIR/output"
-SCENE_NAMES=("radioactive_decay" "radiation_penetration" "chain_reaction")
+SCENE_NAMES=("radioactive_decay" "radiation_penetration" "chain_reaction" "energy_sources" "radioisotope_uses")
 
 # ── Quality flag ─────────────────────────────────────────────────────
 QUALITY="${2:--qh}"

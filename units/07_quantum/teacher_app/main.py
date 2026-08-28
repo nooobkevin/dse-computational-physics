@@ -5,6 +5,10 @@ Usage
     uv run python units/07_quantum/teacher_app/main.py --mode well
     uv run python units/07_quantum/teacher_app/main.py --mode photoelectric
     uv run python units/07_quantum/teacher_app/main.py --mode de_broglie
+    uv run python units/07_quantum/teacher_app/main.py --mode laser
+    uv run python units/07_quantum/teacher_app/main.py --mode rutherford
+    uv run python units/07_quantum/teacher_app/main.py --mode hydrogen
+    uv run python units/07_quantum/teacher_app/main.py --mode uncertainty
     uv run python units/07_quantum/teacher_app/main.py --mode well --headless-selfcheck
 """
 
@@ -32,6 +36,9 @@ from physics_core.quantum.wavefunctions import (
     ReferenceQuantumWell,
 )
 from physics_core.quantum.photoelectric import E_CHARGE, PhotoElectric
+from physics_core.quantum.lasers import ReferenceLaser
+from physics_core.quantum.rutherford import ReferenceRutherfordScattering
+from physics_core.quantum.bohr import BohrHydrogen
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -53,6 +60,8 @@ COLOR_KE = (0, 255, 100)
 COLOR_STOPPING = (0, 100, 255)
 COLOR_DE_BROGLIE = (0, 200, 255)
 COLOR_GRID = (50, 50, 50)
+COLOR_NO = (0, 0, 255)      # red
+COLOR_LASER = (0, 255, 0)  # green laser
 
 # ---------------------------------------------------------------------------
 # CLI
@@ -64,7 +73,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         required=True,
-        choices=["well", "photoelectric", "de_broglie"],
+        choices=["well", "photoelectric", "de_broglie", "laser",
+                 "rutherford", "hydrogen", "uncertainty"],
         help="Demo mode",
     )
     parser.add_argument(
@@ -450,6 +460,368 @@ def _run_de_broglie(args: argparse.Namespace) -> None:
     cv2.destroyAllWindows()
 
 
+def _run_laser(args: argparse.Namespace) -> None:
+    """Laser mode — population inversion and stimulated emission."""
+    laser = ReferenceLaser(N_upper=100.0, N_lower=10.0, pump_rate=50.0)
+
+    cv2.namedWindow(WIN_NAME)
+
+    while True:
+        canvas = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.uint8)
+
+        # Draw laser cavity
+        cx, cy = CANVAS_W // 2, CANVAS_H // 2
+
+        # Mirrors
+        cv2.rectangle(canvas, (cx - 300, cy - 80), (cx - 290, cy + 80), (200, 200, 200), -1)
+        cv2.rectangle(canvas, (cx + 290, cy - 80), (cx + 300, cy + 80), (200, 200, 200), -1)
+
+        # Gain medium
+        cv2.rectangle(canvas, (cx - 200, cy - 60), (cx + 200, cy + 60), (50, 50, 50), 1)
+
+        # Laser beam (coherent light)
+        photon_count = laser.state["photon_count"]
+        beam_intensity = min(1.0, photon_count / 50.0)
+        if beam_intensity > 0.01:
+            beam_color = (0, int(255 * beam_intensity), int(255 * beam_intensity))
+            cv2.line(canvas, (cx - 290, cy), (cx + 290, cy), beam_color, 3)
+            # Output beam
+            cv2.line(canvas, (cx + 290, cy), (cx + 350, cy), beam_color, 2)
+
+        # Energy level diagram
+        ey = 150
+        # Upper level
+        cv2.line(canvas, (50, ey), (250, ey), COLOR_LASER, 2)
+        cv2.putText(canvas, f"N_upper = {laser.N_upper:.0f}", (260, ey + 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_LASER, 1)
+        # Lower level
+        cv2.line(canvas, (50, ey + 100), (250, ey + 100), COLOR_NO, 2)
+        cv2.putText(canvas, f"N_lower = {laser.N_lower:.0f}", (260, ey + 105),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_NO, 1)
+
+        # Population inversion indicator
+        inversion = laser.population_inversion
+        inv_color = COLOR_LASER if inversion else COLOR_NO
+        inv_text = "Population inversion: YES" if inversion else "Population inversion: NO"
+        cv2.putText(canvas, inv_text, (50, ey + 140),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, inv_color, 2)
+
+        # Info panel
+        info = [
+            "Laser — Stimulated Emission",
+            f"Photon count: {photon_count:.1f}",
+            f"Pump rate: {laser.pump_rate:.0f} atoms/s",
+            "",
+            "Stimulated emission requires",
+            "population inversion (N_upper > N_lower).",
+            "Coherent photons build up in the cavity.",
+            "",
+            "Press ESC to exit",
+        ]
+        for i, line in enumerate(info):
+            cv2.putText(canvas, line, (50, 400 + i * 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_TEXT, 1)
+
+        # Step the simulation
+        laser.step(0.05)
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:
+            break
+
+    cv2.destroyAllWindows()
+
+
+# ---------------------------------------------------------------------------
+# Rutherford mode
+# ---------------------------------------------------------------------------
+
+
+def _run_rutherford(args: argparse.Namespace) -> None:
+    """Rutherford scattering: impact parameter slider, live θ and trajectory."""
+    sim = ReferenceRutherfordScattering(Z1=2, Z2=79, E=5.0e6 * E_CHARGE)
+    b = 1e-14  # initial impact parameter
+    E = 5.0e6 * E_CHARGE  # 5 MeV
+    scale = 1.5e13  # m → pixels (approx)
+
+    cv2.namedWindow(WIN_NAME)
+
+    while True:
+        canvas = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.uint8)
+
+        # Compute scattering angle
+        theta = sim.scattering_angle(b, E)
+        theta_deg = math.degrees(theta)
+
+        # ---- Trajectory plot ----
+        traj_region = (40, 40, 700, 600)
+        rx, ry, rw, rh = traj_region
+        cv2.rectangle(canvas, (rx, ry), (rx + rw, ry + rh), COLOR_AXIS, 1)
+        cv2.putText(canvas, "Rutherford Scattering Trajectory", (rx + 5, ry + 18),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        # Draw gold nucleus at centre
+        cx = rx + rw // 2
+        cy = ry + rh // 2
+        cv2.circle(canvas, (cx, cy), 10, (0, 215, 255), -1)  # gold
+        cv2.putText(canvas, "Au", (cx - 8, cy + 4),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 1)
+
+        # Compute and draw trajectory
+        pts = sim.trajectory_points(b, E, n_points=200, r_max=3e-13)
+        if len(pts) >= 2:
+            traj_px = []
+            for px, py in pts:
+                sx = int(cx + px * scale)
+                sy = int(cy - py * scale)
+                traj_px.append((sx, sy))
+            traj_arr = np.array(traj_px, dtype=np.int32)
+            cv2.polylines(canvas, [traj_arr], False, COLOR_LEVEL, 2, cv2.LINE_AA)
+
+        # Draw incoming direction
+        cv2.arrowedLine(canvas, (rx + 10, cy), (cx - 30, cy), COLOR_AXIS, 1, tipLength=0.1)
+
+        # ---- Info panel ----
+        info_lines = [
+            f"Alpha particle (Z=2) → Gold nucleus (Z=79)",
+            f"Energy: {E / E_CHARGE:.1e} eV",
+            f"Impact parameter b = {b:.2e} m",
+            f"Scattering angle θ = {theta_deg:.1f}°",
+            "",
+            "Keys: ↑↓ adjust b (×1.5 / ÷1.5)",
+            "      ESC: exit",
+        ]
+        for i, line in enumerate(info_lines):
+            cv2.putText(canvas, line, (760, 40 + i * 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:
+            break
+        elif key == 82:  # ↑
+            b *= 1.5
+        elif key == 84:  # ↓
+            b /= 1.5
+            if b < 1e-20:
+                b = 1e-20
+
+    cv2.destroyAllWindows()
+
+
+# ---------------------------------------------------------------------------
+# Hydrogen mode
+# ---------------------------------------------------------------------------
+
+
+def _run_hydrogen(args: argparse.Namespace) -> None:
+    """Bohr hydrogen: n-level slider, emission/absorption, live photon λ."""
+    bohr = BohrHydrogen()
+    n_max = 10
+    selected_n = 2
+    target_n = 1
+    show_emission = True
+
+    cv2.namedWindow(WIN_NAME)
+
+    while True:
+        canvas = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.uint8)
+
+        # ---- Energy level diagram ----
+        level_region = (20, 20, 500, 600)
+        rx, ry, rw, rh = level_region
+        cv2.rectangle(canvas, (rx, ry), (rx + rw, ry + rh), COLOR_AXIS, 1)
+        cv2.putText(canvas, "Hydrogen Energy Levels (Bohr Model)", (rx + 5, ry + 18),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, COLOR_TEXT, 1)
+
+        # Compute energies
+        energies = [bohr.energy_level(n) for n in range(1, n_max + 1)]
+        e_min = min(energies)
+        e_max = 0.0  # ionisation limit
+
+        # Draw levels
+        wall_left = rx + 80
+        wall_right = rx + rw - 40
+        well_top = ry + 50
+        well_bottom = ry + rh - 50
+        well_height = well_bottom - well_top
+
+        for n_idx in range(n_max):
+            n = n_idx + 1
+            e = energies[n_idx]
+            e_frac = (e - e_min) / max(e_max - e_min, 1e-10)
+            level_y = int(well_bottom - e_frac * well_height)
+
+            is_selected = (n == selected_n)
+            is_target = (n == target_n)
+            color = COLOR_LEVEL
+            thickness = 1
+            if is_selected:
+                color = (0, 255, 255)  # yellow
+                thickness = 3
+            if is_target:
+                color = COLOR_TRANSITION
+                thickness = 2
+
+            cv2.line(canvas, (wall_left, level_y), (wall_right, level_y), color, thickness)
+            label = f"n={n}  E={e:.2f} eV"
+            cv2.putText(canvas, label, (wall_right + 5, level_y + 4),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.35, COLOR_TEXT, 1)
+
+        # Ionisation limit
+        ion_y = int(well_bottom)
+        cv2.line(canvas, (wall_left, ion_y), (wall_right, ion_y), COLOR_AXIS, 1)
+        cv2.putText(canvas, "Ionisation limit (E=0)", (wall_right + 5, ion_y + 4),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, COLOR_AXIS, 1)
+
+        # Transition arrow
+        if show_emission:
+            n_i, n_f = selected_n, target_n
+        else:
+            n_i, n_f = target_n, selected_n
+
+        if n_i != n_f:
+            e_i = energies[n_i - 1]
+            e_f = energies[n_f - 1]
+            y_i = int(well_bottom - ((e_i - e_min) / max(e_max - e_min, 1e-10)) * well_height)
+            y_f = int(well_bottom - ((e_f - e_min) / max(e_max - e_min, 1e-10)) * well_height)
+            mid_x = (wall_left + wall_right) // 2
+            cv2.arrowedLine(canvas, (mid_x, y_i), (mid_x, y_f), COLOR_TRANSITION, 2, tipLength=0.15)
+
+            delta_e = bohr.transition_energy(n_i, n_f)
+            lam = bohr.transition_wavelength(n_i, n_f)
+            lam_nm = lam * 1e9
+            delta_e_abs = abs(delta_e)
+            transition_type = "Emission" if n_f < n_i else "Absorption"
+            info = f"{transition_type}: ΔE = {delta_e_abs:.2f} eV, λ = {lam_nm:.1f} nm"
+            cv2.putText(canvas, info, (rx + 5, ry + rh - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_TRANSITION, 1)
+
+        # ---- Info panel ----
+        info_lines = [
+            f"Selected n = {selected_n}",
+            f"Target n = {target_n}",
+            f"Mode: {'Emission' if show_emission else 'Absorption'}",
+            "",
+            "Keys: 1-9 select upper level",
+            "      t: toggle emission/absorption",
+            "      ESC: exit",
+        ]
+        for i, line in enumerate(info_lines):
+            cv2.putText(canvas, line, (540, 40 + i * 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:
+            break
+        elif ord("1") <= key <= ord(str(min(n_max, 9))):
+            selected_n = key - ord("0")
+        elif key == ord("t"):
+            show_emission = not show_emission
+            if show_emission:
+                target_n = 1 if selected_n > 1 else 2
+            else:
+                target_n = selected_n + 1 if selected_n < n_max else selected_n
+
+    cv2.destroyAllWindows()
+
+
+# ---------------------------------------------------------------------------
+# Uncertainty mode
+# ---------------------------------------------------------------------------
+
+
+def _run_uncertainty(args: argparse.Namespace) -> None:
+    """Heisenberg uncertainty: Δx·Δp ≥ ħ/2, slider for well width L."""
+    hbar = 1.054571817e-34  # reduced Planck constant (J·s)
+    m_e = 9.10938356e-31  # electron mass (kg)
+    e_charge = 1.602176634e-19  # elementary charge (C)
+
+    well_width = 1e-10  # initial well width (m)
+    L_min = 1e-11
+    L_max = 1e-9
+
+    cv2.namedWindow(WIN_NAME)
+
+    while True:
+        canvas = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.uint8)
+
+        # Compute uncertainty quantities
+        delta_x = well_width  # position uncertainty ≈ well width
+        delta_p = hbar / (2.0 * delta_x)  # minimum momentum uncertainty
+        e_min = (delta_p * delta_p) / (2.0 * m_e)  # minimum kinetic energy
+        e_min_eV = e_min / e_charge
+
+        # ---- Graph: Δx vs Δp ----
+        graph_region = (40, 40, 700, 500)
+        rx, ry, rw, rh = graph_region
+        cv2.rectangle(canvas, (rx, ry), (rx + rw, ry + rh), COLOR_AXIS, 1)
+        cv2.putText(canvas, "Heisenberg Uncertainty Principle", (rx + 5, ry + 18),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        # Draw Δx · Δp ≥ ħ/2 curve
+        n_points = 200
+        x_vals = [L_min + (L_max - L_min) * i / n_points for i in range(n_points + 1)]
+        p_vals = [hbar / (2.0 * x) for x in x_vals]
+
+        curve_pts = [(x, p) for x, p in zip(x_vals, p_vals)]
+        draw_graph(
+            canvas,
+            graph_region,
+            curve_pts,
+            COLOR_LEVEL,
+            x_label="Δx (m)",
+            y_label="Δp (kg·m/s)",
+            title="Δx · Δp ≥ ħ/2",
+            x_range=(L_min, L_max),
+            y_range=(0, max(p_vals) * 1.2),
+        )
+
+        # Mark current point
+        margin = 35
+        gx = rx + margin
+        gy = ry + margin
+        gw = rw - 2 * margin
+        gh = rh - 2 * margin
+        x_px = int(gx + (well_width - L_min) / (L_max - L_min) * gw)
+        y_px = int(gy + (max(p_vals) * 1.2 - delta_p) / (max(p_vals) * 1.2) * gh)
+        cv2.circle(canvas, (x_px, y_px), 6, (0, 255, 255), -1)
+
+        # ---- Info panel ----
+        info_lines = [
+            f"Well width L = Δx = {well_width:.2e} m",
+            f"Δp ≥ ħ/(2Δx) = {delta_p:.2e} kg·m/s",
+            f"Δx · Δp = {delta_x * delta_p:.2e} J·s",
+            f"ħ/2 = {hbar / 2.0:.2e} J·s",
+            f"Product ≥ ħ/2: {'YES ✓' if delta_x * delta_p >= hbar / 2.0 else 'NO ✗'}",
+            "",
+            f"Minimum KE = {e_min_eV:.2f} eV",
+            "",
+            "Keys: ←→ adjust L",
+            "      ESC: exit",
+        ]
+        for i, line in enumerate(info_lines):
+            cv2.putText(canvas, line, (760, 40 + i * 25),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:
+            break
+        elif key == 81:  # ←
+            well_width /= 1.2
+            if well_width < L_min:
+                well_width = L_min
+        elif key == 83:  # →
+            well_width *= 1.2
+            if well_width > L_max:
+                well_width = L_max
+
+    cv2.destroyAllWindows()
+
+
 # ---------------------------------------------------------------------------
 # Headless self-check
 # ---------------------------------------------------------------------------
@@ -501,6 +873,53 @@ def _headless_selfcheck(mode: str) -> None:
         assert lam2 < lam, "Higher momentum should give shorter wavelength"
         print("de Broglie self-check OK")
 
+    elif mode == "laser":
+        laser = ReferenceLaser(N_upper=100.0, N_lower=10.0)
+        assert laser.population_inversion, "Population inversion should exist"
+        photons = laser.stimulated_emission()
+        assert photons > 0, "Stimulated emission should produce photons"
+        laser.step(0.1)
+        assert laser.state["photon_count"] > 0, "Photon count should increase"
+        print("Laser self-check OK (stimulated emission verified)")
+
+    elif mode == "rutherford":
+        sim = ReferenceRutherfordScattering(Z1=2, Z2=79, E=5.0e6 * E_CHARGE)
+        # Head-on: b→0 gives θ→π
+        theta_head = sim.scattering_angle(1e-20, 5.0e6 * E_CHARGE)
+        assert abs(theta_head - math.pi) < 0.01, (
+            f"Head-on θ={theta_head}, expected π"
+        )
+        # Large b gives small angle
+        theta_large = sim.scattering_angle(1e-12, 5.0e6 * E_CHARGE)
+        assert theta_large < 0.1, f"Large b should give small angle, got {theta_large}"
+        # Trajectory non-empty
+        pts = sim.trajectory_points(1e-14, 5.0e6 * E_CHARGE, n_points=50)
+        assert len(pts) >= 2, "Trajectory should have multiple points"
+        print("Rutherford self-check OK")
+
+    elif mode == "hydrogen":
+        bohr = BohrHydrogen()
+        # E₁ = -13.6 eV
+        assert abs(bohr.energy_level(1) - (-13.6)) < 0.01
+        # Lyman-alpha ~ 121.6 nm
+        lam = bohr.transition_wavelength(2, 1)
+        assert abs(lam - 121.6e-9) / 121.6e-9 < 0.01
+        # Ionisation from n=1 = 13.6 eV
+        ion = bohr.ionisation_energy(1)
+        assert abs(ion - 13.6) < 0.01
+        print("Hydrogen self-check OK")
+
+    elif mode == "uncertainty":
+        hbar = 1.054571817e-34
+        L_test = 1e-10
+        delta_x = L_test
+        delta_p = hbar / (2.0 * delta_x)
+        product = delta_x * delta_p
+        assert product >= hbar / 2.0, (
+            f"Δx·Δp = {product} should be ≥ ħ/2 = {hbar/2.0}"
+        )
+        print("Uncertainty self-check OK")
+
     sys.exit(0)
 
 
@@ -522,6 +941,14 @@ def main() -> None:
         _run_photoelectric(args)
     elif args.mode == "de_broglie":
         _run_de_broglie(args)
+    elif args.mode == "laser":
+        _run_laser(args)
+    elif args.mode == "rutherford":
+        _run_rutherford(args)
+    elif args.mode == "hydrogen":
+        _run_hydrogen(args)
+    elif args.mode == "uncertainty":
+        _run_uncertainty(args)
 
 
 if __name__ == "__main__":

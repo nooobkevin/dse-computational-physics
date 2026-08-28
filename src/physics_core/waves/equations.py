@@ -174,3 +174,102 @@ def diffraction_grating_angle(
         Angle θ (rad).
     """
     return young_slit_angle(wavelength, grating_spacing, order)
+
+
+def malus_law(intensity_in: float, angle: float) -> float:
+    """Malus's law: transmitted intensity through a polariser.
+
+    I = I₀ cos²(θ)
+
+    Parameters
+    ----------
+    intensity_in : float
+        Incident intensity I₀ (arbitrary units).
+    angle : float
+        Angle between the polariser axis and the incident polarisation
+        direction (rad).
+
+    Returns
+    -------
+    float
+        Transmitted intensity (arbitrary units).
+    """
+    return intensity_in * (math.cos(angle) ** 2)
+
+
+def ultrasound_echo_distance(speed: float, echo_time: float) -> float:
+    """Distance to a reflector from pulse-echo ultrasound.
+
+    d = v × t / 2
+
+    Parameters
+    ----------
+    speed : float
+        Speed of sound in the medium (m/s).
+    echo_time : float
+        Round-trip time for the pulse to travel to the reflector and
+        back (s).
+
+    Returns
+    -------
+    float
+        Distance to the reflector (m).
+    """
+    if echo_time < 0.0:
+        raise ValueError(f"echo_time must be >= 0, got {echo_time}")
+    return speed * echo_time / 2.0
+
+
+def young_slit_intensity(
+    y: float,
+    slit_separation: float,
+    slit_width: float,
+    screen_distance: float,
+    wavelength: float,
+    intensity_0: float = 1.0,
+) -> float:
+    """Intensity at position y on the screen for Young's double-slit.
+
+    I(y) = I₀ cos²(π d y / λ D) · sinc²(π a y / λ D)
+
+    where *d* is the slit separation, *a* is the slit width, *D* is the
+    screen distance, and λ is the wavelength.  The sinc² factor accounts
+    for single-slit diffraction modulation.
+
+    Parameters
+    ----------
+    y : float
+        Position on the screen measured from the central axis (m).
+    slit_separation : float
+        Distance between the two slits (m).
+    slit_width : float
+        Width of each slit (m).
+    screen_distance : float
+        Distance from the slits to the screen (m).
+    wavelength : float
+        Wavelength of the light (m).
+    intensity_0 : float
+        Peak intensity at the central maximum (default 1.0).
+
+    Returns
+    -------
+    float
+        Relative intensity I(y) / I₀ (arbitrary units).
+    """
+    if wavelength <= 0.0:
+        raise ValueError(f"wavelength must be > 0, got {wavelength}")
+    if screen_distance <= 0.0:
+        raise ValueError(f"screen_distance must be > 0, got {screen_distance}")
+
+    # Interference factor: cos²(π d y / λ D)
+    beta = math.pi * slit_separation * y / (wavelength * screen_distance)
+    interference = math.cos(beta) ** 2
+
+    # Diffraction envelope: sinc²(π a y / λ D)
+    alpha = math.pi * slit_width * y / (wavelength * screen_distance)
+    if abs(alpha) < 1e-15:
+        diffraction = 1.0
+    else:
+        diffraction = (math.sin(alpha) / alpha) ** 2
+
+    return intensity_0 * interference * diffraction

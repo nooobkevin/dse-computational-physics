@@ -66,12 +66,14 @@ class PendulumSim:
         dt: float = 0.01,
         scheme: str = "verlet",
         small_angle: bool = False,
+        damping_coefficient: float = 0.0,
     ) -> None:
         self.length = length
         self.g = g
         self.mass = mass
         self.dt = dt
         self.small_angle = small_angle
+        self.damping_coefficient = damping_coefficient
 
         if scheme not in ("euler", "verlet"):
             raise ValueError(f"scheme must be 'euler' or 'verlet', got {scheme!r}")
@@ -183,9 +185,15 @@ class ReferencePendulumSim(PendulumSim):
 
     The angular acceleration is the exact non-linear expression
     ``-(g/L) sin(θ)``, or ``-(g/L) θ`` when *small_angle* is True.
+    When *damping_coefficient* > 0, a linear damping term ``-b·ω``
+    is added: ``α = -(g/L) sin(θ) - b·ω``.
     """
 
     def angular_acceleration(self, theta: float, omega: float) -> float:
         if self.small_angle:
-            return -(self.g / self.length) * theta
-        return -(self.g / self.length) * math.sin(theta)
+            a = -(self.g / self.length) * theta
+        else:
+            a = -(self.g / self.length) * math.sin(theta)
+        # Linear damping: -b * omega
+        a -= self.damping_coefficient * omega
+        return a

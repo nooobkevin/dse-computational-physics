@@ -12,6 +12,7 @@ from physics_core.thermal.equations import (
     most_probable_speed,
     rms_speed,
 )
+from physics_core.thermal.random_walk import RandomWalk
 
 
 class TestGasSim:
@@ -203,6 +204,82 @@ class TestReferenceGasSim:
             f"Verlet drift {drift * 100:.3f}% — expected < 0.5%"
         )
 
+    # ------------------------------------------------------------------
+    # Gas-law helper tests
+    # ------------------------------------------------------------------
+
+    def test_set_volume_scales_positions(self) -> None:
+        """set_volume should rescale positions proportionally."""
+        sim = ReferenceGasSim(N=10, L=10.0, T=1.0, seed=42)
+        old_pos = sim._positions.copy()
+        sim.set_volume(5.0)
+        assert sim.L == pytest.approx(5.0)
+        # Positions should be scaled by 0.5
+        np.testing.assert_array_almost_equal(
+            sim._positions, old_pos * 0.5
+        )
+
+    def test_set_volume_raises_for_non_positive(self) -> None:
+        sim = ReferenceGasSim(N=5, L=10.0, T=1.0)
+        with pytest.raises(ValueError, match="Box side length must be positive"):
+            sim.set_volume(-1.0)
+
+    def test_set_temperature_rescales_ke(self) -> None:
+        """set_temperature should change KE proportionally."""
+        sim = ReferenceGasSim(N=50, L=10.0, T=1.0, dt=0.01, seed=42)
+        ke_before = sim.energy()["kinetic"]
+        sim.set_temperature(4.0)
+        ke_after = sim.energy()["kinetic"]
+        # KE should scale by factor of 4 (T doubles, so KE doubles in 2D)
+        # In 2D: KE = N * kB * T, so KE ratio = T_ratio
+        ratio = ke_after / ke_before
+        assert ratio == pytest.approx(4.0, rel=0.05), (
+            f"KE ratio={ratio:.4f}, expected 4.0"
+        )
+
+    def test_set_temperature_raises_for_non_positive(self) -> None:
+        sim = ReferenceGasSim(N=5, L=10.0, T=1.0)
+        with pytest.raises(ValueError, match="Temperature must be positive"):
+            sim.set_temperature(-1.0)
+
+    def test_gas_law_isothermal_curve_boyle(self) -> None:
+        """Isothermal P-V curve should approximately follow P ∝ 1/V."""
+        sim = ReferenceGasSim(
+            N=100, L=15.0, T=2.0, dt=0.01, dim=2,
+            particle_radius=0.05, seed=42,
+        )
+        V_values = [100.0, 150.0, 225.0, 300.0]
+        curve = sim.gas_law_isothermal_curve(
+            V_values, equilibration_steps=300, sample_steps=100, seed=42
+        )
+        # P * V should be approximately constant (Boyle's law)
+        pv_products = [P * V for V, P in curve]
+        mean_pv = float(np.mean(pv_products))
+        for V, P in curve:
+            pv = P * V
+            assert pv == pytest.approx(mean_pv, rel=0.25), (
+                f"P*V={pv:.4f} at V={V:.1f}, mean={mean_pv:.4f}"
+            )
+
+    def test_gas_law_isochoric_curve_p_t(self) -> None:
+        """Isochoric P-T curve should approximately follow P ∝ T."""
+        sim = ReferenceGasSim(
+            N=100, L=15.0, T=2.0, dt=0.01, dim=2,
+            particle_radius=0.05, seed=42,
+        )
+        T_values = [1.0, 2.0, 3.0, 4.0]
+        curve = sim.gas_law_isochoric_curve(
+            T_values, equilibration_steps=500, sample_steps=200, seed=42
+        )
+        # P / T should be approximately constant
+        pt_ratios = [P / T for T, P in curve]
+        mean_ratio = float(np.mean(pt_ratios))
+        for T, P in curve:
+            ratio = P / T
+            assert ratio == pytest.approx(mean_ratio, rel=0.35), (
+                f"P/T={ratio:.4f} at T={T:.1f}, mean={mean_ratio:.4f}"
+            )
+
 
 class TestMaxwellBoltzmannEquations:
     """Tests for the Maxwell-Boltzmann distribution helpers."""
@@ -271,3 +348,114 @@ class TestMaxwellBoltzmannEquations:
         f_after = maxwell_boltzmann(vp * 1.5, T, m, dim=2)
         assert f_at_vp > f_before
         assert f_at_vp > f_after
+
+
+class TestRandomWalk:
+    """Tests for the RandomWalk engine."""
+
+    def test_rms_scaling_with_n(self) -> None:
+        """RMS displacement should scale as sqrt(N) * step_length."""
+        rw = RandomWalk(n_walkers=5000, n_steps=100, step_length=1.0, dim=2, seed=42)
+        # Check RMS at final step
+        rms_final = rw.rms[-1]
+        theoretical = rw.rms_theoretical[-1]
+        # Should be close (within 5% for 5000 walkers)
+        assert rms_final == pytest.approx(theoretical, rel=0.05), (
+            f"RMS={rms_final:.4f}, theoretical={theoretical:.4f}"
+        )
+
+    def test_rms_scaling_multi_step(self) -> None:
+        """RMS at each step should approximately follow sqrt(N)."""
+        rw = RandomWalk(n_walkers=2000, n_steps=50, step_length=0.5, dim=2, seed=42)
+        # Check a few intermediate steps
+        for s in [10, 25, 40]:
+            rms_s = rw.rms[s]
+            theo_s = rw.rms_theoretical[s]
+            assert rms_s == pytest.approx(theo_s, rel=0.1), (
+                f"At step {s}: RMS={rms_s:.4f}, theoretical={theo_s:.4f}"
+            )
+
+    def test_determinism_same_seed(self) -> None:
+        """Same seed should produce identical trajectories."""
+        rw1 = RandomWalk(n_walkers=10, n_steps=50, dim=2, seed=123)
+        rw2 = RandomWalk(n_walkers=10, n_steps=50, dim=2, seed=123)
+        np.testing.assert_array_equal(rw1.positions, rw2.positions)
+
+    def test_determinism_different_seed(self) -> None:
+        """Different seeds should produce different trajectories."""
+        rw1 = RandomWalk(n_walkers=10, n_steps=50, dim=2, seed=123)
+        rw2 = RandomWalk(n_walkers=10, n_steps=50, dim=2, seed=456)
+        assert not np.allclose(rw1.positions, rw2.positions)
+
+    def test_1d_rms_scaling(self) -> None:
+        """1D random walk RMS should also scale as sqrt(N)."""
+        rw = RandomWalk(n_walkers=5000, n_steps=100, step_length=1.0, dim=1, seed=42)
+        rms_final = rw.rms[-1]
+        theoretical = rw.rms_theoretical[-1]
+        assert rms_final == pytest.approx(theoretical, rel=0.05)
+
+    def test_distribution_symmetric(self) -> None:
+        """Final displacement distribution should be roughly symmetric
+        about zero (mean near zero for many walkers)."""
+        rw = RandomWalk(n_walkers=2000, n_steps=50, step_length=1.0, dim=2, seed=42)
+        final_pos = rw.positions[:, -1, :]  # (W, 2)
+        mean_x = float(np.mean(final_pos[:, 0]))
+        mean_y = float(np.mean(final_pos[:, 1]))
+        # Mean should be near zero (within 0.3 step lengths)
+        assert abs(mean_x) < 0.3, f"Mean x={mean_x:.4f} too far from zero"
+        assert abs(mean_y) < 0.3, f"Mean y={mean_y:.4f} too far from zero"
+
+    def test_final_displacement_distribution(self) -> None:
+        """Final displacement distribution should return valid bins."""
+        rw = RandomWalk(n_walkers=100, n_steps=30, dim=2, seed=42)
+        counts, bin_edges = rw.final_displacement_distribution(bins=10)
+        assert len(counts) > 0
+        assert len(bin_edges) == 11
+        assert np.sum(counts) == rw.n_walkers
+
+    def test_step_length_affects_rms(self) -> None:
+        """Doubling step length should double RMS."""
+        rw1 = RandomWalk(n_walkers=2000, n_steps=50, step_length=1.0, dim=2, seed=42)
+        rw2 = RandomWalk(n_walkers=2000, n_steps=50, step_length=2.0, dim=2, seed=42)
+        ratio = rw2.rms[-1] / rw1.rms[-1]
+        assert ratio == pytest.approx(2.0, rel=0.1), (
+            f"RMS ratio={ratio:.4f}, expected 2.0"
+        )
+
+    def test_origin_start(self) -> None:
+        """All walkers should start at the origin."""
+        rw = RandomWalk(n_walkers=50, n_steps=20, dim=2, seed=42)
+        positions = rw.positions
+        assert np.all(positions[:, 0, :] == 0.0)
+
+    def test_invalid_dim(self) -> None:
+        """dim must be 1 or 2."""
+        with pytest.raises(ValueError, match="dim must be 1 or 2"):
+            RandomWalk(dim=3)
+
+    def test_invalid_n_walkers(self) -> None:
+        with pytest.raises(ValueError, match="n_walkers must be >= 1"):
+            RandomWalk(n_walkers=0)
+
+    def test_invalid_n_steps(self) -> None:
+        with pytest.raises(ValueError, match="n_steps must be >= 1"):
+            RandomWalk(n_steps=0)
+
+    def test_invalid_step_length(self) -> None:
+        with pytest.raises(ValueError, match="step_length must be positive"):
+            RandomWalk(step_length=0.0)
+
+    def test_position_distribution_at_step_2d(self) -> None:
+        """position_distribution_at_step should return valid bins for 2D."""
+        rw = RandomWalk(n_walkers=100, n_steps=30, dim=2, seed=42)
+        xc, xe, yc, ye = rw.position_distribution_at_step(step=15, bins=10)
+        assert len(xc) > 0
+        assert len(yc) > 0
+        assert len(xe) == 11
+        assert len(ye) == 11
+
+    def test_position_distribution_at_step_1d_raises(self) -> None:
+        """position_distribution_at_step should raise for dim=1."""
+        rw = RandomWalk(n_walkers=10, n_steps=10, dim=1, seed=42)
+        with pytest.raises(ValueError, match="requires dim=2"):
+            rw.position_distribution_at_step(step=5)

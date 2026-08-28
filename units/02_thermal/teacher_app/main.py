@@ -4,6 +4,8 @@ Usage
 -----
     uv run python units/02_thermal/teacher_app/main.py --mode gas
     uv run python units/02_thermal/teacher_app/main.py --mode gas --headless-selfcheck
+    uv run python units/02_thermal/teacher_app/main.py --mode gas_laws
+    uv run python units/02_thermal/teacher_app/main.py --mode gas_laws --headless-selfcheck
 """
 
 from __future__ import annotations
@@ -50,7 +52,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         required=True,
-        choices=["gas"],
+        choices=["gas", "gas_laws"],
         help="Demo mode",
     )
     parser.add_argument(
@@ -342,6 +344,162 @@ def _run_gas(args: argparse.Namespace) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Gas laws mode runner
+# ---------------------------------------------------------------------------
+
+
+def _run_gas_laws(args: argparse.Namespace) -> None:
+    """Gas laws mode — Boyle's law (P-V) and absolute-zero extrapolation (P-T).
+
+    Shows two live graphs:
+    - Left: P vs V (Boyle's law) — isothermal compression/expansion
+    - Right: P vs T (pressure law) — isochoric heating with absolute-zero
+      extrapolation line
+    """
+    N = 100
+    T_init = 2.0
+    L = 15.0
+    dt = 0.01
+
+    sim = ReferenceGasSim(
+        N=N, L=L, T=T_init, m=1.0, dt=dt, dim=2,
+        particle_radius=0.05, seed=42,
+    )
+
+    # Pre-compute Boyle's law curve (P vs V at constant T)
+    V_values = np.linspace(100.0, 350.0, 8).tolist()
+    boyle_curve = sim.gas_law_isothermal_curve(
+        V_values, equilibration_steps=300, sample_steps=100, seed=42
+    )
+
+    # Pre-compute pressure law curve (P vs T at constant V)
+    T_sim_values = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+    pt_curve = sim.gas_law_isochoric_curve(
+        T_sim_values, equilibration_steps=300, sample_steps=100, seed=42
+    )
+
+    # Convert simulation T to Celsius for absolute-zero extrapolation
+    # Map: simulation T=0 → -273.15°C, simulation T=2.0 → 0°C (arbitrary mapping)
+    # We use: T_Celsius = (T_sim - 2.0) * 100.0  (so T_sim=2 → 0°C, T_sim=4 → 200°C)
+    T_scale = 100.0
+    T_offset = 2.0  # simulation T that maps to 0°C
+    pt_celsius = [
+        ((T_sim - T_offset) * T_scale, P) for T_sim, P in pt_curve
+    ]
+
+    # Linear fit to P-T data for absolute-zero extrapolation
+    T_c_vals = np.array([tc for tc, _ in pt_celsius], dtype=np.float64)
+    P_vals = np.array([P for _, P in pt_curve], dtype=np.float64)
+    if len(T_c_vals) >= 2:
+        coeffs = np.polyfit(T_c_vals, P_vals, 1)
+        slope = coeffs[0]
+        intercept = coeffs[1]
+        # Absolute zero: P = 0 → T = -intercept / slope
+        if abs(slope) > 1e-12:
+            abs_zero_C = -intercept / slope
+        else:
+            abs_zero_C = -273.15
+    else:
+        slope = 0.0
+        intercept = 0.0
+        abs_zero_C = -273.15
+
+    # Layout regions
+    boyle_region = (50, 50, 550, 400)
+    pt_region = (680, 50, 550, 400)
+    info_x = 50
+    info_y = 500
+
+    cv2.namedWindow(WIN_NAME)
+
+    while True:
+        canvas = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.uint8)
+
+        # Draw Boyle's law (P vs V)
+        draw_graph(
+            canvas, boyle_region, boyle_curve,
+            color=(0, 200, 255),  # yellow-orange
+            x_label="V", y_label="P",
+            title="Boyle's law: P vs V (isothermal)",
+        )
+
+        # Draw pressure law (P vs T in Celsius)
+        draw_graph(
+            canvas, pt_region, pt_celsius,
+            color=(0, 255, 255),  # yellow
+            x_label="T (°C)", y_label="P",
+            title="Pressure law: P vs T (isochoric)",
+        )
+
+        # Draw absolute-zero extrapolation line on P-T graph
+        rx, ry, rw, rh = pt_region
+        margin = 35
+        gx = rx + margin
+        gy = ry + margin
+        gw = rw - 2 * margin
+        gh = rh - 2 * margin
+
+        # Determine visible T range
+        all_tc = [tc for tc, _ in pt_celsius]
+        t_min = min(all_tc) - 50.0
+        t_max = max(all_tc) + 50.0
+        # Extend to include absolute zero
+        t_min = min(t_min, abs_zero_C - 50.0)
+
+        all_p = [P for _, P in pt_curve]
+        p_min = 0.0
+        p_max = max(all_p) * 1.2 if max(all_p) > 0 else 1.0
+
+        def to_px_celsius(tc: float, p: float) -> Tuple[int, int]:
+            px = int(gx + (tc - t_min) / (t_max - t_min) * gw)
+            py = int(gy + (p_max - p) / (p_max - p_min) * gh)
+            return (px, py)
+
+        # Draw extrapolation line (dashed)
+        if abs(slope) > 1e-12:
+            t_extrap_start = abs_zero_C
+            t_extrap_end = t_max
+            p_start = slope * t_extrap_start + intercept
+            p_end = slope * t_extrap_end + intercept
+            pt1 = to_px_celsius(t_extrap_start, p_start)
+            pt2 = to_px_celsius(t_extrap_end, p_end)
+            cv2.line(canvas, pt1, pt2, (100, 100, 255), 1, cv2.LINE_AA)  # red-ish dashed
+
+        # Mark absolute zero
+        abs_zero_px = to_px_celsius(abs_zero_C, 0.0)
+        cv2.circle(canvas, abs_zero_px, 5, (0, 0, 255), -1)
+        cv2.putText(
+            canvas,
+            f"Absolute zero: {abs_zero_C:.1f} °C",
+            (abs_zero_px[0] - 80, abs_zero_px[1] - 10),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1,
+        )
+
+        # Info panel
+        info_lines = [
+            f"N = {N}",
+            f"T = {T_init:.2f} (simulation units)",
+            f"Boyle: P x V = constant",
+            f"P-T slope = {slope:.4f}",
+            f"Abs zero = {abs_zero_C:.1f} °C",
+            f"Theoretical: -273.15 °C",
+        ]
+        for i, line in enumerate(info_lines):
+            cv2.putText(
+                canvas, line,
+                (info_x, info_y + i * 25),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1,
+            )
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:  # ESC
+            break
+
+    cv2.destroyAllWindows()
+
+
+# ---------------------------------------------------------------------------
 # Headless self-check
 # ---------------------------------------------------------------------------
 
@@ -367,6 +525,45 @@ def _headless_selfcheck(mode: str) -> None:
             f"(error {rel_err*100:.2f}%)"
         )
         print(f"Thermal self-check OK ({sim.N} particles)")
+    elif mode == "gas_laws":
+        sim = ReferenceGasSim(N=100, L=15.0, T=2.0, dt=0.01, dim=2, particle_radius=0.05, seed=42)
+        # Test Boyle's law: P * V should be approximately constant
+        V_values = [100.0, 200.0, 300.0]
+        boyle = sim.gas_law_isothermal_curve(
+            V_values, equilibration_steps=300, sample_steps=200, seed=42
+        )
+        pv_products = [P * V for V, P in boyle]
+        mean_pv = float(np.mean(pv_products))
+        for V, P in boyle:
+            pv = P * V
+            rel_err = abs(pv - mean_pv) / mean_pv
+            assert rel_err < 0.35, (
+                f"Boyle self-check: P*V={pv:.4f} at V={V:.1f}, mean={mean_pv:.4f}"
+            )
+        # Test pressure law: P / T should be approximately constant
+        T_values = [1.0, 2.0, 3.0]
+        pt = sim.gas_law_isochoric_curve(
+            T_values, equilibration_steps=500, sample_steps=300, seed=42
+        )
+        pt_ratios = [P / T for T, P in pt]
+        mean_ratio = float(np.mean(pt_ratios))
+        for T, P in pt:
+            ratio = P / T
+            rel_err = abs(ratio - mean_ratio) / mean_ratio
+            assert rel_err < 0.35, (
+                f"Pressure law self-check: P/T={ratio:.4f} at T={T:.1f}, mean={mean_ratio:.4f}"
+            )
+        # Test absolute-zero extrapolation
+        T_c_vals = np.array([(T_sim - 2.0) * 100.0 for T_sim, _ in pt], dtype=np.float64)
+        P_vals = np.array([P for _, P in pt], dtype=np.float64)
+        coeffs = np.polyfit(T_c_vals, P_vals, 1)
+        slope = coeffs[0]
+        intercept = coeffs[1]
+        abs_zero_C = -intercept / slope
+        assert abs(abs_zero_C - (-273.15)) / 273.15 < 0.5, (
+            f"Absolute zero self-check: got {abs_zero_C:.1f} °C, expected -273.15 °C"
+        )
+        print(f"Gas laws self-check OK (abs zero = {abs_zero_C:.1f} °C)")
     else:
         print(f"No self-check for mode '{mode}'")
     sys.exit(0)
@@ -386,6 +583,8 @@ def main() -> None:
 
     if args.mode == "gas":
         _run_gas(args)
+    elif args.mode == "gas_laws":
+        _run_gas_laws(args)
 
 
 if __name__ == "__main__":

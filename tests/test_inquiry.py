@@ -189,3 +189,117 @@ class TestHelpers:
         y = np.array([0.0, 1.0, 2.0])
         with pytest.raises(ValueError, match="non-positive"):
             propagate_uncertainty(slope=1.0, intercept=0.0, x_data=x, y_data=y)
+
+
+class TestEpidemicModel:
+    """Tests for the cellular-automaton epidemic model."""
+
+    def test_abstract_raises(self) -> None:
+        """Abstract base should raise NotImplementedError on step()."""
+        from physics_core.inquiry.complex_systems import EpidemicModel
+
+        m = EpidemicModel(rows=10, cols=10, p_infect=0.3, p_recover=0.1, seed=42)
+        with pytest.raises(NotImplementedError):
+            m.step()
+
+    def test_initial_state(self) -> None:
+        """Initial state: centre infected, rest susceptible."""
+        m = get_ref_epidemic(rows=10, cols=10)
+        s, i, r = m.sir_counts()
+        assert s == 99
+        assert i == 1
+        assert r == 0
+
+    def test_infection_spreads(self) -> None:
+        """Infection spreads from the centre seed."""
+        m = get_ref_epidemic(rows=50, cols=50, p_infect=0.5, p_recover=0.05)
+        history = m.run(200)
+        max_i = max(h[1] for h in history)
+        assert max_i > 1, "Infection should spread from initial seed"
+
+    def test_r_monotonic(self) -> None:
+        """Recovered count must be non-decreasing."""
+        m = get_ref_epidemic(rows=30, cols=30, p_infect=0.4, p_recover=0.08)
+        history = m.run(150)
+        r_counts = [h[2] for h in history]
+        for i in range(1, len(r_counts)):
+            assert r_counts[i] >= r_counts[i - 1], (
+                f"R dropped at step {i}: {r_counts[i - 1]} -> {r_counts[i]}"
+            )
+
+    def test_deterministic_same_seed(self) -> None:
+        """Same seed produces identical trajectory."""
+        m1 = get_ref_epidemic(rows=30, cols=30, p_infect=0.3, p_recover=0.1)
+        m2 = get_ref_epidemic(rows=30, cols=30, p_infect=0.3, p_recover=0.1)
+        h1 = m1.run(100)
+        h2 = m2.run(100)
+        for i, (a, b) in enumerate(zip(h1, h2)):
+            assert a == b, f"Trajectory diverged at step {i}: {a} vs {b}"
+
+    def test_no_infection_when_p_infect_zero(self) -> None:
+        """p_infect=0 means no spread beyond the initial seed."""
+        m = get_ref_epidemic(rows=20, cols=20, p_infect=0.0, p_recover=0.1)
+        history = m.run(50)
+        peak_i = max(h[1] for h in history)
+        assert peak_i <= 1, (
+            f"With p_infect=0, max I should be <= 1, got {peak_i}"
+        )
+
+    def test_run_returns_including_initial(self) -> None:
+        """run(steps) returns steps+1 entries, starting with initial state."""
+        m = get_ref_epidemic(rows=10, cols=10)
+        h = m.run(50)
+        assert len(h) == 51
+        assert h[0] == (99, 1, 0)
+
+    def test_grid_property_returns_copy(self) -> None:
+        """grid property returns a copy, not a reference."""
+        m = get_ref_epidemic(rows=10, cols=10)
+        g = m.grid
+        g[0, 0] = 99
+        assert m.grid[0, 0] != 99
+
+    def test_small_grid_raises(self) -> None:
+        """Grids smaller than 3x3 raise ValueError."""
+        with pytest.raises(ValueError):
+            get_ref_epidemic(rows=2, cols=10)
+
+    def test_invalid_p_infect_raises(self) -> None:
+        with pytest.raises(ValueError):
+            get_ref_epidemic(p_infect=-0.1)
+
+    def test_invalid_p_recover_raises(self) -> None:
+        with pytest.raises(ValueError):
+            get_ref_epidemic(p_recover=1.5)
+
+    def test_basic_reproduction_number(self) -> None:
+        """R0 computation is correct."""
+        from physics_core.inquiry.complex_systems import basic_reproduction_number
+
+        r0 = basic_reproduction_number(0.5, 0.1)
+        assert r0 == pytest.approx(20.0)
+        # When p_recover is zero, R0 is infinite
+        import math
+        assert basic_reproduction_number(0.3, 0.0) == math.inf
+
+    def test_history_accessor(self) -> None:
+        """history() returns the per-step S/I/R counts."""
+        m = get_ref_epidemic(rows=10, cols=10, p_infect=0.5, p_recover=0.05)
+        m.run(10)
+        h = m.history()
+        assert len(h) == 11  # initial + 10 steps
+
+
+def get_ref_epidemic(
+    rows: int = 50,
+    cols: int = 50,
+    p_infect: float = 0.3,
+    p_recover: float = 0.1,
+    seed: int = 42,
+):
+    """Helper: create a ReferenceEpidemicModel for testing."""
+    from physics_core.inquiry.complex_systems import ReferenceEpidemicModel
+
+    return ReferenceEpidemicModel(
+        rows=rows, cols=cols, p_infect=p_infect, p_recover=p_recover, seed=seed
+    )

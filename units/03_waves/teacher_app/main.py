@@ -18,6 +18,7 @@ import cv2
 import numpy as np
 
 from physics_core.waves.wave_sim import ReferenceWaveSim
+from physics_core.waves.equations import intensity_inverse_square
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -50,7 +51,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         required=True,
-        choices=["traveling", "standing", "interference"],
+        choices=["traveling", "standing", "interference", "inverse_square"],
         help="Demo mode",
     )
     parser.add_argument(
@@ -475,7 +476,163 @@ def _run_interference(args: argparse.Namespace) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Headless self-check
+# Inverse-square law mode
+# ---------------------------------------------------------------------------
+
+
+def _run_inverse_square(args: argparse.Namespace) -> None:
+    """Inverse-square law mode — point source + detector at distance r.
+
+    Shows:
+    - A point source (bright circle) and detector (small circle) at distance r
+    - Live I vs r plot building data points as r changes
+    - A log-log inset showing the straight line of slope -2
+    """
+    I0 = 100.0  # reference intensity at r=1
+
+    # Data collection
+    data_points: list[tuple[float, float]] = []  # (r, I)
+    r_min = 0.3
+    r_max = 5.0
+    r = r_min
+    dr = 0.02
+
+    # Layout
+    scene_x0, scene_y0 = 40, 50
+    scene_w, scene_h = 500, 350
+    source_pos = (scene_x0 + 60, scene_y0 + scene_h // 2)
+
+    cv2.namedWindow(WIN_NAME)
+
+    while True:
+        canvas = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.uint8)
+
+        # --- Scene: point source + detector ---
+        I = intensity_inverse_square(r, I0)
+
+        # Source (bright circle)
+        cv2.circle(canvas, source_pos, 20, (0, 255, 255), -1)
+        cv2.circle(canvas, source_pos, 20, (255, 255, 255), 1)
+        cv2.putText(
+            canvas, "Source", (source_pos[0] - 30, source_pos[1] - 30),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1,
+        )
+
+        # Detector at distance r
+        det_x = source_pos[0] + int(r * 60)
+        det_y = source_pos[1]
+        cv2.circle(canvas, (det_x, det_y), 8, (0, 255, 0), -1)
+        cv2.circle(canvas, (det_x, det_y), 8, (255, 255, 255), 1)
+        cv2.putText(
+            canvas, "Detector", (det_x - 30, det_y - 20),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1,
+        )
+
+        # Distance line
+        cv2.line(canvas, source_pos, (det_x, det_y), COLOR_AXIS, 1, cv2.LINE_AA)
+
+        # --- Info panel ---
+        info = [
+            f"Inverse-Square Law: I ∝ 1/r²",
+            f"r = {r:.2f} m",
+            f"I = I₀ / r² = {I:.2f}",
+            f"Data points: {len(data_points)}",
+        ]
+        for i, line in enumerate(info):
+            cv2.putText(
+                canvas, line, (10, 30 + i * 25),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_TEXT, 1,
+            )
+
+        # --- I vs r plot (right side) ---
+        # Collect data point at current r
+        if len(data_points) == 0 or abs(data_points[-1][0] - r) > 0.05:
+            data_points.append((r, I))
+
+        plot_region = (560, 40, 350, 300)
+        draw_graph(
+            canvas, plot_region, data_points, COLOR_WAVE,
+            x_label="r (m)", y_label="I",
+            title="I vs r",
+            x_range=(0, r_max + 0.5),
+            y_range=(0, I0 + 10),
+        )
+
+        # --- Log-log inset (bottom right) ---
+        if len(data_points) >= 3:
+            log_points = [
+                (math.log10(p[0]), math.log10(p[1]))
+                for p in data_points
+                if p[0] > 0 and p[1] > 0
+            ]
+            inset_region = (560, 360, 250, 200)
+            draw_graph(
+                canvas, inset_region, log_points, COLOR_RESULT,
+                x_label="log(r)", y_label="log(I)",
+                title="Log-Log (slope = -2)",
+            )
+
+            # Theoretical slope line
+            if log_points:
+                lx_vals = [p[0] for p in log_points]
+                lx_min, lx_max = min(lx_vals), max(lx_vals)
+                if lx_max - lx_min > 0.01:
+                    ix, iy, iw, ih = inset_region
+                    margin = 35
+                    gx = ix + margin
+                    gy = iy + margin
+                    gw = iw - 2 * margin
+                    gh = ih - 2 * margin
+
+                    # I ∝ 1/r² → log(I) = -2*log(r) + const
+                    # Fit a line to the log data
+                    lx_arr = np.array([p[0] for p in log_points])
+                    ly_arr = np.array([p[1] for p in log_points])
+                    if len(lx_arr) >= 2:
+                        A_fit = np.vstack([lx_arr, np.ones_like(lx_arr)]).T
+                        m_fit, c_fit = np.linalg.lstsq(A_fit, ly_arr, rcond=None)[0]
+
+                        # Extend to full inset width
+                        px_min = gx
+                        px_max = gx + gw
+                        l_min = lx_min - (lx_max - lx_min) * 0.1
+                        l_max = lx_max + (lx_max - lx_min) * 0.1
+                        ly_min_fit = m_fit * l_min + c_fit
+                        ly_max_fit = m_fit * l_max + c_fit
+
+                        log_range_x = (l_min, l_max)
+                        log_range_y = (min(ly_min_fit, ly_max_fit), max(ly_min_fit, ly_max_fit))
+                        if log_range_y[1] - log_range_y[0] < 0.01:
+                            log_range_y = (log_range_y[0] - 0.5, log_range_y[1] + 0.5)
+
+                        def log_to_inset(wx: float, wy: float) -> tuple[int, int]:
+                            ppx = int(gx + (wx - l_min) / (l_max - l_min) * gw)
+                            ppy = int(gy + (log_range_y[1] - wy) / (log_range_y[1] - log_range_y[0]) * gh)
+                            return (ppx, ppy)
+
+                        p1 = log_to_inset(l_min, ly_min_fit)
+                        p2 = log_to_inset(l_max, ly_max_fit)
+                        cv2.line(canvas, p1, p2, (0, 255, 255), 1, cv2.LINE_AA)
+
+                        # Show slope
+                        cv2.putText(
+                            canvas, f"Slope = {m_fit:.2f}",
+                            (ix + 5, iy + ih - 8),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_RESULT, 1,
+                        )
+
+        # Advance r
+        r += dr
+        if r > r_max:
+            r = r_min
+            data_points.clear()
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:
+            break
+
+    cv2.destroyAllWindows()
 # ---------------------------------------------------------------------------
 
 
@@ -519,6 +676,25 @@ def _headless_selfcheck(mode: str) -> None:
         assert fringe_spacing > 0, "Fringe spacing must be positive"
         print(f"Interference self-check OK (fringe spacing = {fringe_spacing*1e3:.4f} mm)")
 
+    elif mode == "inverse_square":
+        # Verify inverse-square law engine function
+        from physics_core.waves.equations import intensity_inverse_square
+
+        I0 = 100.0
+        # At r=1, I should equal I0
+        I1 = intensity_inverse_square(1.0, I0)
+        assert abs(I1 - I0) < 1e-12, f"At r=1, I should be {I0}, got {I1}"
+        # At r=2, I should be I0/4
+        I2 = intensity_inverse_square(2.0, I0)
+        assert abs(I2 - I0 / 4.0) < 1e-12, f"At r=2, I should be {I0/4}, got {I2}"
+        # At r=3, I should be I0/9
+        I3 = intensity_inverse_square(3.0, I0)
+        assert abs(I3 - I0 / 9.0) < 1e-12, f"At r=3, I should be {I0/9}, got {I3}"
+        # Log-log slope should be -2: log(I) = -2*log(r) + log(I0)
+        log_slope = (math.log10(I2) - math.log10(I1)) / (math.log10(2.0) - math.log10(1.0))
+        assert abs(log_slope - (-2.0)) < 1e-12, f"Log-log slope should be -2, got {log_slope}"
+        print("Inverse-square self-check OK (I ∝ 1/r² verified)")
+
     sys.exit(0)
 
 
@@ -540,6 +716,8 @@ def main() -> None:
         _run_standing(args)
     elif args.mode == "interference":
         _run_interference(args)
+    elif args.mode == "inverse_square":
+        _run_inverse_square(args)
 
 
 if __name__ == "__main__":

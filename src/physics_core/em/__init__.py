@@ -2,7 +2,14 @@
 
 from physics_core.em.electrostatics import ElectricField, ReferenceElectricField
 from physics_core.em.circuits import Circuit, ReferenceCircuit
-from physics_core.em.magnetism import MagneticField, ReferenceStraightWire, ReferenceSolenoid
+from physics_core.em.magnetism import (
+    MagneticField,
+    MovingCharge,
+    ReferenceBarMagnet,
+    ReferenceMovingCharge,
+    ReferenceSolenoid,
+    ReferenceStraightWire,
+)
 
 __all__ = [
     "ElectricField",
@@ -10,6 +17,9 @@ __all__ = [
     "Circuit",
     "ReferenceCircuit",
     "MagneticField",
-    "ReferenceStraightWire",
+    "MovingCharge",
+    "ReferenceBarMagnet",
+    "ReferenceMovingCharge",
     "ReferenceSolenoid",
+    "ReferenceStraightWire",
 ]

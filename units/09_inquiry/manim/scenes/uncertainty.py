@@ -31,6 +31,7 @@ from manim import (
     MathTex,
     ORANGE,
     RED,
+    RIGHT,
     Scene,
     Text,
     UP,
@@ -228,3 +229,154 @@ class UncertaintyShort(Scene):
 
         self.add(axes, dots, fit_line, result)
         self.wait(3.0)
+
+
+class UncertaintyRepeated(Scene):
+    """Repeated measurements with outlier detection and mean±std."""
+
+    def construct(self) -> None:
+        title = Text(
+            "Repeated Measurements & Outlier Detection", font_size=28, color=YELLOW
+        )
+        title.to_edge(UP)
+        self.play(Write(title), run_time=0.8)
+        self.wait(0.3)
+
+        # Simulated repeated measurements of the same quantity
+        rng = np.random.default_rng(42)
+        true_value = 9.81  # m/s² for g
+        values = true_value + rng.normal(0, 0.15, size=5)
+        values[3] = 10.45  # Introduce a clear outlier (value 4)
+
+        # Original mean and std
+        mean_orig = float(np.mean(values))
+        std_orig = float(np.std(values, ddof=1))
+
+        # IQR outlier detection
+        q1 = float(np.percentile(values, 25))
+        q3 = float(np.percentile(values, 75))
+        iqr = q3 - q1
+        lower = q1 - 1.5 * iqr
+        upper = q3 + 1.5 * iqr
+
+        # Filter outliers
+        values_clean = np.array([v for v in values if lower <= v <= upper])
+        mean_clean = float(np.mean(values_clean))
+        std_clean = float(np.std(values_clean, ddof=1)) if len(values_clean) > 1 else 0.0
+
+        # Intro text
+        intro = VGroup(
+            Text("5 repeated measurements of g (m/s²):", font_size=20, color=GRAY),
+        )
+        intro.arrange(DOWN, aligned_edge=LEFT, buff=0.1)
+        intro.next_to(title, DOWN, buff=0.3).align_to(LEFT, LEFT).shift(LEFT * 3.5)
+        self.play(Write(intro), run_time=0.5)
+
+        # Draw scatter of individual measurements
+        axes = Axes(
+            x_range=[0, 2, 1],
+            y_range=[9.0, 11.0, 0.5],
+            x_length=4.0,
+            y_length=3.5,
+            axis_config={"color": GRAY_A, "include_numbers": True, "font_size": 18},
+        )
+        axes.move_to(RIGHT * 0.5 + DOWN * 0.2)
+        self.play(Create(axes), run_time=0.8)
+        self.add(
+            MathTex("\\text{Trial}", font_size=18, color=GRAY).next_to(
+                axes.x_axis.get_end(), DOWN
+            ),
+            MathTex("g\\; (\\text{m/s}^2)", font_size=18, color=GRAY).next_to(
+                axes.y_axis.get_end(), LEFT
+            ),
+        )
+
+        # Plot points
+        x_positions = np.linspace(0.2, 1.8, 5)
+        point_group = VGroup()
+        labels_group = VGroup()
+        for i, (xv, yv) in enumerate(zip(x_positions, values)):
+            is_outlier = not (lower <= yv <= upper)
+            color = RED if is_outlier else BLUE_B
+            dot = Dot(axes.c2p(xv, yv), color=color, radius=0.08)
+            point_group.add(dot)
+            label = MathTex(
+                f"{yv:.2f}",
+                font_size=14, color=color,
+            )
+            label.next_to(dot, UP, buff=0.1)
+            labels_group.add(label)
+
+        for d in point_group:
+            self.play(FadeIn(d), run_time=0.3)
+        for l in labels_group:
+            self.play(Write(l), run_time=0.2)
+
+        self.wait(0.3)
+
+        # Show mean line and std band (before outlier removal)
+        mean_line_orig = axes.get_horizontal_line(
+            axes.c2p(0, mean_orig), color=ORANGE, stroke_width=2
+        )
+        self.play(Create(mean_line_orig), run_time=0.5)
+
+        mean_label_orig = MathTex(
+            f"\\bar{{g}} = {mean_orig:.3f}", font_size=16, color=ORANGE
+        )
+        mean_label_orig.next_to(mean_line_orig, LEFT, buff=0.2)
+        self.play(Write(mean_label_orig), run_time=0.4)
+
+        # Outlier flagging
+        outlier_idx = np.where(
+            (values < lower) | (values > upper)
+        )[0]
+        if len(outlier_idx) > 0:
+            flag_text = Text(
+                f"Outlier! IQR = [{lower:.2f}, {upper:.2f}]",
+                font_size=16, color=RED,
+            )
+            flag_text.next_to(axes, DOWN, buff=0.3)
+            self.play(Write(flag_text), run_time=0.6)
+
+        self.wait(0.5)
+
+        # Show corrected mean
+        new_mean_line = axes.get_horizontal_line(
+            axes.c2p(0, mean_clean), color=GREEN, stroke_width=3
+        )
+        self.play(Create(new_mean_line), run_time=0.5)
+
+        corrected_label = MathTex(
+            f"\\text{{Corrected }}\\bar{{g}} = {mean_clean:.3f}",
+            font_size=18, color=GREEN,
+        )
+        corrected_label.next_to(new_mean_line, RIGHT, buff=0.3)
+        self.play(Write(corrected_label), run_time=0.5)
+
+        self.wait(0.5)
+
+        # Summary info panel (right)
+        summary_lines = [
+            "Original:",
+            f"  Mean = {mean_orig:.4f} m/s²",
+            f"  Std = {std_orig:.4f} m/s²",
+            "",
+            "IQR method:",
+            f"  Q1 = {q1:.3f}, Q3 = {q3:.3f}",
+            f"  IQR = {iqr:.3f}",
+            f"  Outlier < {lower:.3f} or > {upper:.3f}",
+            "",
+            "After outlier removal:",
+            f"  N = {len(values_clean)} points",
+            f"  Corrected mean = {mean_clean:.4f} m/s²",
+            f"  Corrected std = {std_clean:.4f} m/s²",
+            f"  True value = {true_value:.2f} m/s²",
+        ]
+        summary = VGroup(
+            *[Text(line, font_size=14, color=GRAY) for line in summary_lines]
+        )
+        summary.arrange(DOWN, aligned_edge=LEFT, buff=0.04)
+        summary.next_to(title, DOWN, buff=0.5).align_to(RIGHT, RIGHT).shift(LEFT * 0.5)
+        for line in summary:
+            self.play(Write(line), run_time=0.25)
+        self.wait(1.5)

@@ -3,10 +3,13 @@
 # render.sh — Render Manim scenes for Unit 07: Quantum Physics.
 #
 # Usage:
-#   ./render.sh                         # render all three scenes
+#   ./render.sh                         # render all six scenes
 #   ./render.sh energy_levels           # render a specific scene
 #   ./render.sh photoelectric
 #   ./render.sh wavefunction_probability
+#   ./render.sh rutherford_scattering
+#   ./render.sh hydrogen_spectra
+#   ./render.sh superposition_state
 #
 # Quality:
 #   Pass -q <flag> as the second argument, e.g.:
@@ -22,7 +25,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SCENES_DIR="$SCRIPT_DIR/scenes"
 OUTPUT_DIR="$SCRIPT_DIR/output"
-SCENE_NAMES=("energy_levels" "photoelectric" "wavefunction_probability")
+SCENE_NAMES=("energy_levels" "photoelectric" "wavefunction_probability"
+             "rutherford_scattering" "hydrogen_spectra" "superposition_state")
 
 # ── Quality flag ─────────────────────────────────────────────────────
 QUALITY="${2:--qm}"
