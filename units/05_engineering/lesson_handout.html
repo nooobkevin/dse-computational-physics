@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DSE Computational Physics — Lesson Handout</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">@page { size: A4; margin: 14mm 14mm 16mm 14mm; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font-family: "PingFang HK", "PingFang TC", "Microsoft JhengHei",
+               "Noto Sans CJK TC", "Noto Sans TC", "Heiti TC",
+               "Hiragino Sans GB", "Source Han Sans TC", sans-serif;
+  font-size: 10.5pt; line-height: 1.45; color: #1a1a1a; margin: 0;
+}
+h1 { font-size: 16pt; margin: 0 0 2pt 0; color: #0b3d66; }
+h2 { font-size: 12pt; margin: 10pt 0 3pt 0; color: #0b3d66;
+     border-bottom: 1.5px solid #0b3d66; padding-bottom: 1pt; }
+h3 { font-size: 11pt; margin: 7pt 0 2pt 0; color: #14507a; }
+p  { margin: 3pt 0; }
+ul, ol { margin: 3pt 0 3pt 0; padding-left: 16pt; }
+li { margin: 1pt 0; }
+table { border-collapse: collapse; width: 100%; margin: 4pt 0; font-size: 9.5pt; }
+th, td { border: 1px solid #b9c6d2; padding: 2pt 5pt; text-align: left; vertical-align: top; }
+th { background: #e8eef4; color: #0b3d66; }
+tr:nth-child(even) td { background: #f6f9fb; }
+code { font-family: "SF Mono", Menlo, Consolas, "Courier New", monospace;
+       font-size: 9pt; background: #f0f2f5; padding: 0 2pt; border-radius: 2pt; }
+pre { background: #f0f2f5; border: 1px solid #d5dbe2; border-radius: 3pt;
+      padding: 5pt 7pt; overflow-x: auto; font-size: 9pt; }
+pre code { background: none; padding: 0; }
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DSE Computational Physics — Lesson Handout</h1>
+</header>
+<h1 id="unit-05-physics-and-engineering-工程物理-s5">Unit 05: Physics
+and Engineering 工程物理 — S5</h1>
+<h2 id="learning-outcomes-學習目標">Learning Outcomes 學習目標</h2>
+<ul>
+<li><strong>Electromagnetic induction</strong> 電磁感應: flux <span class="math inline"><em>Φ</em> = <em>B</em><em>A</em>cos <em>θ</em></span>;
+Faraday <span class="math inline"><em>ε</em> = −<em>Δ</em><em>Φ</em>/<em>Δ</em><em>t</em></span>;
+Lenz’s law.</li>
+<li><strong>Transformer</strong> 變壓器: <span class="math inline"><em>V</em><sub><em>p</em></sub>/<em>V</em><sub><em>s</em></sub> = <em>N</em><sub><em>p</em></sub>/<em>N</em><sub><em>s</em></sub></span>;
+power conservation; efficiency.</li>
+<li><strong>Domestic electricity</strong> 家居電力: <span class="math inline"><em>I</em> = <em>P</em>/<em>V</em></span>; fuse
+selection; kWh cost.</li>
+<li><strong>Orbital motion</strong> 軌道運動: <span class="math inline"><em>F</em> = <em>G</em><em>M</em><em>m</em>/<em>r</em><sup>2</sup></span>;
+<span class="math inline">$v_{orb} = \sqrt{GM/r}$</span>; <span class="math inline">$v_{esc} = \sqrt{2GM/r}$</span>.</li>
+<li><strong>Bernoulli</strong> 伯努利: <span class="math inline">$P +
+\rho gh + \tfrac{1}{2}\rho v^2 = \text{const}$</span>; pitot tube.</li>
+<li><strong>Energy conservation</strong> 能量守恆: <span class="math inline"><em>U</em> = −<em>G</em><em>M</em><em>m</em>/<em>r</em></span>;
+KE/GPE/total.</li>
+</ul>
+<h2 id="key-formulas-核心公式">Key Formulas 核心公式</h2>
+<table>
+<thead>
+<tr>
+<th>Formula</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline"><em>Φ</em> = <em>B</em><em>A</em>cos <em>θ</em></span></td>
+<td>magnetic flux</td>
+</tr>
+<tr>
+<td><span class="math inline">$\varepsilon = -\frac{\Delta\Phi}{\Delta
+t}$</span></td>
+<td>Faraday’s law</td>
+</tr>
+<tr>
+<td><span class="math inline">$\frac{V_p}{V_s} =
+\frac{N_p}{N_s}$</span></td>
+<td>transformer ratio</td>
+</tr>
+<tr>
+<td><span class="math inline">$I = \frac{P}{V}$</span></td>
+<td>operating current</td>
+</tr>
+<tr>
+<td><span class="math inline">$F = \frac{GMm}{r^2}$</span></td>
+<td>gravitation</td>
+</tr>
+<tr>
+<td><span class="math inline">$v_{orb} =
+\sqrt{\frac{GM}{r}}$</span></td>
+<td>orbital velocity</td>
+</tr>
+<tr>
+<td><span class="math inline">$v_{esc} =
+\sqrt{\frac{2GM}{r}}$</span></td>
+<td>escape velocity</td>
+</tr>
+<tr>
+<td><span class="math inline">$P + \rho gh + \tfrac{1}{2}\rho v^2 =
+\text{const}$</span></td>
+<td>Bernoulli</td>
+</tr>
+</tbody>
+</table>
+<h2 id="lesson-flow-課堂流程">Lesson Flow 課堂流程</h2>
+<ol type="1">
+<li><strong>Watch</strong> 觀看: <code>OrbitalMotion.mp4</code>,
+<code>BernoulliPitot.mp4</code>,
+<code>ElectromagneticInduction.mp4</code>,
+<code>TransformerScene.mp4</code>, <code>MotorEffect.mp4</code>.</li>
+<li><strong>Interact</strong> 互動: teacher app
+<code>--mode transformer|orbital|induction</code> (+ <code>fibre</code>
+enrichment).</li>
+<li><strong>Code</strong> 編程: <code>orbital_exercise.py</code> (5
+hooks) or <code>power_rating_exercise.py</code> (I, fuse, kWh,
+cost).</li>
+</ol>
+<h2 id="simulation-commands-指令">Simulation Commands 指令</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python units/05_engineering/teacher_app/main.py <span class="at">--mode</span> orbital</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> units/05_engineering/manim/render.sh orbital_motion <span class="at">-ql</span>   <span class="co"># Docker</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run pytest units/05_engineering/exercises/test_orbital_exercise.py <span class="at">-v</span></span></code></pre></div>
+<h2 id="assessment-評估">Assessment 評估</h2>
+<ul>
+<li><strong>Exercise</strong> 練習:
+<code>uv run pytest units/05_engineering/exercises/test_orbital_exercise.py -v</code>
+(also <code>test_power_rating_exercise.py</code>).</li>
+<li><strong>Quiz</strong> 小測:
+<code>uv run pytest units/05_engineering/exercises/test_quiz.py</code>
+(expect 10 fails on blank).</li>
+<li><strong>Teacher key</strong> 教師核對:
+<code>DSE_QUIZ_ANSWERS=units/05_engineering/exercises/quiz_solution.py uv run pytest units/05_engineering/exercises/test_quiz.py</code>
+(expect 10 passes).</li>
+</ul>
+</body>
+</html>

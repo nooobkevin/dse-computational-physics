@@ -1,6 +1,8 @@
 # Unit 07: Quantum Physics
 
-## Overview
+> **中文概覽**：本單元涵蓋量子物理的核心概念，包括盧瑟福散射、光電效應、波耳氫原子模型、德布羅意波長、無限方阱、量子疊加與海森堡不確定原理，以及雷射。所有教材均共用同一套 `physics_core` 引擎，確保動畫、教師示範程式與學生練習的物理內容完全一致。
+
+## Overview 概覽
 
 This unit follows the three-artifact pattern shared by every unit in the toolkit:
 
@@ -12,7 +14,7 @@ All three artifacts consume the same `physics_core` engine (`src/physics_core/qu
 
 ---
 
-## Curriculum Learning-Outcome Map
+## Curriculum Learning-Outcome Map 課程學習成果對照
 
 This unit targets the following HKDSE Physics curriculum outcomes (CAF 2026 Consultation Draft):
 
@@ -29,7 +31,7 @@ This unit targets the following HKDSE Physics curriculum outcomes (CAF 2026 Cons
 
 ---
 
-## Lesson Flow (Suggested Sequence)
+## Lesson Flow (Suggested Sequence) 教學流程（建議次序）
 
 ### Step 1: Watch the Manim scene(s)
 
@@ -71,7 +73,7 @@ Students implement `energy_level(self, n)`: E_n = n²h²/(8mL²).
 
 ---
 
-## How to Run Each Artifact
+## How to Run Each Artifact 如何執行各項教材
 
 ### Prerequisites
 
@@ -162,7 +164,7 @@ Solution files (`quantum_solution.py`, `hydrogen_solution.py`) and teacher answe
 
 ---
 
-## Quantum Physics Content Summary
+## Quantum Physics Content Summary 量子物理內容摘要
 
 ### a. Atomic Model — Rutherford scattering
 
@@ -223,7 +225,7 @@ Solution files (`quantum_solution.py`, `hydrogen_solution.py`) and teacher answe
 
 ---
 
-## Physics Engines
+## Physics Engines 物理引擎
 
 | Module | Engine class | Reference class | Purpose |
 |---|---|---|---|
@@ -235,7 +237,7 @@ Solution files (`quantum_solution.py`, `hydrogen_solution.py`) and teacher answe
 
 ---
 
-## Numerical-Methods Tie-In
+## Numerical-Methods Tie-In 數值方法關聯
 
 The quantum simulation engines provide analytic solutions (no ODE integration is needed):
 

@@ -17,6 +17,14 @@ pendulum depends on its length.
 2. What is the **dependent variable**?
 3. List at least **three control variables** that must be kept constant.
 
+**（a）辨識變量**
+
+你正設計一個實驗，探究單擺的週期如何隨其長度而變化。
+
+1. 甚麼是**自變量**？
+2. 甚麼是**因變量**？
+3. 列出至少**三項**必須保持恆定的控制變量。
+
 ### (b) Why linearise?
 
 You collect (L, T) data from a pendulum experiment.  The relationship
@@ -25,6 +33,14 @@ between T and L is non-linear: T = 2π √(L/g).
 1. Why do we plot T² vs L instead of T vs L?
 2. What quantity does the slope of the T² vs L graph represent?
 3. What would the intercept be if the data were perfect?
+
+**（b）為甚麼要線性化？**
+
+你從單擺實驗收集了 (L, T) 數據。T 與 L 的關係是非線性的：T = 2π √(L/g)。
+
+1. 為甚麼我們繪 T² 對 L 的圖，而不是 T 對 L 的圖？
+2. T² 對 L 圖的斜率代表甚麼物理量？
+3. 若數據完美，截距會是多少？
 
 ### (c) Best-fit line vs passing through origin
 
@@ -36,6 +52,14 @@ it should.
 2. Should you force the line through the origin?  Explain the trade-off.
 3. What does a non-zero intercept tell you about your data or experiment?
 
+**（c）最佳擬合線與通過原點**
+
+當你對 T² 對 L 數據擬合一條直線時，最佳擬合線可能不會恰好通過原點 (0, 0)，即使理論預測它應該通過。
+
+1. 為甚麼最佳擬合線可能不通過原點？
+2. 你應否強迫直線通過原點？解釋當中的取捨。
+3. 非零截距告訴你關於數據或實驗的甚麼？
+
 ### (d) Percent error
 
 You estimate g = 9.65 m/s² from your pendulum data.  The accepted value
@@ -44,6 +68,14 @@ is g = 9.81 m/s².
 1. Compute the percent error of your estimate.
 2. Is this a small or large error?  What might cause it?
 3. How would the percent error change if you used a longer pendulum?
+
+**（d）百分誤差**
+
+你從單擺數據估算出 g = 9.65 m/s²。公認值為 g = 9.81 m/s²。
+
+1. 計算你估算值的百分誤差。
+2. 這是小誤差還是大誤差？可能是甚麼造成的？
+3. 若你使用較長的單擺，百分誤差會如何變化？
 
 ### (e) Systematic vs random error
 
@@ -58,6 +90,18 @@ Classify each of the following as **systematic** or **random** error:
 For each, explain whether it makes the measured period longer, shorter, or
 unpredictable.
 
+**（e）系統誤差與隨機誤差**
+
+將以下各項分類為**系統誤差**或**隨機誤差**：
+
+1. 空氣阻力使單擺擺動減慢。
+2. 用量角器讀取角度時的視差誤差。
+3. 啟動／停止秒錶時的人類反應時間。
+4. 小角度近似（sin θ ≈ θ）。
+5. 影片分析中的像素追蹤抖動。
+
+對每一項，解釋它使量得的週期變長、變短，還是不可預測。
+
 ### (f) Evaluation and limitations
 
 After completing your experiment and analysis, you are asked to evaluate
@@ -70,9 +114,18 @@ your investigation.
 4. If your percent error is large, does that mean the experiment was a
    failure?  Explain.
 
+**（f）評估與限制**
+
+完成實驗與分析後，你被要求評估你的探究。
+
+1. 列出你實驗設計的至少**兩項限制**。
+2. 建議**一項**改善，以減少最主要的誤差來源。
+3. 你對估算的 g 值有多大信心？甚麼證據支持你的信心？
+4. 若你的百分誤差很大，是否表示實驗失敗？解釋。
+
 ---
 
-## Model Answers (teacher only)
+## Model Answers (teacher only) 模型答案（僅供教師）
 
 *The section below contains model answers.  Remove it before distributing
 the questions to students.*
@@ -171,6 +224,22 @@ Conclusion: the data strongly supports the theoretical model.
 4. How would you critically evaluate the reliability and scientific accuracy
    of this AI-generated output?  List at least two steps you would take.
 
+**（g）批判性評估 AI 生成的分析**
+
+你使用 AI 工具分析你的單擺數據。AI 輸出：
+
+```
+Fit: T² = 4.12 × L + 0.08
+g = 4π² / 4.12 = 9.58 m/s²
+Percent error vs 9.81 = 2.34%
+Conclusion: the data strongly supports the theoretical model.
+```
+
+1. AI 聲稱數據「強烈支持該模型」。你需要甚麼額外資訊來核實這個說法？（提示：AI 沒有向你展示甚麼？）
+2. 截距為 +0.08 s²，但理論預測為 0。這應否改變你對 AI 結論的信心？解釋。
+3. 若你把原始 (L, T) 數據交給 AI，它自動產生 T² 對 L 圖並擬合，你可能會忽略哪些潛在陷阱？
+4. 你會如何批判性評估這份 AI 生成輸出的可靠性與科學準確性？列出你至少會採取的兩項步驟。
+
 ### (h) Safety assessment
 
 You are designing an experiment to measure the acceleration due to gravity
@@ -190,9 +259,18 @@ a stopwatch.  The experiment will be performed in a school laboratory.
    concerns does this raise?  How would you address them while still
    improving measurement accuracy?
 
+**（h）安全評估**
+
+你正設計一個實驗，從 2.0 m 高度釋放鋼球並用秒錶計時其下落，以量度重力加速度。實驗將在校內實驗室進行。
+
+1. 辨識此實驗中**兩項**潛在安全危害。
+2. 對每項危害，建議一項控制措施以降低風險。
+3. 你決定改用較重（5 kg）的球而非小鋼球，以獲得更「可靠」的量度。這是安全問題嗎？解釋。
+4. 你的朋友建議使用學校天台（高度約 10 m）以獲得更長的下落時間並減少相對計時誤差。這會引起甚麼安全問題？你會如何在仍改善量度準確度的同時處理這些問題？
+
 ---
 
-## Model Answers (teacher only)
+## Model Answers (teacher only) 模型答案（僅供教師）
 
 *The section below contains model answers.  Remove it before distributing
 the questions to students.*

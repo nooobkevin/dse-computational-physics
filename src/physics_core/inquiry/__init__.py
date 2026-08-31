@@ -6,18 +6,26 @@ Students fill in the analysis hook (e.g. a model function or a least-squares
 formula), while :class:`ReferenceLinearFit` provides the correct
 least-squares linear regression implementation.
 
-New in this CAF iteration
--------------------------
-- :class:`EpidemicModel` / :class:`ReferenceEpidemicModel` — cellular
-  automaton SIR epidemic simulation (CAF complex-systems topic).
+Complex systems
+---------------
+- :class:`EpidemicModel` / :class:`ReferenceEpidemicModel` — deterministic
+  cellular-automaton SIR epidemic simulation (CAF complex-systems topic).
+- :class:`ForestFireModel` / :class:`ReferenceForestFire` — deterministic
+  forest-fire cellular automaton with wind-biased spread.
+- :class:`CrowdModel` / :class:`ReferenceCrowdModel` — deterministic
+  agent-based crowd evacuation with panic-dependent congestion.
 """
 
 from __future__ import annotations
 
 from physics_core.inquiry.analysis import LinearFit, ReferenceLinearFit
 from physics_core.inquiry.complex_systems import (
+    CrowdModel,
     EpidemicModel,
+    ForestFireModel,
+    ReferenceCrowdModel,
     ReferenceEpidemicModel,
+    ReferenceForestFire,
     basic_reproduction_number,
 )
 
@@ -26,5 +34,9 @@ __all__ = [
     "ReferenceLinearFit",
     "EpidemicModel",
     "ReferenceEpidemicModel",
+    "ForestFireModel",
+    "ReferenceForestFire",
+    "CrowdModel",
+    "ReferenceCrowdModel",
     "basic_reproduction_number",
 ]

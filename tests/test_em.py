@@ -16,6 +16,14 @@ from physics_core.em.magnetism import (
     ReferenceSolenoid,
     ReferenceStraightWire,
 )
+from physics_core.em.motor import (
+    CoilTorque,
+    DCMotor,
+    ReferenceCoilTorque,
+    ReferenceDCMotor,
+    ReferenceWireForce,
+    WireForce,
+)
 
 
 # ===========================================================================
@@ -443,3 +451,175 @@ class TestReferenceBarMagnet:
         assert Bx == pytest.approx(0.0)
         assert By == pytest.approx(0.0)
         assert Bz == pytest.approx(0.0)
+
+
+# ===========================================================================
+# Electric motor: force on a conductor, torque on a coil, commutator
+# ===========================================================================
+
+
+class TestWireForce:
+    """Tests for the abstract wire-force base."""
+
+    def test_force_raises_not_implemented(self) -> None:
+        wf = WireForce()
+        with pytest.raises(NotImplementedError):
+            wf.force(0.5, 1.0, 0.2, 90.0)
+
+
+class TestReferenceWireForce:
+    """Tests for the conductor force F = B I L sin(theta)."""
+
+    def test_force_max_at_90_degrees(self) -> None:
+        """F = B I L at theta = 90 deg (max)."""
+        wf = ReferenceWireForce()
+        F = wf.force(B=0.5, I=2.0, L=0.3, theta_degrees=90.0)
+        assert F == pytest.approx(0.5 * 2.0 * 0.3, rel=1e-9)
+
+    def test_force_zero_at_0_degrees(self) -> None:
+        """F = 0 when the wire is parallel to the field."""
+        wf = ReferenceWireForce()
+        F = wf.force(B=0.5, I=2.0, L=0.3, theta_degrees=0.0)
+        assert F == pytest.approx(0.0, abs=1e-12)
+
+    def test_force_zero_at_180_degrees(self) -> None:
+        """F = 0 when the wire is anti-parallel to the field."""
+        wf = ReferenceWireForce()
+        F = wf.force(B=0.5, I=2.0, L=0.3, theta_degrees=180.0)
+        assert F == pytest.approx(0.0, abs=1e-12)
+
+    def test_force_scales_with_current_and_length(self) -> None:
+        """F is proportional to I and to L."""
+        wf = ReferenceWireForce()
+        F_base = wf.force(B=0.5, I=2.0, L=0.3, theta_degrees=90.0)
+        F_double_current = wf.force(B=0.5, I=4.0, L=0.3, theta_degrees=90.0)
+        F_double_length = wf.force(B=0.5, I=2.0, L=0.6, theta_degrees=90.0)
+        assert F_double_current == pytest.approx(2.0 * F_base, rel=1e-9)
+        assert F_double_length == pytest.approx(2.0 * F_base, rel=1e-9)
+
+
+class TestCoilTorque:
+    """Tests for the abstract coil-torque base."""
+
+    def test_torque_raises_not_implemented(self) -> None:
+        ct = CoilTorque()
+        with pytest.raises(NotImplementedError):
+            ct.torque(10, 0.5, 1.0, 0.02, 90.0)
+
+
+class TestReferenceCoilTorque:
+    """Tests for the coil torque tau = N B I A sin(phi)."""
+
+    def test_torque_zero_at_phi_zero(self) -> None:
+        """tau = 0 when the coil normal is parallel to the field."""
+        ct = ReferenceCoilTorque()
+        tau = ct.torque(N=10, B=0.5, I=1.0, A=0.02, phi_degrees=0.0)
+        assert tau == pytest.approx(0.0, abs=1e-12)
+
+    def test_torque_zero_at_phi_180(self) -> None:
+        """tau = 0 when the coil normal is anti-parallel to the field."""
+        ct = ReferenceCoilTorque()
+        tau = ct.torque(N=10, B=0.5, I=1.0, A=0.02, phi_degrees=180.0)
+        assert tau == pytest.approx(0.0, abs=1e-12)
+
+    def test_torque_max_at_phi_90(self) -> None:
+        """tau = N B I A at phi = 90 deg (maximum)."""
+        ct = ReferenceCoilTorque()
+        tau = ct.torque(N=10, B=0.5, I=1.0, A=0.02, phi_degrees=90.0)
+        assert tau == pytest.approx(10 * 0.5 * 1.0 * 0.02, rel=1e-9)
+
+    def test_torque_scales_with_turns(self) -> None:
+        """tau is proportional to N."""
+        ct = ReferenceCoilTorque()
+        tau1 = ct.torque(N=10, B=0.5, I=1.0, A=0.02, phi_degrees=90.0)
+        tau2 = ct.torque(N=20, B=0.5, I=1.0, A=0.02, phi_degrees=90.0)
+        assert tau2 == pytest.approx(2.0 * tau1, rel=1e-9)
+
+    def test_torque_magnitude_non_negative(self) -> None:
+        """The magnitude is always non-negative."""
+        ct = ReferenceCoilTorque()
+        for phi in (0.0, 45.0, 90.0, 135.0, 180.0):
+            assert ct.torque_magnitude(10, 0.5, 1.0, 0.02, phi) >= 0.0
+
+
+class TestDCMotor:
+    """Tests for the abstract DC-motor base."""
+
+    def test_step_raises_not_implemented(self) -> None:
+        motor = DCMotor()
+        with pytest.raises(NotImplementedError):
+            motor.step(0.01)
+
+
+class TestReferenceDCMotor:
+    """Tests for the commutator DC motor.
+
+    The commutator flips the coil current every half turn so the drive
+    torque stays unidirectional (>= 0 for positive supply current).
+    """
+
+    def make_motor(self, phi: float) -> ReferenceDCMotor:
+        return ReferenceDCMotor(
+            N=10, B=0.5, A=0.02, J=1e-3, current=1.0, friction=0.0, phi=phi
+        )
+
+    def test_drive_torque_unidirectional_across_half_turns(self) -> None:
+        """drive_torque stays >= 0 for positive current over a full turn."""
+        motor = self.make_motor(phi=0.0)
+        # Sample angles across two full half-turns (0 -> 4*pi).
+        n_samples = 720
+        for i in range(n_samples):
+            phi = 4.0 * math.pi * i / n_samples
+            motor.reset(phi=phi, omega=0.0)
+            assert motor.drive_torque() >= 0.0, f"Negative torque at phi={phi}"
+
+    def test_commutator_sign_flips_each_half_turn(self) -> None:
+        """The current sign flips roughly every pi radians of phi."""
+        motor = self.make_motor(phi=0.1)
+        s_early = motor.commutator_sign()
+        motor.reset(phi=math.pi + 0.1, omega=0.0)
+        s_late = motor.commutator_sign()
+        assert s_early == 1.0
+        assert s_late == -1.0
+
+    def test_commutator_makes_coil_torque_unidirectional(self) -> None:
+        """After the commutator, the coil current sign matches sin(phi)."""
+        motor = self.make_motor(phi=0.0)
+        # For 0 < phi < pi (sin > 0) the commutator is +; for pi < phi < 2pi
+        # (sin < 0) it is -, so drive_torque = sign*coil_torque >= 0.
+        motor.reset(phi=math.pi / 2.0, omega=0.0)
+        assert motor.commutator_sign() == 1.0
+        assert motor.drive_torque() >= 0.0
+        motor.reset(phi=3.0 * math.pi / 2.0, omega=0.0)
+        assert motor.commutator_sign() == -1.0
+        assert motor.drive_torque() >= 0.0
+
+    def test_drive_torque_peaks_at_ninety_degrees(self) -> None:
+        """Drive torque is max where |sin(phi)| is max (phi = 90 deg)."""
+        motor = self.make_motor(phi=math.pi / 2.0)
+        tau_max = motor.drive_torque()
+        assert tau_max == pytest.approx(10 * 0.5 * 1.0 * 0.02, rel=1e-9)
+
+    def test_motor_rotates_one_way_over_many_steps(self) -> None:
+        """phi only increases (never reverses) for positive current."""
+        motor = self.make_motor(phi=0.0)
+        dt = 0.01
+        phi_prev = motor.phi
+        for _ in range(500):
+            motor.step(dt)
+            assert motor.phi >= phi_prev - 1e-12
+            phi_prev = motor.phi
+
+    def test_friction_bounds_angular_speed(self) -> None:
+        """With friction, omega approaches a deterministic terminal value."""
+        motor = ReferenceDCMotor(
+            N=10, B=0.5, A=0.02, J=1e-3, current=1.0,
+            friction=0.05, phi=math.pi / 2.0,
+        )
+        # Terminal omega = tau_max / friction.
+        omega_terminal = (10 * 0.5 * 1.0 * 0.02) / 0.05
+        for _ in range(2000):
+            motor.step(0.001)
+        # With friction and the sinusoidal drive, omega should not exceed a
+        # bounded value near terminal.
+        assert motor.omega <= omega_terminal * 1.5

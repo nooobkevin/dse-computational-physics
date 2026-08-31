@@ -18,6 +18,39 @@ H0 = 67.8
 # 1 Mpc in km (for Hubble time calculation)
 MEGAPARSEC_IN_KM = 3.085677581e19
 
+
+def redshift_factor(z: float) -> float:
+    """Factor by which cosmic expansion stretches light of redshift ``z``.
+
+    A photon emitted with wavelength ``λ_e`` at a source of redshift ``z``
+    is observed today with wavelength ``λ_o`` given by
+
+        λ_o = (1 + z) · λ_e
+
+    so :func:`redshift_factor` returns ``(1 + z)``.  It is the inverse of
+    the cosmic scale factor *a = 1 / (1 + z)*.
+
+    Parameters
+    ----------
+    z : float
+        Cosmological redshift (dimensionless).  Must be greater than -1.
+
+    Returns
+    -------
+    float
+        The wavelength-stretching factor ``1 + z``.
+
+    Raises
+    ------
+    ValueError
+        If ``z < -1`` (a physically impossible redshift — the emitted
+        wavelength would be non-positive).
+    """
+    if z < -1.0:
+        raise ValueError(f"redshift z must be >= -1, got {z}")
+    return 1.0 + z
+
+
 # ---------------------------------------------------------------------------
 # Stellar spectral classification (O B A F G K M)
 # ---------------------------------------------------------------------------

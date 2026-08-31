@@ -24,6 +24,11 @@ import pytest
 from physics_core.em.circuits import ReferenceCircuit
 from physics_core.em.electrostatics import ReferenceElectricField
 from physics_core.em.magnetism import ReferenceSolenoid, ReferenceStraightWire
+from physics_core.em.motor import (
+    ReferenceCoilTorque,
+    ReferenceDCMotor,
+    ReferenceWireForce,
+)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -42,6 +47,11 @@ COLOR_CHARGE_POS = (0, 0, 255)   # red for positive charge
 COLOR_CHARGE_NEG = (255, 0, 0)   # blue for negative charge
 COLOR_WIRE = (0, 255, 255)       # yellow wire
 COLOR_B = (0, 165, 255)          # orange magnetic field
+COLOR_FORCE = (0, 0, 255)        # red force
+COLOR_TORQUE = (0, 255, 0)       # green torque
+COLOR_COIL = (255, 255, 255)     # white coil
+COLOR_CURRENT_FWD = (0, 0, 255)  # red: current out of the page
+COLOR_CURRENT_REV = (255, 0, 0)  # blue: current into the page
 COLOR_CIRCUIT = (0, 255, 0)      # green circuit wires
 COLOR_RESISTOR = (0, 0, 255)     # red resistors
 COLOR_BATTERY = (0, 255, 255)    # yellow battery
@@ -56,7 +66,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         required=True,
-        choices=["field", "circuit", "magnet", "solenoid", "vi_graph", "parallel"],
+        choices=["field", "circuit", "magnet", "solenoid", "vi_graph", "parallel", "motor"],
         help="Demo mode",
     )
     parser.add_argument(
@@ -571,6 +581,147 @@ def _run_parallel(args: argparse.Namespace) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Electric motor mode
+# ---------------------------------------------------------------------------
+
+MOTOR_N = 10  # coil turns
+MOTOR_B = 0.5  # T
+MOTOR_A = 0.05  # m^2 coil area
+MOTOR_R_PX = 120  # coil radius in pixels (top-down view)
+
+
+def _draw_motor_coil(
+    canvas: np.ndarray,
+    center_px: Tuple[int, int],
+    phi_rad: float,
+    current: float,
+) -> None:
+    """Draw a top-down coil at angle phi and its couple forces.
+
+    *phi* is the coil-normal angle from the +x (field) axis.  Side A is the
+    leading end of the coil plane, drawn with the commutator-consistent
+    current direction.
+    """
+    cx, cy = center_px
+    sign = 1.0 if (phi_rad % (2.0 * math.pi)) < math.pi else -1.0
+    seg_angle = phi_rad + math.pi / 2.0
+    ax = cx + int(MOTOR_R_PX * math.cos(seg_angle))
+    ay = cy - int(MOTOR_R_PX * math.sin(seg_angle))
+    bx = cx - int(MOTOR_R_PX * math.cos(seg_angle))
+    by = cy + int(MOTOR_R_PX * math.sin(seg_angle))
+
+    # Coil plane (shaft-line silhouette).
+    cv2.line(canvas, (ax, ay), (bx, by), COLOR_COIL, 5, cv2.LINE_AA)
+
+    # Current markers (circle out / cross in) coloured by current direction.
+    a_is_out = sign > 0.0
+    col_a = COLOR_CURRENT_FWD if a_is_out else COLOR_CURRENT_REV
+    col_b = COLOR_CURRENT_REV if a_is_out else COLOR_CURRENT_FWD
+    cv2.circle(canvas, (ax, ay), 16, col_a, 2)
+    cv2.circle(canvas, (ax, ay), 16, col_a, -1)
+    cv2.circle(canvas, (ax, ay), 12, (0, 0, 0), -1)
+    if a_is_out:
+        cv2.circle(canvas, (ax, ay), 5, COLOR_CURRENT_FWD, -1)
+    else:
+        cv2.line(canvas, (ax - 8, ay), (ax + 8, ay), COLOR_CURRENT_REV, 3)
+        cv2.line(canvas, (ax, ay - 8), (ax, ay + 8), COLOR_CURRENT_REV, 3)
+
+    cv2.circle(canvas, (bx, by), 16, col_b, 2)
+    cv2.circle(canvas, (bx, by), 16, col_b, -1)
+    cv2.circle(canvas, (bx, by), 12, (0, 0, 0), -1)
+    if not a_is_out:
+        cv2.circle(canvas, (bx, by), 5, COLOR_CURRENT_FWD, -1)
+    else:
+        cv2.line(canvas, (bx - 8, by), (bx + 8, by), COLOR_CURRENT_REV, 3)
+        cv2.line(canvas, (bx, by - 8), (bx, by + 8), COLOR_CURRENT_REV, 3)
+
+    # Couple forces: F = I (L x B); current along +/-z and B along +x gives
+    # a force along +/-y (canvas -y is up).
+    f_a_dir = -1 if a_is_out else 1
+    f_b_dir = -f_a_dir
+    for (fx, fy, fdir) in ((ax, ay, f_a_dir), (bx, by, f_b_dir)):
+        end_y = fy + fdir * 70
+        draw_arrow(canvas, (fx, fy), (fx, end_y), COLOR_FORCE, 3)
+
+    # Commutator split-ring at the shaft.
+    cv2.circle(canvas, (cx, cy), 14, (150, 150, 150), 3)
+    cv2.line(canvas, (cx, cy), (cx + 10, cy), COLOR_FORCE, 2)
+
+
+def _run_motor(args: argparse.Namespace) -> None:
+    """Electric-motor mode — coil torque with a commutator and current slider.
+
+    A top-down coil between two pole pieces.  The teacher sets the supply
+    current and drags (or auto-spins) the coil angle.  The live torque
+    ``tau = N B I A sin(phi)`` is shown, along with the commutator current
+    direction that flips every half turn.
+    """
+    cv2.namedWindow(WIN_NAME)
+    cv2.createTrackbar("Current (A)", WIN_NAME, 10, 30, lambda _: None)
+    cv2.createTrackbar("Speed (deg/s)", WIN_NAME, 0, 400, lambda _: None)
+    cv2.createTrackbar("Angle (deg)", WIN_NAME, 0, 3600, lambda _: None)
+
+    phi_deg: float = 0.0
+    center_px = (CANVAS_W // 2, CANVAS_H // 2)
+
+    while True:
+        current_val = cv2.getTrackbarPos("Current (A)", WIN_NAME) / 10.0
+        speed = cv2.getTrackbarPos("Speed (deg/s)", WIN_NAME)
+        angle_slider = cv2.getTrackbarPos("Angle (deg)", WIN_NAME)
+
+        # Angle stepping: manual (speed == 0) uses the slider; auto-spin
+        # otherwise advances phi in real time.
+        if speed == 0:
+            phi_deg = float(angle_slider % 360)
+        else:
+            phi_deg = (phi_deg + speed * (1.0 / FPS)) % 360.0
+
+        phi_rad = math.radians(phi_deg)
+        canvas = np.zeros((CANVAS_H, CANVAS_W, 3), dtype=np.uint8)
+
+        # Pole pieces (N left, S right) with B-field arrows.
+        px_l, px_r = center_px[0] - 320, center_px[0] + 320
+        cv2.rectangle(canvas, (px_l, 230), (px_l + 40, 490), COLOR_CHARGE_POS, -1)
+        cv2.putText(canvas, "N", (px_l + 12, 360), cv2.FONT_HERSHEY_SIMPLEX, 0.8, COLOR_TEXT, 2)
+        cv2.rectangle(canvas, (px_r - 40, 230), (px_r, 490), COLOR_CHARGE_NEG, -1)
+        cv2.putText(canvas, "S", (px_r - 28, 360), cv2.FONT_HERSHEY_SIMPLEX, 0.8, COLOR_TEXT, 2)
+        for gy in range(270, 491, 60):
+            for gx in range(px_l + 70, px_r - 60, 70):
+                draw_arrow(canvas, (gx, gy), (gx + 22, gy), COLOR_B, 2)
+
+        _draw_motor_coil(canvas, center_px, phi_rad, current_val)
+
+        # Live physics readouts.
+        coil = ReferenceCoilTorque()
+        torque = coil.torque(MOTOR_N, MOTOR_B, current_val, MOTOR_A, phi_deg)
+        torque_drive = ReferenceDCMotor(
+            N=MOTOR_N, B=MOTOR_B, A=MOTOR_A, current=current_val, phi=phi_rad,
+        ).drive_torque()
+        commutator_dir = "forward (out)" if (phi_rad % (2.0 * math.pi)) < math.pi else "reversed (in)"
+
+        info = [
+            "Electric motor (commutator)",
+            f"tau = N B I A sin(phi)",
+            f"I = {current_val:.1f} A",
+            f"phi = {phi_deg:.0f} deg",
+            f"coil torque = {torque:+.3f} N m",
+            f"motor drive = {torque_drive:.3f} N m",
+            f"commutator current: {commutator_dir}",
+            "drag angle slider, or set Speed > 0",
+        ]
+        for i, line in enumerate(info):
+            cv2.putText(canvas, line, (10, 30 + i * 28),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_TEXT, 1)
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:
+            break
+
+    cv2.destroyAllWindows()
+
+
+# ---------------------------------------------------------------------------
 # Headless self-check
 # ---------------------------------------------------------------------------
 
@@ -655,6 +806,28 @@ def _headless_selfcheck(mode: str) -> None:
         assert I2 == pytest.approx(10.0 / 3.0, rel=0.01), f"I2 = {I2}, expected 3.33"
         print("Parallel self-check OK (KCL and branch currents verified)")
 
+    elif mode == "motor":
+        wf = ReferenceWireForce()
+        assert wf.force(0.5, 2.0, 0.3, 90.0) == pytest.approx(0.5 * 2.0 * 0.3), (
+            "F = BIL should be maximal at 90 deg"
+        )
+        assert wf.force(0.5, 2.0, 0.3, 0.0) == pytest.approx(0.0, abs=1e-12), (
+            "F should vanish at 0 deg"
+        )
+        ct = ReferenceCoilTorque()
+        assert ct.torque(10, 0.5, 1.0, 0.02, 90.0) == pytest.approx(10 * 0.5 * 0.02), (
+            "tau = NBIA at 90 deg"
+        )
+        assert ct.torque(10, 0.5, 1.0, 0.02, 0.0) == pytest.approx(0.0, abs=1e-12)
+        assert ct.torque(10, 0.5, 1.0, 0.02, 180.0) == pytest.approx(0.0, abs=1e-12)
+        motor = ReferenceDCMotor(
+            N=10, B=0.5, A=0.02, current=1.0, friction=0.0, phi=0.1,
+        )
+        for i in range(720):
+            motor.reset(phi=4.0 * math.pi * i / 720, omega=0.0)
+            assert motor.drive_torque() >= 0.0, "Commutator must keep drive >= 0"
+        print("Motor self-check OK (F = BIL, tau = NBIA sin(phi), commutator verified)")
+
     print("Electricity & Magnetism self-check OK")
     sys.exit(0)
 
@@ -683,6 +856,8 @@ def main() -> None:
         _run_vi_graph(args)
     elif args.mode == "parallel":
         _run_parallel(args)
+    elif args.mode == "motor":
+        _run_motor(args)
 
 
 if __name__ == "__main__":

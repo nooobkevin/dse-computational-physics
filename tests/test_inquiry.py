@@ -1,6 +1,7 @@
 """Tests for physics_core.inquiry.analysis — LinearFit and ReferenceLinearFit."""
 
 import math
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -10,6 +11,12 @@ from physics_core.inquiry.analysis import (
     ReferenceLinearFit,
     percent_error,
     propagate_uncertainty,
+)
+from physics_core.inquiry.complex_systems import (
+    CrowdModel,
+    ForestFireModel,
+    ReferenceCrowdModel,
+    ReferenceForestFire,
 )
 
 
@@ -302,4 +309,277 @@ def get_ref_epidemic(
 
     return ReferenceEpidemicModel(
         rows=rows, cols=cols, p_infect=p_infect, p_recover=p_recover, seed=seed
+    )
+
+
+class TestForestFire:
+    """Tests for the forest-fire cellular automaton."""
+
+    def test_abstract_raises(self) -> None:
+        """Abstract base should raise NotImplementedError on step()."""
+        m = ForestFireModel(rows=10, cols=10, p_ignite=0.3, seed=42)
+        with pytest.raises(NotImplementedError):
+            m.step()
+
+    def test_initial_state(self) -> None:
+        """Initial state: centre burning, no burned cells yet."""
+        m = get_ref_fire(rows=20, cols=20)
+        trees, burning, burned = m.fire_counts()
+        assert burning == 1
+        assert burned == 0
+        assert trees > 0
+
+    def test_deterministic_same_seed(self) -> None:
+        """Same seed produces an identical fire trajectory."""
+        m1 = get_ref_fire(rows=30, cols=40, p_ignite=0.4, wind_bias=0.3)
+        m2 = get_ref_fire(rows=30, cols=40, p_ignite=0.4, wind_bias=0.3)
+        h1 = m1.run(60)
+        h2 = m2.run(60)
+        for i, (a, b) in enumerate(zip(h1, h2)):
+            assert a == b, f"Trajectory diverged at step {i}: {a} vs {b}"
+
+    def test_single_ignition_eventually_burns_out(self) -> None:
+        """A single ignition burns out: burning → 0 with burned > 0."""
+        m = get_ref_fire(rows=30, cols=30, p_ignite=0.4, seed=5)
+        history = m.run(30 * 30)
+        trees, burning, burned = history[-1]
+        assert burning == 0, f"Fire never died out: {burning} burning"
+        assert burned > 0, "Fire should have consumed some trees"
+
+    def test_wind_biases_direction(self) -> None:
+        """Wind shifts the burned centroid toward the downwind direction."""
+        east = get_ref_fire(
+            rows=40, cols=60, p_ignite=0.4, wind_direction=0,
+            wind_bias=0.5, seed=11,
+        )
+        west = get_ref_fire(
+            rows=40, cols=60, p_ignite=0.4, wind_direction=2,
+            wind_bias=0.5, seed=11,
+        )
+        east.run(30)
+        west.run(30)
+
+        def centroid(model: ReferenceForestFire) -> float:
+            mask = (model.grid == 2) | (model.grid == 3)  # burning | burned
+            r_, c_ = np.where(mask)
+            return float(c_.mean()) if len(c_) else float("nan")
+
+        assert centroid(east) > centroid(west), (
+            f"East wind should push the fire east (col centroid "
+            f"{centroid(east):.2f} vs {centroid(west):.2f})"
+        )
+
+    def test_run_returns_including_initial(self) -> None:
+        """run(steps) returns steps+1 entries, starting with the initial state."""
+        m = get_ref_fire(rows=10, cols=10)
+        h = m.run(20)
+        assert len(h) == 21
+        assert h[0][1] == 1  # one burning cell at t=0
+
+    def test_grid_property_returns_copy(self) -> None:
+        """grid property returns a copy, not a reference."""
+        m = get_ref_fire(rows=10, cols=10)
+        g = m.grid
+        g[0, 0] = 99
+        assert m.grid[0, 0] != 99
+
+    def test_small_grid_raises(self) -> None:
+        """Grids smaller than 3x3 raise ValueError."""
+        with pytest.raises(ValueError):
+            get_ref_fire(rows=2, cols=10)
+
+    def test_invalid_p_ignite_raises(self) -> None:
+        with pytest.raises(ValueError):
+            get_ref_fire(p_ignite=1.5)
+
+    def test_invalid_wind_direction_raises(self) -> None:
+        with pytest.raises(ValueError):
+            get_ref_fire(wind_direction=4)
+        with pytest.raises(ValueError):
+            get_ref_fire(wind_direction=-1)
+
+    def test_history_accessor(self) -> None:
+        """history() returns the per-step fire counts."""
+        m = get_ref_fire(rows=10, cols=10)
+        m.run(10)
+        h = m.history()
+        assert len(h) == 11  # initial + 10 steps
+
+
+class TestCrowdModel:
+    """Tests for the agent-based crowd-evacuation model."""
+
+    def test_abstract_raises(self) -> None:
+        """Abstract base should raise NotImplementedError on step()."""
+        c = CrowdModel(n_agents=5, seed=42)
+        with pytest.raises(NotImplementedError):
+            c.step()
+
+    def test_initial_state(self) -> None:
+        """Initially no one has exited and all agents are inside the hall."""
+        c = get_ref_crowd(n_agents=10, seed=42)
+        mean_speed, exited, pressure = c.crowd_metrics()
+        assert exited == 0
+        assert c.positions.shape == (10, 2)
+        assert np.all(c.positions >= 0)
+        assert np.all(c.positions[:, 0] <= c.hall_width)
+        assert np.all(c.positions[:, 1] <= c.hall_height)
+
+    def test_deterministic_same_seed(self) -> None:
+        """Same seed produces an identical agent trajectory."""
+        c1 = get_ref_crowd(n_agents=20, seed=7)
+        c2 = get_ref_crowd(n_agents=20, seed=7)
+        for _ in range(60):
+            c1.step()
+            c2.step()
+            assert np.array_equal(c1.positions, c2.positions)
+
+    def test_all_agents_eventually_exit(self) -> None:
+        """With enough steps every agent reaches the exit."""
+        c = get_ref_crowd(n_agents=25, seed=7)
+        c.run(3000)
+        assert np.all(c.exited)
+
+    def test_all_exit_under_high_panic(self) -> None:
+        """Even an evacuating crowd under high panic fully clears."""
+        c = ReferenceCrowdModel(
+            n_agents=40, base_speed=1.0, panic=1.2, seed=9
+        )
+        c.run(3000)
+        assert np.all(c.exited)
+
+    def test_crowding_slows_mean_speed(self) -> None:
+        """A crowded hall slows mean speed vs an empty hall."""
+        empty = get_ref_crowd(
+            n_agents=1,
+            init_positions=np.array([[5.0, 3.0]]),
+            seed=1,
+        )
+        empty.step()
+        empty_speed = empty.crowd_metrics()[0]
+
+        rng = np.random.default_rng(3)
+        cluster = np.column_stack(
+            [
+                rng.uniform(4.5, 5.5, 20),
+                rng.uniform(2.5, 3.5, 20),
+            ]
+        )
+        crowded = get_ref_crowd(
+            n_agents=20, init_positions=cluster, seed=1
+        )
+        crowded.step()
+        crowd_speed = crowded.crowd_metrics()[0]
+
+        assert crowd_speed < empty_speed, (
+            f"Crowding should slow mean speed "
+            f"({crowd_speed:.3f} vs empty {empty_speed:.3f})"
+        )
+
+    def test_higher_panic_faster_exit_but_higher_pressure(self) -> None:
+        """Panic gives a faster initial rush but a larger door bottleneck."""
+        low = get_ref_crowd(
+            n_agents=60, base_speed=0.9, panic=0.0, exit_size=0.8, seed=9
+        )
+        high = get_ref_crowd(
+            n_agents=60, base_speed=0.9, panic=1.2, exit_size=0.8, seed=9
+        )
+        h_low = low.run(800)
+        h_high = high.run(800)
+
+        # Both fully evacuate.
+        assert h_low[-1][1] == 60
+        assert h_high[-1][1] == 60
+
+        # At the initial rush (step 18) high panic exits faster...
+        assert h_high[18][1] > h_low[18][1]
+        # ...while piling up a bigger crowd at the door.
+        assert h_high[18][2] > h_low[18][2]
+
+    def test_run_returns_including_initial(self) -> None:
+        """run(steps) returns steps+1 metric rows, starting with the initial."""
+        c = get_ref_crowd(n_agents=10, seed=42)
+        h = c.run(20)
+        assert len(h) == 21
+        mean_speed, exited, pressure = h[0]
+        assert exited == 0
+
+    def test_invalid_n_agents_raises(self) -> None:
+        with pytest.raises(ValueError):
+            get_ref_crowd(n_agents=0)
+
+    def test_invalid_panic_raises(self) -> None:
+        with pytest.raises(ValueError):
+            get_ref_crowd(n_agents=5, panic=-0.1)
+
+    def test_init_positions_outside_hall_raises(self) -> None:
+        with pytest.raises(ValueError):
+            get_ref_crowd(
+                n_agents=5,
+                init_positions=np.array(
+                    [[50.0, 3.0], [5.0, 3.0], [5.0, 3.0], [5.0, 3.0], [5.0, 3.0]]
+                ),
+            )
+
+    def test_metric_types(self) -> None:
+        """crowd_metrics returns (float, int, int)."""
+        c = get_ref_crowd(n_agents=10, seed=42)
+        c.step()
+        mean_speed, exited, pressure = c.crowd_metrics()
+        assert isinstance(mean_speed, float)
+        assert isinstance(exited, int)
+        assert isinstance(pressure, int)
+
+
+def get_ref_fire(
+    rows: int = 50,
+    cols: int = 50,
+    p_ignite: float = 0.3,
+    wind_direction: int = 0,
+    wind_bias: float = 0.0,
+    burn_duration: int = 1,
+    tree_density: float = 0.85,
+    seed: int = 42,
+) -> ReferenceForestFire:
+    """Helper: create a ReferenceForestFire for testing."""
+    return ReferenceForestFire(
+        rows=rows,
+        cols=cols,
+        p_ignite=p_ignite,
+        wind_direction=wind_direction,
+        wind_bias=wind_bias,
+        burn_duration=burn_duration,
+        tree_density=tree_density,
+        seed=seed,
+    )
+
+
+def get_ref_crowd(
+    n_agents: int = 20,
+    hall_width: float = 10.0,
+    hall_height: float = 6.0,
+    exit_size: float = 1.0,
+    base_speed: float = 1.0,
+    panic: float = 0.0,
+    neighbour_radius: float = 0.8,
+    agent_radius: float = 0.12,
+    exit_radius: float = 1.0,
+    exit_on: str = "right",
+    seed: int = 42,
+    init_positions: Optional[np.ndarray] = None,
+) -> ReferenceCrowdModel:
+    """Helper: create a ReferenceCrowdModel for testing."""
+    return ReferenceCrowdModel(
+        n_agents=n_agents,
+        hall_width=hall_width,
+        hall_height=hall_height,
+        exit_size=exit_size,
+        base_speed=base_speed,
+        panic=panic,
+        neighbour_radius=neighbour_radius,
+        agent_radius=agent_radius,
+        exit_radius=exit_radius,
+        exit_on=exit_on,
+        seed=seed,
+        init_positions=init_positions,
     )

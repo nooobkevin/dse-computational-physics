@@ -1,6 +1,8 @@
-# Unit 05: Physics and Engineering
+# Unit 05: Physics and Engineering 工程物理
 
-## Overview
+## Overview 單元概覽
+
+本單元涵蓋工程物理的核心課題，包括電磁感應、變壓器與電力傳輸、家居電力與智能生活，以及航天科學與工程（軌道運動、伯努利原理）。學生透過觀看動畫、操作教師示範程式及完成填空式編程練習，掌握功率、效率、電磁感應、變壓器、軌道運動與光纖等概念。
 
 This unit follows the three-artifact pattern shared by every unit in the toolkit:
 
@@ -12,11 +14,13 @@ All three artifacts consume the same `physics_core` engine (`src/physics_core/en
 
 ---
 
-## Curriculum Learning-Outcome Map (CAF June 2026)
+## Curriculum Learning-Outcome Map (CAF June 2026) 課程學習成果對照
 
 This unit targets the following HKDSE Physics - Physics and Engineering curriculum outcomes:
 
-### a. Electricity generation and power transmission
+下表對應 CAF（2026 年 6 月諮詢稿）主題五「物理與工程」的學習成果，涵蓋電力產生與輸送、家居電力與智能生活，以及航天科學與工程三大範疇。
+
+### a. Electricity generation and power transmission 電力產生與輸送
 
 | Learning outcome(s) | Which artifact(s) deliver it |
 |---|---|
@@ -28,7 +32,7 @@ This unit targets the following HKDSE Physics - Physics and Engineering curricul
 | Methods for improving transformer efficiency (laminated core, eddy current reduction) | Concept questions |
 | Advantages of high-voltage AC transmission; grid system stages (step-up/step-down) | Concept questions |
 
-### b. Domestic electricity and smart living
+### b. Domestic electricity and smart living 家居電力與智能生活
 
 | Learning outcome(s) | Which artifact(s) deliver it |
 |---|---|
@@ -38,7 +42,7 @@ This unit targets the following HKDSE Physics - Physics and Engineering curricul
 | Applications of sensing devices for smart living | Concept questions |
 | LED light emission (energy change in atomic level, efficiency, endurance) | Concept questions |
 
-### c. Aerospace Science and Engineering
+### c. Aerospace Science and Engineering 航天科學與工程
 
 | Learning outcome(s) | Which artifact(s) deliver it |
 |---|---|
@@ -53,9 +57,11 @@ This unit targets the following HKDSE Physics - Physics and Engineering curricul
 
 ---
 
-### Items beyond CAF core — enrichment only
+### Items beyond CAF core — enrichment only 超出 CAF 核心範圍（僅供增潤）
 
 The following sub-topics were present in the previous curriculum but are **not in the CAF (June 2026) Unit 05**. Existing code, scenes, and app modes are preserved for reference and enrichment:
+
+以下子課題見於舊課程，但**不在 CAF（2026 年 6 月）主題五**內。現有程式、場景及示範模式予以保留，供參考及增潤之用：
 
 | Sub-topic | Status | Artifacts |
 |---|---|---|
@@ -65,9 +71,11 @@ The following sub-topics were present in the previous curriculum but are **not i
 
 ---
 
-## Lesson Flow (Suggested Sequence)
+## Lesson Flow (Suggested Sequence) 教學流程
 
-### Step 1: Watch the Manim scene(s)
+以下為建議的教學順序：先觀看 Manim 動畫建立直觀概念，再以教師示範程式即時演示物理現象，最後讓學生完成填空式編程練習並回答概念問題。
+
+### Step 1: Watch the Manim scene(s) 第一步：觀看 Manim 動畫
 
 Play the rendered MP4 for the topic you are about to teach:
 
@@ -77,7 +85,7 @@ Play the rendered MP4 for the topic you are about to teach:
 - **Transformer**: `TransformerScene.mp4` — schematic transformer with turns ratio and power conservation verification.
 - **Motor effect**: `MotorEffect.mp4` — current-carrying conductor in a magnetic field with force and torque formulas.
 
-### Step 2: Run the teacher demo app
+### Step 2: Run the teacher demo app 第二步：執行教師示範程式
 
 ```bash
 # Fibre mode (TIR visualisation — enrichment)
@@ -93,7 +101,7 @@ uv run python units/05_engineering/teacher_app/main.py --mode orbital
 uv run python units/05_engineering/teacher_app/main.py --mode induction
 ```
 
-### Step 3: Complete the fill-in-the-blank exercises
+### Step 3: Complete the fill-in-the-blank exercises 第三步：完成填空式練習
 
 - **Orbital mechanics**: Open `orbital_exercise.py` — implement `gravitational_force`, `orbital_velocity`, `escape_velocity`, `gravitational_potential_energy`, `total_energy`.
 - **Power rating**: Open `power_rating_exercise.py` — implement `operating_current`, `fuse_rating`, `energy_kwh`, `cost`.
@@ -101,9 +109,11 @@ uv run python units/05_engineering/teacher_app/main.py --mode induction
 
 ---
 
-## How to Run Each Artifact
+## How to Run Each Artifact 如何執行各項工具
 
-### Prerequisites
+以下指令說明如何執行引擎測試、教師示範程式、Manim 渲染及練習評分器。所有示範模式均為全合成（synthetic），無需攝影機即可在課堂投影。
+
+### Prerequisites 前置要求
 
 - Python 3.11+ with `uv` installed
 - Docker (for Manim rendering only)
@@ -113,13 +123,13 @@ uv run python units/05_engineering/teacher_app/main.py --mode induction
 uv sync
 ```
 
-### Engine tests
+### Engine tests 引擎測試
 
 ```bash
 uv run pytest tests/test_engineering.py -v
 ```
 
-### Teacher app — headless self-check (CI-friendly)
+### Teacher app — headless self-check (CI-friendly) 教師示範程式 — 無頭自檢（適合 CI）
 
 ```bash
 uv run python units/05_engineering/teacher_app/main.py --mode orbital --headless-selfcheck
@@ -128,7 +138,7 @@ uv run python units/05_engineering/teacher_app/main.py --mode fibre --headless-s
 uv run python units/05_engineering/teacher_app/main.py --mode transformer --headless-selfcheck
 ```
 
-### Manim render
+### Manim render Manim 渲染
 
 ```bash
 # Render all scenes (requires Docker)
@@ -145,7 +155,7 @@ Available scenes: `total_internal_reflection`, `transformer`, `motor_effect`, `o
 
 Quality flags: `-qh` (high, default), `-ql` (low, fast preview), `-qk` (4K).
 
-### Exercises / grader
+### Exercises / grader 練習／評分器
 
 ```bash
 # Grade existing optical fibre exercise
@@ -167,9 +177,11 @@ uv run pytest units/05_engineering/exercises/test_orbital_exercise.py -v \
 
 ---
 
-## Physics Engine Architecture
+## Physics Engine Architecture 物理引擎架構
 
 The `src/physics_core/engineering/` package reflects the new CAF structure:
+
+`src/physics_core/engineering/` 套件反映新的 CAF 結構：
 
 ```
 src/physics_core/engineering/
@@ -183,7 +195,7 @@ src/physics_core/engineering/
 
 Each abstract base defines physics **hooks** (raising `NotImplementedError`) that subclasses override. The Reference subclasses provide the correct physics using the same formulas students are expected to implement.
 
-### dt-clamp in Manim updaters
+### dt-clamp in Manim updaters Manim 更新器中的 dt 限制
 
 All Manim scenes use the same dt-clamp pattern in their updater functions:
 
@@ -193,13 +205,15 @@ h = min(dt, 1.0 / config.frame_rate)
 
 This prevents a Manim edge-case where `dt` can be 0 on frame boundaries, which would cause the simulation to stall.
 
-### Rendering notes
+### Rendering notes 渲染說明
 
 - The `render.sh` script passes `--disable_caching` to force a fresh render every time.
 - Output MP4s are flattened from the nested `videos/` directory into the flat `output/` directory by the script.
 
 ---
 
-## Synthetic-Only Note
+## Synthetic-Only Note 全合成模式說明
 
 All modes in the teacher app are **fully synthetic**. There is no camera input — all physics is computed and rendered procedurally. This makes the app deterministic and ideal for classroom projection without any hardware dependency.
+
+教師示範程式的所有模式均為**全合成**，沒有攝影機輸入，所有物理均由程式計算並程序化渲染，因此結果確定，適合無需任何硬體依賴的課堂投影。

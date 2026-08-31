@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DSE Computational Physics — Lesson Handout</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">@page { size: A4; margin: 14mm 14mm 16mm 14mm; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font-family: "PingFang HK", "PingFang TC", "Microsoft JhengHei",
+               "Noto Sans CJK TC", "Noto Sans TC", "Heiti TC",
+               "Hiragino Sans GB", "Source Han Sans TC", sans-serif;
+  font-size: 10.5pt; line-height: 1.45; color: #1a1a1a; margin: 0;
+}
+h1 { font-size: 16pt; margin: 0 0 2pt 0; color: #0b3d66; }
+h2 { font-size: 12pt; margin: 10pt 0 3pt 0; color: #0b3d66;
+     border-bottom: 1.5px solid #0b3d66; padding-bottom: 1pt; }
+h3 { font-size: 11pt; margin: 7pt 0 2pt 0; color: #14507a; }
+p  { margin: 3pt 0; }
+ul, ol { margin: 3pt 0 3pt 0; padding-left: 16pt; }
+li { margin: 1pt 0; }
+table { border-collapse: collapse; width: 100%; margin: 4pt 0; font-size: 9.5pt; }
+th, td { border: 1px solid #b9c6d2; padding: 2pt 5pt; text-align: left; vertical-align: top; }
+th { background: #e8eef4; color: #0b3d66; }
+tr:nth-child(even) td { background: #f6f9fb; }
+code { font-family: "SF Mono", Menlo, Consolas, "Courier New", monospace;
+       font-size: 9pt; background: #f0f2f5; padding: 0 2pt; border-radius: 2pt; }
+pre { background: #f0f2f5; border: 1px solid #d5dbe2; border-radius: 3pt;
+      padding: 5pt 7pt; overflow-x: auto; font-size: 9pt; }
+pre code { background: none; padding: 0; }
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DSE Computational Physics — Lesson Handout</h1>
+</header>
+<h1 id="unit-03-waves-波動-s4">Unit 03: Waves 波動 — S4</h1>
+<h2 id="learning-outcomes-學習目標">Learning Outcomes 學習目標</h2>
+<ul>
+<li><strong>Nature of waves</strong> 波的性質: <span class="math inline"><em>v</em> = <em>f</em><em>λ</em></span>; transverse
+vs longitudinal; energy <span class="math inline"> ∝ <em>A</em><sup>2</sup></span>.</li>
+<li><strong>Superposition &amp; standing waves</strong> 疊加與駐波: two
+counter-propagating waves → nodes.</li>
+<li><strong>Young’s double-slit</strong> 楊氏雙縫: <span class="math inline"><em>d</em>sin <em>θ</em> = <em>n</em><em>λ</em></span>;
+fringe spacing <span class="math inline"><em>Δ</em><em>y</em> = <em>λ</em><em>D</em>/<em>d</em></span>.</li>
+<li><strong>Polarisation</strong> 偏振: Malus’s law <span class="math inline"><em>I</em> = <em>I</em><sub>0</sub>cos<sup>2</sup><em>θ</em></span>.</li>
+<li><strong>EM spectrum</strong> 電磁波譜: bands radio → gamma; visible
+400–700 nm.</li>
+<li><strong>Ultrasound</strong> 超聲波: pulse-echo ranging <span class="math inline"><em>d</em> = <em>v</em><em>t</em>/2</span>.</li>
+</ul>
+<h2 id="key-formulas-核心公式">Key Formulas 核心公式</h2>
+<table>
+<thead>
+<tr>
+<th>Formula</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline"><em>v</em> = <em>f</em><em>λ</em></span></td>
+<td>wave speed</td>
+</tr>
+<tr>
+<td><span class="math inline"><em>y</em>(<em>x</em>, <em>t</em>) = <em>A</em>sin (<em>k</em><em>x</em> − <em>ω</em><em>t</em>)</span></td>
+<td>traveling wave</td>
+</tr>
+<tr>
+<td><span class="math inline"><em>I</em> ∝ <em>A</em><sup>2</sup></span></td>
+<td>intensity vs amplitude</td>
+</tr>
+<tr>
+<td><span class="math inline"><em>d</em>sin <em>θ</em> = <em>n</em><em>λ</em></span></td>
+<td>double-slit maxima</td>
+</tr>
+<tr>
+<td><span class="math inline"><em>I</em> = <em>I</em><sub>0</sub>cos<sup>2</sup><em>θ</em></span></td>
+<td>Malus’s law</td>
+</tr>
+<tr>
+<td><span class="math inline"><em>I</em> = <em>I</em><sub>0</sub>/<em>r</em><sup>2</sup></span></td>
+<td>inverse-square law</td>
+</tr>
+<tr>
+<td><span class="math inline">$d = \frac{vt}{2}$</span></td>
+<td>ultrasound echo distance</td>
+</tr>
+</tbody>
+</table>
+<h2 id="lesson-flow-課堂流程">Lesson Flow 課堂流程</h2>
+<ol type="1">
+<li><strong>Watch</strong> 觀看: <code>SuperpositionStanding.mp4</code>,
+<code>WaveSpeedIntensity.mp4</code>, <code>YoungSlit.mp4</code>,
+<code>Polarisation.mp4</code>, <code>UltrasoundRanging.mp4</code>,
+<code>EMSpectrum.mp4</code>.</li>
+<li><strong>Interact</strong> 互動: teacher app
+<code>--mode traveling|standing|interference|inverse_square</code>
+(fully synthetic).</li>
+<li><strong>Code</strong> 編程: <code>wave_exercise.py</code> (fill
+<code>displacement(self, x, t)</code>).</li>
+</ol>
+<h2 id="simulation-commands-指令">Simulation Commands 指令</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python units/03_waves/teacher_app/main.py <span class="at">--mode</span> interference</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> units/03_waves/manim/render.sh polarisation <span class="at">-ql</span>   <span class="co"># Docker</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run pytest units/03_waves/exercises/test_exercise.py <span class="at">-v</span></span></code></pre></div>
+<h2 id="assessment-評估">Assessment 評估</h2>
+<ul>
+<li><strong>Exercise</strong> 練習:
+<code>uv run pytest units/03_waves/exercises/test_exercise.py -v</code>
+(auto-grader).</li>
+<li><strong>Quiz</strong> 小測:
+<code>uv run pytest units/03_waves/exercises/test_quiz.py</code> (expect
+10 fails on blank).</li>
+<li><strong>Teacher key</strong> 教師核對:
+<code>DSE_QUIZ_ANSWERS=units/03_waves/exercises/quiz_solution.py uv run pytest units/03_waves/exercises/test_quiz.py</code>
+(expect 10 passes).</li>
+</ul>
+</body>
+</html>

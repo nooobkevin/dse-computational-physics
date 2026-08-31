@@ -2,9 +2,14 @@
 
 import math
 
+import numpy as np
 import pytest
 
-from physics_core.mechanics.pendulum import PendulumSim, ReferencePendulumSim
+from physics_core.mechanics.pendulum import (
+    PendulumSim,
+    ReferencePendulumSim,
+    steady_state_amplitude,
+)
 
 
 class TestPendulumSim:
@@ -222,3 +227,123 @@ class TestDampedPendulumSim:
             f"Damped energy did not decay enough: e0={e0:.6f}, "
             f"e_final={e_final:.6f}"
         )
+
+
+def _fwhm(b: float, g: float, length: float, omega0: float) -> float:
+    """Full width at half maximum of the steady-state amplitude curve."""
+    ws = np.linspace(0.0, 10.0, 20_001)
+    amps = np.array([steady_state_amplitude(float(w), g, length, b) for w in ws])
+    above = np.where(amps >= amps.max() / 2.0)[0]
+    return float(ws[above[-1]] - ws[above[0]])
+
+
+def _driven_steady_amplitude(omega_d: float, b: float, g: float, length: float) -> float:
+    """Peak |theta| of a linearised driven pendulum after reaching steady state."""
+    sim = ReferencePendulumSim(
+        length=length, g=g, theta0=0.0, omega0=0.0, dt=0.002,
+        scheme="verlet", small_angle=True, damping_coefficient=b,
+        driving_amplitude=1.0, driving_frequency=omega_d,
+    )
+    period = 2.0 * math.pi / omega_d
+    for _ in range(int(period * 30 / sim.dt)):
+        sim.step()
+    max_theta = 0.0
+    for _ in range(int(period * 5 / sim.dt)):
+        sim.step()
+        max_theta = max(max_theta, abs(sim.state["theta"]))
+    return max_theta
+
+
+class TestDrivenPendulumSim:
+    """Tests for forced oscillation / resonance (driving terms)."""
+
+    def test_default_driving_params_unchanged(self) -> None:
+        """Default driving_amplitude=0 and driving_frequency=0 add no driving term."""
+        sim = ReferencePendulumSim(length=1.0, g=9.81, small_angle=True)
+        a = sim.angular_acceleration(0.1, 0.05)
+        assert a == pytest.approx(-9.81 * 0.1 - 0.0 * 0.05)
+
+    def test_zero_amplitude_adds_no_driving_term(self) -> None:
+        """driving_amplitude=0 must match the undriven equation for any frequency."""
+        sim = ReferencePendulumSim(
+            length=1.0, g=9.81, small_angle=True,
+            damping_coefficient=0.3, driving_amplitude=0.0, driving_frequency=5.0,
+        )
+        sim._state["t"] = 1.0
+        a = sim.angular_acceleration(0.1, 0.05)
+        assert a == pytest.approx(-9.81 * 0.1 - 0.3 * 0.05)
+
+    def test_driving_term_at_t_zero(self) -> None:
+        """At t=0, cos(0)=1, so the driving contributes +(F0/m)."""
+        sim = ReferencePendulumSim(
+            length=1.0, g=9.81, mass=2.0, small_angle=True,
+            damping_coefficient=0.0, driving_amplitude=4.0, driving_frequency=3.0,
+        )
+        a = sim.angular_acceleration(0.1, 0.0)
+        assert a == pytest.approx(-9.81 * 0.1 + 4.0 / 2.0)
+
+    def test_driving_term_reads_internal_time(self) -> None:
+        """The driven term uses the simulation clock, which advances via step()."""
+        sim = ReferencePendulumSim(
+            length=1.0, g=9.81, mass=1.0, small_angle=True,
+            theta0=0.0, omega0=0.0, dt=0.01,
+            driving_amplitude=1.0, driving_frequency=2.0,
+        )
+        sim.step()
+        assert sim.state["t"] == pytest.approx(0.01)
+        assert sim.state["theta"] != pytest.approx(0.0)
+
+    def test_omega0_property(self) -> None:
+        sim = ReferencePendulumSim(length=4.0, g=9.81)
+        assert sim.omega0 == pytest.approx(math.sqrt(9.81 / 4.0))
+
+    def test_steady_state_peaks_near_omega0(self) -> None:
+        """For light damping the A(omega_d) curve peaks close to omega0 (slightly below)."""
+        g, length = 9.81, 1.0
+        omega0 = math.sqrt(g / length)
+        sim = ReferencePendulumSim(length=length, g=g, damping_coefficient=0.4)
+        ws = np.linspace(0.01, 6.0, 400)
+        amps = np.array([sim.steady_state_amplitude(float(w)) for w in ws])
+        imax = int(np.argmax(amps))
+        assert ws[imax] == pytest.approx(omega0, abs=0.15)
+
+    def test_amplitude_tends_to_zero_at_high_frequency(self) -> None:
+        """A(omega_d) -> 0 as omega_d -> infinity (inertia dominates)."""
+        g, length = 9.81, 1.0
+        omega0 = math.sqrt(g / length)
+        a_peak = steady_state_amplitude(omega0, g, length, 0.5)
+        a_hi = steady_state_amplitude(20.0 * omega0, g, length, 0.5)
+        assert a_hi < a_peak * 0.01
+
+    def test_amplitude_at_zero_frequency_is_finite_static(self) -> None:
+        """At omega_d=0 the response equals the b-independent static value.
+
+        For the mandated normalised formula A(0) = (g/L)/omega0² = 1.0; damping
+        does not change the static response, only the resonance peak.
+        """
+        g, length = 9.81, 1.0
+        omega0 = math.sqrt(g / length)
+        for b in (0.2, 2.0):
+            assert steady_state_amplitude(0.0, g, length, b) == pytest.approx(
+                (g / length) / omega0**2
+            )
+
+    def test_increasing_damping_lowers_peak(self) -> None:
+        g, length = 9.81, 1.0
+        omega0 = math.sqrt(g / length)
+        peak_light = steady_state_amplitude(omega0, g, length, 0.4)
+        peak_heavy = steady_state_amplitude(omega0, g, length, 1.6)
+        assert peak_heavy < peak_light
+
+    def test_increasing_damping_broadens_peak(self) -> None:
+        g, length = 9.81, 1.0
+        omega0 = math.sqrt(g / length)
+        assert _fwhm(1.6, g, length, omega0) > _fwhm(0.4, g, length, omega0)
+
+    def test_resonant_driven_amplitude_exceeds_off_resonance(self) -> None:
+        """Driving at omega0 yields a far larger steady oscillation than off-resonance."""
+        g, length = 9.81, 1.0
+        omega0 = math.sqrt(g / length)
+        a_res = _driven_steady_amplitude(omega0, b=0.5, g=g, length=length)
+        a_off = _driven_steady_amplitude(4.0, b=0.5, g=g, length=length)
+        assert a_res > 2.0 * a_off

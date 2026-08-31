@@ -1,6 +1,8 @@
 # Unit 08: Astrophysics and Relativity
 
-## Overview
+> **中文概覽**：本單元涵蓋天體物理與相對論的核心概念，包括都卜勒紅移、哈勃定律與宇宙膨脹、恆星演化與赫羅圖、視差測距、黑洞與中子星、時間膨脹與時空圖，以及大爆炸與宇宙微波背景輻射。所有教材均共用同一套 `physics_core` 引擎，確保動畫、教師示範程式與學生練習的物理內容完全一致。
+
+## Overview 概覽
 
 This unit follows the three-artifact pattern shared by every unit in the toolkit:
 
@@ -10,11 +12,15 @@ This unit follows the three-artifact pattern shared by every unit in the toolkit
 
 All three artifacts consume the same `physics_core` engine (`src/physics_core/astrophysics/`), so the physics is identical across every front-end.
 
+**中文摘要**：本單元沿用工具箱中每個單元共用的「三件教材」模式：Manim 動畫（觀看）、教師示範程式（互動）與學生填空練習（編程）。三者共用同一套 `physics_core` 引擎，因此所有介面的物理內容完全一致。
+
 ---
 
-## Curriculum Learning-Outcome Map (CAF June 2026)
+## Curriculum Learning-Outcome Map (CAF June 2026) 課程學習成果對照（CAF 2026 年 6 月）
 
 This unit targets the following HKDSE Physics curriculum outcomes per the CAF Consultation Draft:
+
+**中文摘要**：本單元對應 HKDSE 物理課程（CAF 諮詢稿）的學習成果，涵蓋觀測天空（視差測距、光年／天文單位／秒差距）、恆星與宇宙（黑體輻射、赫羅圖、史特凡-波茲曼定律、都卜勒效應、暗物質、紅移與大爆炸）、相對論（參考系、光速不變、時間膨脹、長度收縮、時空圖、衛星導航）等範疇。
 
 ### a. Observing the sky
 
@@ -33,7 +39,7 @@ This unit targets the following HKDSE Physics curriculum outcomes per the CAF Co
 | **b.4** Estimate relative size of stars using H-R diagram | Engine `hr_diagram.py` (`radius_from_luminosity`); Student exercise (radius-from-luminosity hook) |
 | **b.6** Doppler effect (Δλ/λ₀ = vᵣ/c) | Manim `DopplerRedshift`; Teacher app (`--mode doppler`); Student exercise (`observed_frequency`, `redshift`, `velocity_from_z`); Engine `doppler.py` |
 | **b.7** Dark matter from rotation curves | Teacher app (`--mode hubble` — rotation-curve panel with Keplerian vs flat curve, dark matter annotation) |
-| **b.8** Redshift → Big Bang theory | Concept questions (Q h — CMB, redshift, light-element abundances) |
+| **b.8** Redshift → Big Bang theory | Manim `BigBangEvidence` (two pillars of evidence: universal expansion/redshift via an inflating balloon-surface analogy `v = H₀·d`; the CMB blackbody curve at `T = 2.725 K` peaking ≈ 1.06 mm, with a faint dipole anisotropy); Concept questions (Q h) |
 
 ### c. Relativity
 
@@ -62,7 +68,7 @@ This unit targets the following HKDSE Physics curriculum outcomes per the CAF Co
 
 ---
 
-## Lesson Flow (Suggested Sequence)
+## Lesson Flow (Suggested Sequence) 教學流程（建議次序）
 
 ### Step 1: Watch the Manim scene(s)
 
@@ -73,6 +79,7 @@ Play the rendered MP4 for the topic you are about to teach:
 - **Stellar life cycle**: `StellarLifecycle.mp4` — shows a schematic flow diagram of stellar evolution (enrichment).
 - **Spacetime diagram**: `SpacetimeDiagram.mp4` — shows a ct-x Minkowski diagram with light cones, two observers' worldlines, and relativity of simultaneity.
 - **H-R diagram**: `HRDiagramScene.mp4` — shows log L vs T axes, main-sequence band, giant and white-dwarf regions, sample stars, and a blackbody-curve inset whose colour morphs with temperature.
+- **Big Bang evidence**: `BigBangEvidence.mp4` — the two pillars of evidence for the Big Bang: an inflating balloon-surface analogy for universal expansion (galaxy dots receding, `v = H₀·d`, farther = faster), and the CMB — a nearly uniform glow whose blackbody curve peaks at `T = 2.725 K` (≈ 1.06 mm), plus a faint dipole anisotropy bar. Closes with "CMB + redshift = evidence for the Big Bang".
 
 ### Step 2: Run the teacher demo app
 
@@ -93,9 +100,11 @@ Students open the exercise files and implement the physics hooks:
 
 The concept questions in `questions.md` tie the code to the broader curriculum.
 
+**中文摘要**：建議教學次序為：先播放 Manim 動畫（都卜勒紅移、哈勃定律、恆星演化、時空圖、赫羅圖、大爆炸證據），再以教師示範程式即時示範（都卜勒、哈勃、恆星演化、相對論、視差等模式），最後讓學生完成填空練習（`astrophysics_exercise.py` 與 `stars_exercise.py`），並以 `questions.md` 的概念題連結課程內容。
+
 ---
 
-## How to Run Each Artifact
+## How to Run Each Artifact 如何執行各項教材
 
 ### Prerequisites
 
@@ -154,7 +163,7 @@ bash units/08_astrophysics/manim/render.sh spacetime_diagram -ql
 
 The script uses the `manimcommunity/manim:stable` Docker image. Output MP4 files land in `units/08_astrophysics/manim/output/`. The `--disable_caching` flag is set to force re-render on every run.
 
-Available scenes: `doppler_redshift`, `hubble_law`, `stellar_lifecycle`, `spacetime_diagram`, `hr_diagram`.
+Available scenes: `doppler_redshift`, `hubble_law`, `stellar_lifecycle`, `spacetime_diagram`, `hr_diagram`, `big_bang_evidence`.
 
 Quality flags: `-qm` (medium, default), `-qh` (high), `-ql` (low, fast preview), `-qk` (4K).
 
@@ -180,7 +189,7 @@ The solution files (`astrophysics_solution.py`, `stars_solution.py`) and teacher
 
 ---
 
-## Physics Engine Architecture
+## Physics Engine Architecture 物理引擎架構
 
 The `src/physics_core/astrophysics/` package mirrors the pattern established by `mechanics/` and `em/`:
 
@@ -188,15 +197,19 @@ The `src/physics_core/astrophysics/` package mirrors the pattern established by 
 src/physics_core/astrophysics/
   __init__.py           ← exports all classes
   doppler.py            ← DopplerShift (abstract) + ReferenceDopplerShift
-  hubble.py             ← HubbleLaw + SPECTRAL_CLASSES table (enrichment)
+  hubble.py             ← HubbleLaw + redshift_factor(z)=1+z, SPECTRAL_CLASSES table (enrichment)
   relativity.py         ← RelativityEngine (abstract) + ReferenceRelativityEngine
   hr_diagram.py         ← HRDiagram (abstract) + ReferenceHRDiagram + SAMPLE_STARS
 ```
 
 Each abstract base defines physics **hooks** (raising `NotImplementedError`) that subclasses override. The `Reference*` subclasses provide the correct physics using the same formulas students are expected to implement.
 
+**中文摘要**：`src/physics_core/astrophysics/` 套件沿用 `mechanics/` 與 `em/` 的設計模式：每個抽象基類定義物理「掛鉤」（拋出 `NotImplementedError`），由子類別覆寫；`Reference*` 子類別則以學生應實作的相同公式提供正確物理。
+
 ---
 
-## Synthetic-Only Note
+## Synthetic-Only Note 全合成模式說明
 
 All modes in the teacher app are **fully synthetic**. Unlike the pendulum mode in Unit 01 (which supported real webcam tracking), there is no camera input — all physics is computed and rendered procedurally. This makes the app deterministic and ideal for classroom projection without any hardware dependency.
+
+**中文摘要**：教師示範程式的所有模式均為「全合成」模式，無需攝影機輸入，所有物理皆以程序化方式計算與繪製。這使程式具確定性，適合在課堂投影使用，不依賴任何硬件。

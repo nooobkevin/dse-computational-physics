@@ -3,6 +3,8 @@
 These questions test your understanding of the physics behind the wave
 simulation you just implemented.  Answer them in a few sentences each.
 
+> 中文：以下問題測試你對剛才實作的波動模擬背後物理概念的理解。每題以數句作答。
+
 ---
 
 ## Questions
@@ -22,6 +24,12 @@ direction, the sum is a standing wave.
 4. At what positions *x* does the displacement reach its maximum amplitude?
    These are called **anti-nodes**.
 
+> 中文：(a) 為何疊加會產生駐波？你實作了行波 `y(x,t) = A sin(kx - ωt)`。若加上第二個沿相反方向行進的波 `y₂(x,t) = A sin(kx + ωt)`，其和即為駐波。
+> 1. 寫出 `y₁ + y₂` 的數學表達式。
+> 2. 利用三角恆等式 `sin α + sin β = 2 sin((α+β)/2) cos((α-β)/2)` 化簡此和。所得表達式為何？
+> 3. 在哪些位置 *x* 上，位移在所有時間 *t* 均保持為零？這些位置稱為**節點**。請以波長 λ 表示答案。
+> 4. 在哪些位置 *x* 上，位移達到最大振幅？這些位置稱為**腹點**。
+
 ### (b) Standing waves vs. traveling waves
 
 1. In a traveling wave, does a point on the string ever have zero
@@ -32,6 +40,11 @@ direction, the sum is a standing wave.
    wavelengths.  If the string length is *L*, what are the allowed
    wavelengths?  (This is the origin of musical notes on a string
    instrument.)
+
+> 中文：(b) 駐波對行波。
+> 1. 在行波中，弦上某一點會在所有時間都保持零位移嗎？解釋之。
+> 2. 在駐波中，能量會沿弦傳播嗎？解釋為何會或不會。
+> 3. 兩端固定的弦上的駐波只能具有某些波長。若弦長為 *L*，容許的波長為何？（這是弦樂器樂音的來源。）
 
 ### (c) Intensity and amplitude
 
@@ -47,6 +60,12 @@ The energy of a wave is proportional to the square of its amplitude:
    rather than amplitude.  (Hint: consider the kinetic energy of a point
    on the string: `½ m v²`, where *v* is the transverse velocity.)
 
+> 中文：(c) 強度與振幅。波的能量與其振幅的平方成正比：`I ∝ A²`。
+> 1. 若將波的振幅加倍，強度會增加多少倍？
+> 2. 若將振幅增至三倍，強度會增加多少倍？
+> 3. 振幅為 *A* 的聲波強度為 *I*。要產生強度為 4 倍的聲波，振幅須增加多少倍？
+> 4. 用物理術語解釋為何能量取決於振幅的平方而非振幅。（提示：考慮弦上一點的動能 `½ m v²`，其中 *v* 為橫向速度。）
+
 ### (d) Inverse-square law
 
 A point source emits waves uniformly in all directions.  The intensity
@@ -59,6 +78,11 @@ at a distance *r* from the source follows the inverse-square law:
    at a distance of 3 m?
 3. Why does the intensity follow a `1/r²` law rather than `1/r`?  (Hint:
    consider the surface area of a sphere.)
+
+> 中文：(d) 反平方定律。點源向所有方向均勻發射波。距源 *r* 處的強度遵循反平方定律：`I ∝ 1/r²`。
+> 1. 若與聲源的距離加倍，強度會減少多少倍？
+> 2. 若在距離 1 m 處強度為 *I₀*，在距離 3 m 處強度為何？
+> 3. 為何強度遵循 `1/r²` 定律而非 `1/r`？（提示：考慮球體的表面面積。）
 
 ### (e) Interference and Young's double-slit
 
@@ -75,6 +99,12 @@ integer number of wavelengths: `d sin θ = n λ`.
 4. Why does the central fringe (n = 0) always appear bright regardless
    of the wavelength?
 
+> 中文：(e) 干涉與楊氏雙縫。楊氏雙縫實驗證明光的波動性質。當兩縫的光程差為波長的整數倍時出現亮紋：`d sin θ = n λ`。
+> 1. **相消**干涉（暗紋）須滿足甚麼條件？
+> 2. 若縫距 *d* 增大，屏幕上的條紋間距會有何變化？
+> 3. 若波長 λ 增大（例如紅光而非藍光），條紋間距會有何變化？
+> 4. 為何中央條紋（n = 0）無論波長為何都總是亮紋？
+
 ### (f) Polarisation as evidence for transverse waves
 
 1. Explain why only **transverse** waves can be polarised, while
@@ -83,6 +113,11 @@ integer number of wavelengths: `d sin θ = n λ`.
    demonstrates that light is a transverse wave.
 3. Sound waves in air are longitudinal.  Can sound waves be polarised?
    Explain.
+
+> 中文：(f) 偏振作為橫波的證據。
+> 1. 解釋為何只有**橫波**能被偏振，而**縱波**不能。
+> 2. 描述一個使用偏振濾光片的簡單實驗，證明光是橫波。
+> 3. 空氣中的聲波是縱波。聲波能被偏振嗎？解釋之。
 
 ---
 
@@ -103,6 +138,8 @@ the questions to students.*
 4. Anti-nodes occur where `|sin(kx)| = 1`, i.e. `kx = (n+½)π`, so
    `x = (n+½)λ/2 = λ/4, 3λ/4, 5λ/4, ...`
 
+> 中文：(a) 參考答案。`y₁ + y₂ = A sin(kx - ωt) + A sin(kx + ωt)`。利用 `sin α + sin β = 2 sin((α+β)/2) cos((α-β)/2)` 得 `y = 2A sin(kx) cos(ωt)`。節點出現於 `sin(kx) = 0`，即 `kx = nπ`，故 `x = nπ/k = nλ/2`，節點位於 `x = 0, λ/2, λ, 3λ/2, ...`。腹點出現於 `|sin(kx)| = 1`，即 `kx = (n+½)π`，故 `x = (n+½)λ/2 = λ/4, 3λ/4, 5λ/4, ...`。
+
 ### (b) Model answer
 
 1. No.  In a traveling wave, every point oscillates with the same
@@ -115,6 +152,8 @@ the questions to students.*
    are `λₙ = 2L/n` where `n = 1, 2, 3, ...` (the harmonic series).
    The fundamental frequency is `f₁ = v/(2L)`.
 
+> 中文：(b) 參考答案。不會。在行波中，每一點都以相同振幅 *A* 振盪，一點只在特定時刻（波經過平衡位置時）位移為零，而非所有時間。不會。在駐波中，能量儲存於振盪中但不沿弦傳播，能量被限制在節點之間，在動能與勢能形式之間振盪。對兩端固定、長度為 *L* 的弦，容許波長為 `λₙ = 2L/n`，其中 `n = 1, 2, 3, ...`（諧波系列），基頻為 `f₁ = v/(2L)`。
+
 ### (c) Model answer
 
 1. Doubling amplitude → intensity increases by factor 4 (2² = 4).
@@ -125,6 +164,8 @@ the questions to students.*
    is `½ m v_y² ∝ A²`.  Since both kinetic and potential energy scale
    with A², the total energy (intensity) scales as A².
 
+> 中文：(c) 參考答案。振幅加倍 → 強度增加 4 倍（2² = 4）。振幅增至三倍 → 強度增加 9 倍（3² = 9）。要使強度增至 4 倍，振幅須增加 2 倍（√4 = 2）。弦上一點的橫向速度為 `v_y = ∂y/∂t`；對 `y = A sin(kx - ωt)`，`v_y = -ωA cos(kx - ωt)`，動能 `½ m v_y² ∝ A²`。由於動能與勢能均按 A² 標度，總能量（強度）按 A² 標度。
+
 ### (d) Model answer
 
 1. Doubling distance → intensity decreases by factor 4 (1/2² = 1/4).
@@ -133,6 +174,8 @@ the questions to students.*
    power emitted by the source spreads uniformly over a sphere of surface
    area `4πr²`.  Since power = intensity × area, `I = P / (4πr²) ∝ 1/r²`.
    If it were `1/r`, energy would not be conserved.
+
+> 中文：(d) 參考答案。距離加倍 → 強度減少 4 倍（1/2² = 1/4）。在 3 m 處：`I = I₀ / 3² = I₀ / 9`。反平方定律源於能量守恆：源發出的總功率均勻分佈於表面面積 `4πr²` 的球面上，因功率 = 強度 × 面積，故 `I = P / (4πr²) ∝ 1/r²`；若為 `1/r`，能量便不守恆。
 
 ### (e) Model answer
 
@@ -144,6 +187,8 @@ the questions to students.*
 4. The central fringe (n = 0) has zero path difference from both slits,
    so waves arrive in phase for any wavelength, producing constructive
    interference.
+
+> 中文：(e) 參考答案。相消干涉（暗紋）：光程差 = `(n + ½)λ`，即 `d sin θ = (n + ½)λ`。增大縫距 *d* 會減小條紋間距（條紋更密）。增大波長 λ 會增大條紋間距（條紋更疏）。中央條紋（n = 0）對兩縫的光程差為零，故任何波長下波均同相到達，產生相長干涉。
 
 ### (f) Model answer
 
@@ -160,3 +205,5 @@ the questions to students.*
 3. No, sound waves in air are longitudinal (compression/rarefaction).
    There is no transverse oscillation to filter, so sound cannot be
    polarised.
+
+> 中文：(f) 參考答案。偏振要求波的振盪具有特定方向（取向）。橫波垂直於傳播方向振盪，故有明確的偏振方向；縱波平行於傳播方向振盪，沒有可過濾的「方向」，故不能偏振。讓光通過偏振濾光片，透射強度會減弱；再通過旋轉 90° 的第二片偏振濾光片，光完全不能通過；把第二片轉回 0° 則恢復透射，這顯示光具有橫向取向。不能，空氣中的聲波是縱波（壓縮／稀疏），沒有可過濾的橫向振盪，故聲波不能偏振。

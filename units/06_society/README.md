@@ -1,6 +1,8 @@
-# Unit 06: Physics and Society
+# Unit 06: Physics and Society 社會與能源
 
-## Overview
+## Overview 單元概覽
+
+本單元涵蓋物理與社會的核心課題，包括輻射與放射性（半衰期、放射性強度、蓋革計數器、電離輻射、裂變與聚變）、能源與可持續發展（可再生能源、太陽能、風能），以及放射性同位素的應用。學生透過觀看動畫、操作教師示範程式及完成填空式編程練習，掌握半衰期、放射性強度、裂變、聚變與可再生能源等概念。
 
 This unit follows the three-artifact pattern shared by every unit in the toolkit:
 
@@ -12,11 +14,13 @@ All three artifacts consume the same `physics_core` engine (`src/physics_core/so
 
 ---
 
-## Curriculum Learning-Outcome Map
+## Curriculum Learning-Outcome Map 課程學習成果對照
 
 This unit targets the following HKDSE Physics curriculum outcomes (CAF Consultation Draft June 2026):
 
-### 6a. Radiation and radioactivity
+下表對應 CAF（2026 年 6 月諮詢稿）主題六「物理與社會」的學習成果，涵蓋輻射與放射性、能源與可持續發展，以及物理與未來科技三大範疇。
+
+### 6a. Radiation and radioactivity 輻射與放射性
 
 | Sub-topic | Learning outcome(s) | Which artifact(s) deliver it |
 |---|---|---|
@@ -25,7 +29,7 @@ This unit targets the following HKDSE Physics curriculum outcomes (CAF Consultat
 | **Radioactive isotopes — uses** (6a.19) | Radiotherapy, thickness inspection, tracers, medical imaging | Manim `RadioisotopeUses` (gamma camera, radiotherapy, thickness gauge) |
 | **Nuclear fission and chain reactions** (6a.20) | Neutron multiplication factor k; critical mass; subcritical/critical/supercritical regimes | Teacher app (`--mode reactor` — neutron population vs generation for k=0.6, 1.0, 1.5); Manim `ChainReaction` (fission schematic + chain reaction generations) |
 
-### 6b. Energy sources and sustainable development
+### 6b. Energy sources and sustainable development 能源與可持續發展
 
 | Sub-topic | Learning outcome(s) | Which artifact(s) deliver it |
 |---|---|---|
@@ -35,14 +39,14 @@ This unit targets the following HKDSE Physics curriculum outcomes (CAF Consultat
 | **Nuclear fission and fusion** (6b.2, 6b.8) | Energy release in fission and fusion; fusion as source of solar energy | Manim `EnergySources` (fission/fusion comparison); Teacher app (`--mode energy` — mass-defect readout) |
 | **Carbon neutrality** (6b.13) | Daily habits; climate change mitigation; HK energy consumption | Concept questions in `questions.md` (STSE carbon-neutrality trade-offs) |
 
-### 6c. Physics for recent and future
+### 6c. Physics for recent and future 物理與未來科技
 
 | Sub-topic | Learning outcome(s) | Which artifact(s) deliver it |
 |---|---|---|
 | **Physics-related careers** (6c.1–6c.2) | Role of physicists and engineers in sustainable society; professions applying physical models | Concept questions in `questions.md`; README notes |
 | **Physics and I&T** (6c.3) | Impact of physics discoveries on modern technologies | Manim `RadioisotopeUses` (medical imaging, industrial applications) |
 
-### Computational Physics (per §2.2.2)
+### Computational Physics (per §2.2.2) 計算物理（按 §2.2.2）
 
 | CP activity | Which artifact(s) deliver it |
 |---|---|
@@ -53,9 +57,11 @@ This unit targets the following HKDSE Physics curriculum outcomes (CAF Consultat
 
 ---
 
-## Lesson Flow (Suggested Sequence)
+## Lesson Flow (Suggested Sequence) 教學流程
 
-### Step 1: Watch the Manim scene(s)
+以下為建議的教學順序：先觀看 Manim 動畫建立直觀概念，再以教師示範程式即時演示物理現象，最後讓學生完成填空式編程練習並回答概念問題。
+
+### Step 1: Watch the Manim scene(s) 第一步：觀看 Manim 動畫
 
 Play the rendered MP4 for the topic you are about to teach:
 
@@ -65,7 +71,7 @@ Play the rendered MP4 for the topic you are about to teach:
 - **Energy sources**: `EnergySources.mp4` — compares fission/fusion (ΔE = Δmc²), solar power (P = S·A·η), and wind power (P ∝ v³) with a bar chart comparison.
 - **Radioisotope uses**: `RadioisotopeUses.mp4` — shows three applications: medical imaging (gamma camera), radiotherapy, and industrial thickness gauge.
 
-### Step 2: Run the teacher demo app
+### Step 2: Run the teacher demo app 第二步：執行教師示範程式
 
 Open the teacher app in the relevant mode and demonstrate the physics live:
 
@@ -74,7 +80,7 @@ Open the teacher app in the relevant mode and demonstrate the physics live:
 - **Reactor mode** (`--mode reactor`): shows neutron population vs generation for three values of k (0.6, 1.0, 1.5).
 - **Energy mode** (`--mode energy`): interactive wind turbine with radius and wind-speed sliders, live P = ½ηρAv³ with the P-vs-v cubic curve; fission panel with mass-defect readout; solar power reference.
 
-### Step 3: Complete the fill-in-the-blank exercises
+### Step 3: Complete the fill-in-the-blank exercises 第三步：完成填空式練習
 
 Students complete one or more of the following exercises:
 
@@ -86,9 +92,11 @@ Each auto-grader measures numerical behaviour — any correct implementation pas
 
 ---
 
-## How to Run Each Artifact
+## How to Run Each Artifact 如何執行各項工具
 
-### Prerequisites
+以下指令說明如何執行引擎測試、教師示範程式、Manim 渲染及練習評分器。所有示範模式均為全合成（synthetic），無需攝影機即可在課堂投影。
+
+### Prerequisites 前置要求
 
 - Python 3.11+ with `uv` installed
 - Docker (for Manim rendering only)
@@ -98,7 +106,7 @@ Each auto-grader measures numerical behaviour — any correct implementation pas
 uv sync
 ```
 
-### Engine tests
+### Engine tests 引擎測試
 
 ```bash
 uv run pytest tests/test_society.py -v
@@ -106,7 +114,7 @@ uv run pytest tests/test_society.py -v
 
 This runs all unit tests for the society domain (decay simulation, radiation properties, energy sources).
 
-### Teacher app
+### Teacher app 教師示範程式
 
 ```bash
 # Decay mode (Monte Carlo simulation + activity display)
@@ -127,7 +135,7 @@ uv run python units/06_society/teacher_app/main.py --mode decay --headless-selfc
 
 All modes are fully synthetic — no camera required. The `--headless-selfcheck` flag runs a few frames without opening a window and exits — useful for CI or testing.
 
-### Manim render
+### Manim render Manim 渲染
 
 ```bash
 # Render all scenes (requires Docker)
@@ -146,7 +154,7 @@ Available scenes: `radioactive_decay`, `radiation_penetration`, `chain_reaction`
 
 Quality flags: `-qh` (high, default), `-ql` (low, fast preview), `-qk` (4K).
 
-### Exercise / grader
+### Exercise / grader 練習／評分器
 
 ```bash
 # Grade the decay exercise (default: society_exercise.py)
@@ -172,9 +180,11 @@ Solution files (`society_solution.py`, `energy_solution.py`, `decay_analysis_sol
 
 ---
 
-## Physics Engine Architecture
+## Physics Engine Architecture 物理引擎架構
 
 The `src/physics_core/society/` package follows the same pattern as `mechanics/` and `em/`:
+
+`src/physics_core/society/` 套件與 `mechanics/` 及 `em/` 採用相同模式：
 
 ```
 src/physics_core/society/
@@ -185,7 +195,7 @@ src/physics_core/society/
 
 The abstract base defines physics **hooks** that raise `NotImplementedError`. The `Reference` subclass provides the correct physics. All three front-ends import the Reference implementation; the student exercise subclasses the base directly.
 
-### Physics hooks
+### Physics hooks 物理鉤子
 
 | Engine | Hook(s) | Physics |
 |---|---|---|
@@ -195,7 +205,7 @@ The abstract base defines physics **hooks** that raise `NotImplementedError`. Th
 | `EnergySim` | `wind_power(r, v, ρ, η)` | P = ½ηρπr²v³ |
 | `EnergySim` | `photovoltaic_power(area, S, η)` | P = S·A·η (default η = 0.20) |
 
-### dt-clamp in Manim updaters
+### dt-clamp in Manim updaters Manim 更新器中的 dt 限制
 
 All Manim scenes use the same dt-clamp pattern in their updater functions:
 
@@ -205,36 +215,38 @@ h = min(dt, 1.0 / config.frame_rate)
 
 This prevents a Manim edge-case where `dt` can be 0 on frame boundaries, which would cause the simulation to stall.
 
-### Rendering notes
+### Rendering notes 渲染說明
 
 - The `render.sh` script passes `--disable_caching` to force a fresh render every time.
 - Output MP4s are flattened from the nested `videos/` directory into the flat `output/` directory by the script.
 
 ---
 
-## Synthetic-Only Note
+## Synthetic-Only Note 全合成模式說明
 
 All modes in the teacher app are **fully synthetic**. Unlike the pendulum mode in Unit 01 (which supported real webcam tracking), there is no camera input — all physics is computed and rendered procedurally. This makes the app deterministic and ideal for classroom projection without any hardware dependency.
 
+教師示範程式的所有模式均為**全合成**。不像單元 01 的單擺模式（支援真實視訊追蹤），這裡沒有攝影機輸入，所有物理均由程式計算並程序化渲染，因此結果確定，適合無需任何硬體依賴的課堂投影。
+
 ---
 
-## CAF Compliance Notes
+## CAF Compliance Notes CAF 合規說明
 
-### Half-life wording
+### Half-life wording 半衰期的表述
 
 The CAF (June 2026) removes the formal "exponential decay law" as named content. The current unit uses `N = N₀·2^(-t/T)` (powers of two) rather than the natural exponential form `N = N₀·e^(-λt)`. This is consistent with the CAF: half-life is presented as the quantity read from the decay curve, not derived from an exponential law. The `decay_probability` hook uses `p = 1 − exp(−λ dt)` internally, which is a computational implementation detail, not a curriculum outcome.
 
-### Removed content
+### Removed content 已刪除內容
 
 - **Exponential law of decay**: Removed per Annex 3, line 4296–4297. The unit uses the half-life form `N = N₀·2^(-t/T)` which is consistent.
 - **Transmutation**: Removed per Annex 3, line 4303. Not covered in this unit.
 
-### Integrated content (Annex 3)
+### Integrated content (Annex 3) 整合內容（附錄 3）
 
 - **Medical imaging applications of radioisotopes** (from Medical Physics): Covered by `RadioisotopeUses` Manim scene.
 - **Energy sources and sustainable development** (from Energy and Use of Energy): Covered by `energy.py` engine, `EnergySources` scene, `--mode energy` app, and `energy_exercise.py`.
 
-### Out-of-scope (teacher-led activities)
+### Out-of-scope (teacher-led activities) 範圍外（教師主導活動）
 
 The following CAF-suggested activities are hands-on/experiential and outside the computational toolkit's scope:
 - GM counter measurements of background radiation

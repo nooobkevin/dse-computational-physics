@@ -14,6 +14,12 @@ All three artifacts consume the same `physics_core` engine (`src/physics_core/wa
 
 ---
 
+## 中文概覽
+
+本單元涵蓋香港中學文憑（HKDSE）物理科「波動」主題，透過三個互相配合的教材元件教授：**Manim 動畫**（觀看）、**教師示範應用程式**（互動）及**學生填空練習**（編程）。核心概念包括波的疊加與駐波、波速與強度（I ∝ A²）、楊氏雙縫干涉、偏振（馬呂斯定律）、電磁波譜、超聲波測距及反平方定律。教師應用程式為全合成（無需網絡攝影機），開箱即用。課堂流程建議：先觀看動畫建立直觀概念，再以教師應用程式即場示範，最後讓學生完成填空練習。
+
+---
+
 ## Curriculum Learning-Outcome Map (CAF Consultation Draft alignment)
 
 This unit targets the following HKDSE Physics curriculum outcomes per the June 2026 CAF Consultation Draft (lines 1563–1842):
@@ -34,6 +40,10 @@ This unit targets the following HKDSE Physics curriculum outcomes per the June 2
 ### Cross-unit references
 
 - **Total internal reflection / optical fibres** — now live in **Unit 05 (Physics & Engineering)**. The wave nature of TIR is introduced conceptually in Unit 03 (c.5) and applied in Unit 05.
+
+### 學習成果對應（中文摘要）
+
+本單元對應 CAF 課程「波動」的學習成果：**a. 波的性質**（振幅、波長、頻率、波速 v = fλ、橫波與縱波、能量 ∝ A²、疊加形成駐波）；**b. 波的特性**（反射、折射、衍射、干涉、楊氏雙縫、d sin θ = nλ、條紋間距 Δy = λD/d）；**c. 光波／電磁波譜**（c = 3.0×10⁸ m/s、電磁波譜波段、可見光 ROYGBIV、偏振與馬呂斯定律 I = I₀ cos²θ、反平方定律 I ∝ 1/r²）；**d. 聲波**（脈衝回聲測距 d = v×t/2、超聲波成像、頻率→音高、振幅→響度、共振）。已刪除內容（CAF Annex 3）：幾何光學（光線圖、透鏡）、噪音、縱波的 d-t/d-d 圖。全內反射／光纖現於單元 05 教授。
 
 ---
 
@@ -69,6 +79,10 @@ Students open `wave_exercise.py` and implement the single method `displacement(s
 4. Intensity scales as amplitude squared (I ∝ A²)
 
 The concept questions in `questions.md` cover superposition, standing vs traveling waves, intensity, inverse-square law, interference, polarisation, and ultrasound.
+
+### 課堂流程（中文摘要）
+
+建議課堂順序分三步：**第一步**播放 Manim 動畫（`SuperpositionStanding.mp4` 疊加／駐波、`WaveSpeedIntensity.mp4` 波速與強度、`YoungSlit.mp4` 楊氏雙縫、`Polarisation.mp4` 偏振、`UltrasoundRanging.mp4` 超聲波測距、`EMSpectrum.mp4` 電磁波譜）；**第二步**以教師應用程式即場示範（行波、駐波、干涉、反平方定律四種模式，全合成無需攝影機）；**第三步**讓學生完成填空練習（實作 `displacement(self, x, t)`），並以自動評分器核對。`questions.md` 的概念題涵蓋疊加、駐波對行波、強度、反平方定律、干涉、偏振及超聲波。
 
 ---
 
@@ -148,6 +162,10 @@ uv run pytest units/03_waves/exercises/test_exercise.py --selfcheck -v
 
 The solution file (`wave_solution.py`) and teacher answer key (`teacher_key.md`) are gitignored — students must not see them.
 
+### 執行方法（中文摘要）
+
+先以 `uv sync` 安裝依賴。引擎測試用 `uv run pytest`。教師應用程式以 `uv run python units/03_waves/teacher_app/main.py --mode traveling|standing|interference|inverse_square` 執行（全合成，無需網絡攝影機）。Manim 動畫以 `bash units/03_waves/manim/render.sh` 渲染（需 Docker），輸出 MP4 存放於 `manim/output/`。評分以 `uv run pytest units/03_waves/exercises/test_exercise.py -v` 執行，教師可加 `--override-student=...wave_solution.py` 自行核對。解答檔與教師答案檔（`teacher_key.md`）已加入 gitignore，學生不得查閱。
+
 ---
 
 ## Numerical-Methods Tie-In
@@ -168,6 +186,10 @@ All Manim scenes use the same pattern in their updater functions — reading `se
 
 - The `render.sh` script passes `--disable_caching` to force a fresh render every time (cached frames from a previous run with different parameters would be stale).
 - Output MP4s are flattened from the nested `videos/` directory into the flat `output/` directory by the script.
+
+### 數值方法連結（中文摘要）
+
+本單元的波動模擬屬**解析**而非數值：行波 `y(x,t) = A sin(kx - ωt)` 是波動方程的閉式解，無需 ODE 積分（無 Euler/Verlet 步驟），解在空間與時間的每一點均精確，學生可解析地驗證波動方程 `∂²y/∂t² = v² ∂²y/∂x²`。`WaveSpeedIntensity` 動畫示範振幅與強度的關係（I ∝ A²），是理解波動能量傳輸的關鍵概念。所有 Manim 場景的更新函數均讀取 `self.time` 而非累積 `dt`，以避免 Manim 在幀邊界 `dt` 為 0 的邊緣情況。
 
 ---
 
@@ -200,3 +222,7 @@ All Manim scenes use the same pattern in their updater functions — reading `se
 | `.standing_wave(x, t)` | Standing wave via superposition |
 | `.step(dt)` | Advance time |
 | `.energy()` | Returns `{"total": A²}` |
+
+### 引擎 API 摘要（中文）
+
+`equations.py` 提供波動常用函數：`wave_speed(f, λ)`（v = fλ）、`angular_frequency(f)`（ω = 2πf）、`wave_number(λ)`（k = 2π/λ）、`intensity(A)`（I ∝ A²）、`intensity_inverse_square(r, I₀)`（I = I₀/r²）、`young_slit_dsin`／`young_slit_angle`／`diffraction_grating_angle`（d sin θ = nλ）、`malus_law(I₀, θ)`（I = I₀ cos²θ）、`ultrasound_echo_distance(v, t)`（d = v×t/2）、`young_slit_intensity`（雙縫強度分佈）。`wave_sim.py` 中 `WaveSim` 為抽象基底（含 `displacement()` 鉤子），`ReferenceWaveSim` 提供正確解析物理 `y = A sin(kx - ωt)`，並提供 `.field`、`.standing_wave`、`.step`、`.energy` 等方法。

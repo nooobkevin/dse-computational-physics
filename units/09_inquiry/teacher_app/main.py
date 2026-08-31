@@ -6,6 +6,8 @@ Usage
     uv run python units/09_inquiry/teacher_app/main.py --mode experiment
     uv run python units/09_inquiry/teacher_app/main.py --mode epidemic
     uv run python units/09_inquiry/teacher_app/main.py --mode design
+    uv run python units/09_inquiry/teacher_app/main.py --mode fire
+    uv run python units/09_inquiry/teacher_app/main.py --mode crowd
     uv run python units/09_inquiry/teacher_app/main.py --mode epidemic --headless-selfcheck
 """
 
@@ -33,7 +35,11 @@ from physics_core.inquiry.analysis import (
     percent_error,
     propagate_uncertainty,
 )
-from physics_core.inquiry.complex_systems import ReferenceEpidemicModel
+from physics_core.inquiry.complex_systems import (
+    ReferenceCrowdModel,
+    ReferenceEpidemicModel,
+    ReferenceForestFire,
+)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -56,6 +62,17 @@ COLOR_INFECTED = (0, 0, 200)          # red (BGR)
 COLOR_RECOVERED = (0, 180, 0)         # green (BGR)
 COLOR_DESIGN_FIT = (255, 0, 255)      # magenta
 
+# Forest-fire colours (BGR)
+COLOR_TREE = (34, 139, 34)            # green
+COLOR_EMPTY = (64, 64, 64)            # dark grey
+COLOR_BURNING = (0, 69, 255)          # orange-red
+COLOR_BURNED = (43, 47, 74)           # dark brown
+
+# Crowd colours (BGR)
+COLOR_HALL = (42, 42, 42)             # dark hall
+COLOR_DOOR = (50, 125, 46)            # green door
+COLOR_AGENT = (255, 144, 30)          # blue agent
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -66,7 +83,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--mode",
         required=True,
-        choices=["analysis", "experiment", "epidemic", "design"],
+        choices=["analysis", "experiment", "epidemic", "design", "fire", "crowd"],
         help="Demo mode",
     )
     parser.add_argument(
@@ -656,6 +673,251 @@ def _run_design(args: argparse.Namespace) -> None:
     cv2.destroyAllWindows()
 
 
+def _run_fire(args: argparse.Namespace) -> None:
+    """Fire mode — forest-fire cellular automaton with wind bias + step/play."""
+    cv2.namedWindow(WIN_NAME)
+    cv2.createTrackbar("p_ignite", WIN_NAME, 35, 80, lambda x: None)   # 0.0-0.8
+    cv2.createTrackbar("wind_bias", WIN_NAME, 40, 60, lambda x: None)  # 0.0-0.6
+
+    rows: int = 40
+    cols: int = 60
+    total_steps: int = 300
+
+    p_ig_prev: Optional[float] = None
+    w_b_prev: Optional[float] = None
+    step: int = 0
+    playing: bool = False
+    grids: List[np.ndarray] = []
+    history: List[Tuple[int, int, int]] = []
+
+    cell_w: int = 9
+    cell_h: int = 9
+    grid_offset_x: int = 20
+    grid_offset_y: int = 50
+
+    while True:
+        p_ig = cv2.getTrackbarPos("p_ignite", WIN_NAME) / 100.0
+        w_b = cv2.getTrackbarPos("wind_bias", WIN_NAME) / 100.0
+
+        if not grids or p_ig != p_ig_prev or w_b != w_b_prev:
+            model = ReferenceForestFire(
+                rows,
+                cols,
+                p_ignite=p_ig,
+                wind_direction=0,
+                wind_bias=w_b,
+                burn_duration=1,
+                tree_density=0.9,
+                seed=42,
+            )
+            grids = [model.grid.copy()]
+            history = [model.fire_counts()]
+            for _ in range(total_steps):
+                model.step()
+                grids.append(model.grid.copy())
+                history.append(model.fire_counts())
+                if model.fire_counts()[1] == 0:  # fire burned out
+                    break
+            p_ig_prev, w_b_prev = p_ig, w_b
+            step = 0
+
+        step = min(step, len(grids) - 1)
+        canvas = np.full((CANVAS_H, CANVAS_W, 3), COLOR_BG, dtype=np.uint8)
+        grid = grids[step]
+
+        for r in range(rows):
+            for c in range(cols):
+                val = grid[r, c]
+                if val == 0:
+                    color = COLOR_TREE
+                elif val == 1:
+                    color = COLOR_EMPTY
+                elif val == 2:
+                    color = COLOR_BURNING
+                else:
+                    color = COLOR_BURNED
+                x = grid_offset_x + c * cell_w
+                y = grid_offset_y + r * cell_h
+                cv2.rectangle(
+                    canvas, (x, y), (x + cell_w - 1, y + cell_h - 1), color, -1,
+                )
+
+        # Live counts bar
+        trees, burning, burned = history[step]
+        total = rows * cols
+        bar_x = grid_offset_x + cols * cell_w + 30
+        bar_y = 60
+        bar_h = 200
+        bar_w = 30
+        gap = 10
+        for idx, (cnt, col, label) in enumerate(
+            [(trees, COLOR_TREE, "Trees"), (burning, COLOR_BURNING, "Burning"), (burned, COLOR_BURNED, "Burned")]
+        ):
+            bx = bar_x + idx * (bar_w + gap)
+            bh = int((cnt / total) * bar_h)
+            cv2.rectangle(canvas, (bx, bar_y + bar_h - bh), (bx + bar_w, bar_y + bar_h), col, -1)
+            cv2.putText(canvas, f"{label}: {cnt}", (bx - 5, bar_y + bar_h + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_TEXT, 1)
+
+        # Wind arrow (east)
+        arrow_tip = (grid_offset_x + cols * cell_w + 10, bar_y - 80)
+        cv2.arrowedLine(canvas, (arrow_tip[0] - 60, arrow_tip[1]), arrow_tip, COLOR_TEXT, 2, tipLength=0.3)
+        cv2.putText(canvas, "WIND (E)", (arrow_tip[0] - 60, arrow_tip[1] - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_TEXT, 1)
+
+        cv2.putText(canvas, f"Step: {step}/{len(grids)-1}", (bar_x, bar_y - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+        cv2.putText(canvas, f"p_ignite = {p_ig:.2f}", (bar_x, bar_y - 50), cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_TEXT, 1)
+        cv2.putText(canvas, f"wind_bias = {w_b:.2f}", (bar_x, bar_y - 70), cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_TEXT, 1)
+
+        controls = ["[SPACE] Play/Pause", "[RIGHT] Step forward", "[ESC] Exit"]
+        for ci, ctrl in enumerate(controls):
+            cv2.putText(canvas, ctrl, (bar_x, 460 + ci * 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_AXIS, 1)
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:  # ESC
+            break
+        elif key == 32:  # SPACE
+            playing = not playing
+        elif key == 83 or key == 115:  # RIGHT / 's'
+            if step < len(grids) - 1:
+                step += 1
+        if playing and step < len(grids) - 1:
+            step += 1
+
+    cv2.destroyAllWindows()
+
+
+def _run_crowd(args: argparse.Namespace) -> None:
+    """Crowd mode — agent-based evacuation with panic + n-agent sliders."""
+    cv2.namedWindow(WIN_NAME)
+    cv2.createTrackbar("panic", WIN_NAME, 30, 100, lambda x: None)   # 0.0-1.5
+    cv2.createTrackbar("n_agents", WIN_NAME, 30, 80, lambda x: None)  # 10-80
+
+    hall_w: float = 10.0
+    hall_h: float = 6.0
+    total_steps: int = 600
+
+    panic_prev: Optional[float] = None
+    n_prev: Optional[int] = None
+    step: int = 0
+    playing: bool = False
+    positions_frames: List[np.ndarray] = []
+    exited_frames: List[np.ndarray] = []
+    metrics: List[Tuple[float, int, int]] = []
+    n_agents: int = 30
+
+    hall_left: int = 60
+    hall_top: int = 90
+    hall_pixel_w: int = 640
+    hall_pixel_h: int = 400
+
+    def world_to_px(x: float, y: float) -> Tuple[int, int]:
+        px = int(hall_left + x / hall_w * hall_pixel_w)
+        py = int(hall_top + y / hall_h * hall_pixel_h)
+        return (px, py)
+
+    while True:
+        panic = cv2.getTrackbarPos("panic", WIN_NAME) / 100.0 * 1.5
+        n_agents = cv2.getTrackbarPos("n_agents", WIN_NAME) + 10
+
+        if not positions_frames or panic != panic_prev or n_agents != n_prev:
+            model = ReferenceCrowdModel(
+                n_agents,
+                hall_width=hall_w,
+                hall_height=hall_h,
+                exit_size=1.0,
+                base_speed=0.9,
+                panic=panic,
+                seed=42,
+            )
+            positions_frames = [model.positions.copy()]
+            exited_frames = [model.exited.copy()]
+            metrics = [model.crowd_metrics()]
+            for _ in range(total_steps):
+                model.step()
+                positions_frames.append(model.positions.copy())
+                exited_frames.append(model.exited.copy())
+                metrics.append(model.crowd_metrics())
+                if metrics[-1][1] == n_agents:  # all evacuated
+                    break
+            panic_prev, n_prev = panic, n_agents
+            step = 0
+
+        step = min(step, len(positions_frames) - 1)
+        positions = positions_frames[step]
+        exited = exited_frames[step]
+        mean_speed, exited_count, pressure = metrics[step]
+
+        canvas = np.full((CANVAS_H, CANVAS_W, 3), COLOR_BG, dtype=np.uint8)
+
+        # Hall
+        cv2.rectangle(
+            canvas,
+            (hall_left, hall_top),
+            (hall_left + hall_pixel_w, hall_top + hall_pixel_h),
+            COLOR_HALL,
+            -1,
+        )
+        cv2.rectangle(
+            canvas,
+            (hall_left, hall_top),
+            (hall_left + hall_pixel_w, hall_top + hall_pixel_h),
+            COLOR_AXIS,
+            2,
+        )
+
+        # Exit opening (right wall, centred) + door
+        exit_half_px = int(0.5 / hall_h * hall_pixel_h)
+        door_x = hall_left + hall_pixel_w
+        cv2.line(
+            canvas,
+            (door_x, hall_top + hall_pixel_h // 2 - exit_half_px),
+            (door_x, hall_top + hall_pixel_h // 2 + exit_half_px),
+            COLOR_DOOR,
+            8,
+        )
+
+        # Agents
+        for i in range(len(positions)):
+            if exited[i]:
+                continue  # exited agents are not drawn
+            px, py = world_to_px(positions[i][0], positions[i][1])
+            cv2.circle(canvas, (px, py), 5, COLOR_AGENT, -1)
+            cv2.circle(canvas, (px, py), 5, (255, 255, 255), 1)
+
+        # Metrics panel
+        panel_x = hall_left + hall_pixel_w + 40
+        cv2.putText(canvas, f"Exited: {exited_count}/{n_agents}", (panel_x, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, COLOR_TEXT, 2)
+        cv2.putText(canvas, f"Mean speed: {mean_speed:.3f}", (panel_x, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+        cv2.putText(canvas, f"Pressure (at door): {pressure}", (panel_x, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+        cv2.putText(canvas, f"Panic = {panic:.2f}", (panel_x, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+        cv2.putText(canvas, f"Step: {step}/{len(metrics)-1}", (panel_x, 200), cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLOR_TEXT, 1)
+
+        # Progress bar
+        bar_w = 220
+        bar_h = 18
+        frac = exited_count / n_agents
+        cv2.rectangle(canvas, (panel_x, 230), (panel_x + bar_w, 230 + bar_h), COLOR_AXIS, 1)
+        cv2.rectangle(canvas, (panel_x, 230), (panel_x + int(bar_w * frac), 230 + bar_h), COLOR_DOOR, -1)
+
+        controls = ["[SPACE] Play/Pause", "[RIGHT] Step forward", "[ESC] Exit"]
+        for ci, ctrl in enumerate(controls):
+            cv2.putText(canvas, ctrl, (panel_x, 480 + ci * 20), cv2.FONT_HERSHEY_SIMPLEX, 0.4, COLOR_AXIS, 1)
+
+        cv2.imshow(WIN_NAME, canvas)
+        key = cv2.waitKey(int(1000 / FPS)) & 0xFF
+        if key == 27:  # ESC
+            break
+        elif key == 32:  # SPACE
+            playing = not playing
+        elif key == 83 or key == 115:  # RIGHT / 's'
+            if step < len(positions_frames) - 1:
+                step += 1
+        if playing and step < len(positions_frames) - 1:
+            step += 1
+
+    cv2.destroyAllWindows()
+
+
 # ---------------------------------------------------------------------------
 # Headless self-check
 # ---------------------------------------------------------------------------
@@ -751,6 +1013,35 @@ def _headless_selfcheck(mode: str) -> None:
             f"({g_err:.2f}%), L_recommended={L_recommended:.3f} m"
         )
 
+    elif mode == "fire":
+        model = ReferenceForestFire(
+            40, 60, p_ignite=0.35, wind_direction=0, wind_bias=0.4,
+            tree_density=0.9, seed=42,
+        )
+        history = model.run(40 * 60)
+        trees, burning, burned = history[-1]
+        assert burning == 0, (
+            f"Fire self-check FAILED: fire did not burn out "
+            f"({burning} cells still burning)"
+        )
+        assert burned > 0, (
+            "Fire self-check FAILED: no cells burned (burned=0)"
+        )
+        print(f"Fire self-check OK: burning={burning}, burned={burned}")
+
+    elif mode == "crowd":
+        model = ReferenceCrowdModel(40, panic=0.5, seed=42)
+        history = model.run(3000)
+        exited = history[-1][1]
+        assert exited == 40, (
+            f"Crowd self-check FAILED: only {exited}/40 agents exited"
+        )
+        peak_pressure = max(h[2] for h in history)
+        print(
+            f"Crowd self-check OK: exited={exited}/40, "
+            f"peak_pressure={peak_pressure}"
+        )
+
     sys.exit(0)
 
 
@@ -774,6 +1065,10 @@ def main() -> None:
         _run_epidemic(args)
     elif args.mode == "design":
         _run_design(args)
+    elif args.mode == "fire":
+        _run_fire(args)
+    elif args.mode == "crowd":
+        _run_crowd(args)
 
 
 if __name__ == "__main__":

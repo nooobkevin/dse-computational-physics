@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SCENES_DIR="$SCRIPT_DIR/scenes"
 OUTPUT_DIR="$SCRIPT_DIR/output"
-SCENE_NAMES=("electric_field_lines" "potential_gradient" "circuit_comparison" "magnetic_force")
+SCENE_NAMES=("electric_field_lines" "potential_gradient" "circuit_comparison" "magnetic_force" "electric_motor")
 
 # ── Quality flag ─────────────────────────────────────────────────────
 QUALITY="${2:--qh}"
@@ -49,11 +49,15 @@ for scene in "${TARGETS[@]}"; do
         exit 1
     fi
 
+    # The container mounts REPO_ROOT at /work, so map the host path to the
+    # container-relative path that manim actually sees.
+    SCENE_IN_CONTAINER="/work/${SCENE_FILE#"$REPO_ROOT"/}"
+
     echo ""
     echo "═══════════════════════════════════════════════════════════"
     echo "  Rendering:  ${scene}"
     echo "  Quality:    ${QUALITY}"
-    echo "  File:       ${SCENE_FILE}"
+    echo "  File:       ${SCENE_FILE}  (container: ${SCENE_IN_CONTAINER})"
     echo "═══════════════════════════════════════════════════════════"
     echo ""
 
@@ -64,7 +68,7 @@ for scene in "${TARGETS[@]}"; do
         --user "$(id -u):$(id -g)" \
         "$IMAGE" \
         manim \
-            "$SCENE_FILE" \
+            "$SCENE_IN_CONTAINER" \
             "$QUALITY" \
             --disable_caching \
             --format mp4 \

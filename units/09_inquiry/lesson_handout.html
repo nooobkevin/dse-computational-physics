@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc 3.10" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>DSE Computational Physics — Lesson Handout</title>
+  <style>
+
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">@page { size: A4; margin: 14mm 14mm 16mm 14mm; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body {
+  font-family: "PingFang HK", "PingFang TC", "Microsoft JhengHei",
+               "Noto Sans CJK TC", "Noto Sans TC", "Heiti TC",
+               "Hiragino Sans GB", "Source Han Sans TC", sans-serif;
+  font-size: 10.5pt; line-height: 1.45; color: #1a1a1a; margin: 0;
+}
+h1 { font-size: 16pt; margin: 0 0 2pt 0; color: #0b3d66; }
+h2 { font-size: 12pt; margin: 10pt 0 3pt 0; color: #0b3d66;
+     border-bottom: 1.5px solid #0b3d66; padding-bottom: 1pt; }
+h3 { font-size: 11pt; margin: 7pt 0 2pt 0; color: #14507a; }
+p  { margin: 3pt 0; }
+ul, ol { margin: 3pt 0 3pt 0; padding-left: 16pt; }
+li { margin: 1pt 0; }
+table { border-collapse: collapse; width: 100%; margin: 4pt 0; font-size: 9.5pt; }
+th, td { border: 1px solid #b9c6d2; padding: 2pt 5pt; text-align: left; vertical-align: top; }
+th { background: #e8eef4; color: #0b3d66; }
+tr:nth-child(even) td { background: #f6f9fb; }
+code { font-family: "SF Mono", Menlo, Consolas, "Courier New", monospace;
+       font-size: 9pt; background: #f0f2f5; padding: 0 2pt; border-radius: 2pt; }
+pre { background: #f0f2f5; border: 1px solid #d5dbe2; border-radius: 3pt;
+      padding: 5pt 7pt; overflow-x: auto; font-size: 9pt; }
+pre code { background: none; padding: 0; }
+</style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">DSE Computational Physics — Lesson Handout</h1>
+</header>
+<h1 id="unit-09-scientific-inquiry-in-physics-物理科學探究-s4s6">Unit
+09: Scientific Inquiry in Physics 物理科學探究 — S4–S6</h1>
+<h2 id="learning-outcomes-學習目標">Learning Outcomes 學習目標</h2>
+<ul>
+<li><strong>Data analysis</strong> 數據分析: linearisation (<span class="math inline">1/<em>x</em></span>, <span class="math inline">1/<em>x</em><sup>2</sup></span>); best-fit line;
+slope → physical quantity.</li>
+<li><strong>Uncertainty &amp; outliers</strong> 不確定度與離群值: error
+bars; IQR outlier detection; percent uncertainty.</li>
+<li><strong>Complex systems</strong> 複雜系統: SIR epidemic, forest
+fire, crowd evacuation cellular automata.</li>
+<li><strong>Engineering design</strong> 工程設計: pendulum-clock design
+loop (Design, Build, Test, Analyse, Improve).</li>
+<li><strong>Investigation report</strong> 探究報告: structure a full
+scientific investigation.</li>
+<li><strong>AI &amp; safety evaluation</strong> AI 與安全評估:
+critically evaluate AI-generated analysis; hazard identification.</li>
+</ul>
+<h2 id="key-formulas-核心公式">Key Formulas 核心公式</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Formula</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math inline">$T^2 = \frac{4\pi^2}{g}L$</span></td>
+<td>pendulum linearisation → g</td>
+</tr>
+<tr>
+<td><span class="math inline"><em>y</em> = <em>m</em><em>x</em> + <em>c</em></span></td>
+<td>best-fit line</td>
+</tr>
+<tr>
+<td><span class="math inline">$\text{percent uncertainty} = \frac{\Delta
+x}{x}\times100\%$</span></td>
+<td>relative error</td>
+</tr>
+<tr>
+<td><span class="math inline">$s = \tfrac{1}{2}gt^2$</span></td>
+<td>free-fall linearisation</td>
+</tr>
+<tr>
+<td>SIR: <span class="math inline">$\frac{dS}{dt} = -\beta
+SI$</span></td>
+<td>epidemic model</td>
+</tr>
+<tr>
+<td><span class="math inline">$T = 2\pi\sqrt{L/g}$</span></td>
+<td>pendulum period (design)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="lesson-flow-課堂流程">Lesson Flow 課堂流程</h2>
+<ol type="1">
+<li><strong>Watch</strong> 觀看: <code>Linearisation.mp4</code>,
+<code>LinearisationTransforms.mp4</code>, <code>Uncertainty.mp4</code>,
+<code>UncertaintyRepeated.mp4</code>, <code>Conclusion.mp4</code>,
+<code>EpidemicSpread.mp4</code>, <code>ForestFire.mp4</code>,
+<code>CrowdControl.mp4</code>, <code>EngineeringDesign.mp4</code>.</li>
+<li><strong>Interact</strong> 互動: teacher app
+<code>--mode analysis|experiment|epidemic|fire|crowd|design</code>.</li>
+<li><strong>Code</strong> 編程: <code>inquiry_exercise.py</code> (linear
+fit), <code>design_exercise.py</code> (fit_slope, recommended_length),
+or <code>data_analysis_exercise.py</code> (to_si, remove_outliers,
+estimate_g).</li>
+</ol>
+<h2 id="simulation-commands-指令">Simulation Commands 指令</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python units/09_inquiry/teacher_app/main.py <span class="at">--mode</span> epidemic</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> units/09_inquiry/manim/render.sh epidemic <span class="at">-ql</span>   <span class="co"># Docker</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run pytest units/09_inquiry/exercises/test_exercise.py <span class="at">-v</span></span></code></pre></div>
+<h2 id="assessment-評估">Assessment 評估</h2>
+<ul>
+<li><strong>Exercise</strong> 練習:
+<code>uv run pytest units/09_inquiry/exercises/test_exercise.py -v</code>
+(also <code>test_design.py</code>,
+<code>test_data_analysis.py</code>).</li>
+<li><strong>Quiz</strong> 小測:
+<code>uv run pytest units/09_inquiry/exercises/test_quiz.py</code>
+(expect 10 fails on blank).</li>
+<li><strong>Teacher key</strong> 教師核對:
+<code>DSE_QUIZ_ANSWERS=units/09_inquiry/exercises/quiz_solution.py uv run pytest units/09_inquiry/exercises/test_quiz.py</code>
+(expect 10 passes).</li>
+</ul>
+</body>
+</html>

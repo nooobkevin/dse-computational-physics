@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Engine tests + headless selfchecks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Engine unit tests (tests/)
+        run: uv run pytest -q
+
+      - name: Teacher-app headless selfchecks (all units)
+        run: |
+          set -euo pipefail
+          # Exact commands from each unit README (--headless-selfcheck runs a
+          # few frames without opening a window, then exits).
+          SELFCHECKS=(
+            "01_mechanics --mode pendulum"
+            "02_thermal --mode gas"
+            "02_thermal --mode gas_laws"
+            "03_waves --mode inverse_square"
+            "04_em --mode solenoid"
+            "04_em --mode motor"
+            "05_engineering --mode orbital"
+            "05_engineering --mode induction"
+            "05_engineering --mode fibre"
+            "05_engineering --mode transformer"
+            "06_society --mode decay"
+            "07_quantum --mode well"
+            "08_astrophysics --mode doppler"
+            "09_inquiry --mode epidemic"
+            "09_inquiry --mode fire"
+            "09_inquiry --mode crowd"
+          )
+          for entry in "${SELFCHECKS[@]}"; do
+            read -r unit mode <<< "$entry"
+            echo "── selfcheck: $unit $mode"
+            uv run python "units/$unit/teacher_app/main.py" "$mode" --headless-selfcheck
+          done
+
+      - name: Exercise grader selfcheck
+        run: uv run python tools/grade_exercise.py --selfcheck
+
+  render-smoke:
+    name: Manim render + motion gate (smoke)
+    needs: test
+    runs-on: ubuntu-latest
+    continue-on-error: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.11"
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Render one scene (unit 07, photoelectric)
+        run: bash units/07_quantum/manim/render.sh photoelectric
+
+      - name: Motion gate (strict)
+        run: uv run python tools/verify_video_motion.py units/07_quantum/manim/output/photoelectric.mp4 --strict

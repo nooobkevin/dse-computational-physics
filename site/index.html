@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSE 計算物理教學套裝 · DSE Computational Physics Toolkit</title>
+<style>
+  /* ---------- Design tokens ---------- */
+  :root {
+    --ink: #1d3557;          /* headings / primary */
+    --accent: #9b2226;       /* oxblood accent */
+    --text: #22303f;
+    --muted: #5c6b7a;
+    --paper: #faf9f6;
+    --card: #ffffff;
+    --line: #dcd9d0;
+    --chip-bg: #eef2f7;
+    --fallback-bg: #fdf3e7;
+    --fallback-line: #e0b978;
+    --radius: 10px;
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+    --sp-5: 24px; --sp-6: 32px; --sp-7: 48px;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    --font-head: Georgia, "Times New Roman", "Songti TC", "Noto Serif TC", "PMingLiU", serif;
+    --font-mono: "SF Mono", Menlo, Consolas, "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--paper); color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px; line-height: 1.6;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 var(--sp-5); }
+  [lang="zh-Hant"] { font-family: var(--font-body); }
+
+  /* ---------- Header ---------- */
+  header.site {
+    background: var(--card);
+    border-bottom: 3px solid var(--accent);
+    padding: var(--sp-7) 0 var(--sp-6);
+  }
+  h1 {
+    font-family: var(--font-head);
+    color: var(--ink);
+    font-size: 2.1rem; line-height: 1.25;
+    margin: 0 0 var(--sp-2);
+  }
+  h1 .zh { display: block; font-size: 1.35rem; color: var(--accent); margin-top: var(--sp-1); }
+  .intro { max-width: 62rem; margin: var(--sp-4) 0 0; }
+  .intro p { margin: var(--sp-2) 0; }
+  .intro .zh { color: var(--muted); }
+  .badges { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }
+  .badge {
+    background: var(--chip-bg); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: var(--sp-1) var(--sp-3);
+    font-size: 0.85rem; font-weight: 600;
+  }
+
+  /* ---------- Unit grid ---------- */
+  .units {
+    display: grid; gap: var(--sp-5);
+    grid-template-columns: 1fr;
+    padding: var(--sp-6) 0;
+  }
+  @media (min-width: 720px)  { .units { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1080px) { .units { grid-template-columns: repeat(3, 1fr); } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: var(--sp-5);
+    display: flex; flex-direction: column;
+    box-shadow: 0 1px 3px rgba(29, 53, 87, 0.07);
+  }
+  .card-head { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+  .unit-no {
+    font-family: var(--font-head);
+    font-size: 1.6rem; font-weight: 700; color: var(--accent);
+    min-width: 2.2rem;
+  }
+  .card h2 {
+    font-family: var(--font-head);
+    color: var(--ink); font-size: 1.18rem; line-height: 1.3;
+    margin: 0;
+  }
+  .card h2 .zh { display: block; font-size: 0.95rem; color: var(--muted); font-weight: 600; }
+  .tag {
+    display: inline-block; align-self: flex-start;
+    background: var(--chip-bg); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 4px;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.03em;
+    padding: 2px var(--sp-2); margin-bottom: var(--sp-3);
+  }
+  .desc { font-size: 0.92rem; margin: 0 0 var(--sp-3); }
+  .desc .zh { display: block; color: var(--muted); margin-top: var(--sp-1); font-size: 0.88rem; }
+
+  .video-wrap { margin: 0 0 var(--sp-2); }
+  .video-wrap video {
+    width: 100%; aspect-ratio: 16 / 9;
+    background: #10141c; border-radius: 6px;
+    display: block;
+  }
+  .vid-caption {
+    font-size: 0.8rem; color: var(--muted);
+    margin: var(--sp-1) 0 0;
+  }
+  .vid-caption strong { color: var(--ink); }
+  .vid-fallback {
+    display: none;
+    width: 100%; aspect-ratio: 16 / 9;
+    background: var(--fallback-bg);
+    border: 1px dashed var(--fallback-line); border-radius: 6px;
+    padding: var(--sp-4);
+    font-size: 0.85rem; color: #6b4a12;
+    display: none; flex-direction: column; justify-content: center; gap: var(--sp-1);
+  }
+  .vid-fallback code {
+    font-family: var(--font-mono); font-size: 0.78rem;
+    background: rgba(224, 185, 120, 0.25); padding: 1px 5px; border-radius: 3px;
+  }
+  .scene-count {
+    font-size: 0.82rem; color: var(--muted);
+    margin: var(--sp-2) 0 var(--sp-3);
+    border-top: 1px solid var(--line); padding-top: var(--sp-2);
+  }
+  .handout {
+    margin-top: auto;
+    font-weight: 600; font-size: 0.92rem;
+    color: var(--accent); text-decoration: none;
+    border: 1px solid var(--accent); border-radius: 6px;
+    padding: var(--sp-2) var(--sp-3);
+    text-align: center;
+  }
+  .handout:hover { background: var(--accent); color: #fff; }
+  .handout .zh { font-weight: 400; }
+
+  /* ---------- Download section ---------- */
+  .download {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--sp-5); margin: var(--sp-5) 0 var(--sp-7);
+  }
+  .download h2 { font-family: var(--font-head); color: var(--ink); margin: 0 0 var(--sp-2); font-size: 1.3rem; }
+  .download p { margin: var(--sp-2) 0; font-size: 0.95rem; }
+  .download .zh { color: var(--muted); }
+  .dl-link {
+    display: inline-block; margin: var(--sp-2) 0;
+    font-weight: 700; color: #fff; background: var(--ink);
+    border-radius: 6px; padding: var(--sp-2) var(--sp-4); text-decoration: none;
+  }
+  .dl-link:hover { background: var(--accent); }
+  .download code { font-family: var(--font-mono); font-size: 0.85em; background: var(--chip-bg); padding: 1px 6px; border-radius: 4px; }
+
+  /* ---------- Footer ---------- */
+  footer.site {
+    border-top: 1px solid var(--line);
+    padding: var(--sp-5) 0 var(--sp-6);
+    color: var(--muted); font-size: 0.85rem;
+  }
+  footer.site .repo { font-weight: 700; color: var(--ink); }
+
+  /* ---------- Print ---------- */
+  @media print {
+    body { background: #fff; font-size: 12px; }
+    .units { grid-template-columns: 1fr; gap: var(--sp-4); }
+    .card { break-inside: avoid; box-shadow: none; }
+    .video-wrap video, .dl-link { display: none; }
+    .vid-fallback { display: flex; aspect-ratio: auto; padding: var(--sp-2); }
+    header.site, .download { border-color: var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <h1>
+      DSE Computational Physics Toolkit
+      <span class="zh" lang="zh-Hant">DSE 計算物理教學套裝</span>
+    </h1>
+    <div class="intro">
+      <p>A curriculum-aligned teaching resource for HKDSE Physics: every unit delivers three artifacts sharing one <code style="font-family:var(--font-mono);font-size:0.9em;background:var(--chip-bg);padding:1px 5px;border-radius:4px;">physics_core</code> engine — a Manim animation to watch, a teacher demo app to interact with, and a student fill-in-the-blank coding exercise with an auto-grader. Aligned to the CAF (Secondary 4–6) Consultation Draft, June 2026.</p>
+      <p class="zh" lang="zh-Hant">一套對應香港中學文憑（HKDSE）物理科的教學資源：每個單元提供三件共用同一 <code>physics_core</code> 引擎的教材 — Manim 動畫（觀看）、教師示範程式（互動）及學生填空編程練習（自動評分），對應 CAF（中四至中六）諮詢稿（2026 年 6 月）。</p>
+    </div>
+    <div class="badges">
+      <span class="badge">9 units 單元</span>
+      <span class="badge">54 animations 動畫</span>
+      <span class="badge">90 quiz questions 測驗題</span>
+      <span class="badge">bilingual 中英雙語</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="units" aria-label="Unit catalog 單元目錄">
+
+    <!-- 01 Mechanics -->
+    <article class="card">
+      <div class="card-head">
+        <span class="unit-no">01</span>
+        <h2>Mechanics <span class="zh" lang="zh-Hant">力學</span></h2>
+      </div>
+      <span class="tag">COMPULSORY 必修 · S4–S5</span>
+      <p class="desc">Kinematics, projectile motion with air drag, SHM with damping and resonance, circular motion, and numerical integrators — all driven by one shared physics engine.
+        <span class="zh" lang="zh-Hant">運動學、拋體運動（含空氣阻力）、簡諧運動、阻尼與共振、圓周運動及數值積分，全部由同一套物理引擎驅動。</span></p>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/01_mechanics/Resonance.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Resonance</strong> · 共振 — light vs heavy damping response</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/01_mechanics/ShmProjection.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>SHM Projection</strong> · 簡諧運動投影 — circular motion → x(t), v(t), a(t)</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/01_mechanics/ProjectileDrag.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Projectile with Drag</strong> · 有阻尼拋體 — ideal parabola vs air resistance</p>
+      </div>
+      <p class="scene-count">7 scenes 場景 · showing 顯示 3</p>
+      <a class="handout" href="../units/01_mechanics/lesson_handout.html">Lesson handout <span class="zh" lang="zh-Hant">教案手冊</span></a>
+    </article>
+
+    <!-- 02 Thermal -->
+    <article class="card">
+      <div class="card-head">
+        <span class="unit-no">02</span>
+        <h2>Thermal Physics <span class="zh" lang="zh-Hant">熱學</span></h2>
+      </div>
+      <span class="tag">COMPULSORY 必修 · S4–S5</span>
+      <p class="desc">Kinetic theory made visible: Maxwell–Boltzmann speed distributions, statistical gas pressure, molecular random walk, and gas laws with absolute-zero extrapolation.
+        <span class="zh" lang="zh-Hant">分子動力論視覺化：麥克斯韋–玻爾茲曼速率分佈、統計氣體壓力、分子隨機行走，以及氣體定律與絕對零度外推。</span></p>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/02_thermal/MaxwellBoltzmann.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Maxwell–Boltzmann</strong> · 速率分佈 — speed distribution vs temperature</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/02_thermal/RandomWalkScene.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Random Walk</strong> · 隨機行走 — diffusion, RMS ∝ √N</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/02_thermal/PressureStatistical.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Statistical Pressure</strong> · 統計壓力 — molecular bombardment → ideal gas law</p>
+      </div>
+      <p class="scene-count">4 scenes 場景 · showing 顯示 3</p>
+      <a class="handout" href="../units/02_thermal/lesson_handout.html">Lesson handout <span class="zh" lang="zh-Hant">教案手冊</span></a>
+    </article>
+
+    <!-- 03 Waves -->
+    <article class="card">
+      <div class="card-head">
+        <span class="unit-no">03</span>
+        <h2>Wave Motion <span class="zh" lang="zh-Hant">波動</span></h2>
+      </div>
+      <span class="tag">COMPULSORY 必修 · S4–S5</span>
+      <p class="desc">Superposition and standing waves, Young's double-slit interference, polarisation (Malus's law), the EM spectrum, and ultrasound pulse-echo ranging.
+        <span class="zh" lang="zh-Hant">波的疊加與駐波、楊氏雙縫干涉、偏振（馬呂斯定律）、電磁波譜及超聲波脈衝回聲測距。</span></p>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/03_waves/SuperpositionStanding.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Standing Waves</strong> · 駐波 — superposition of counter-propagating waves</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/03_waves/YoungSlit.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Young's Double Slit</strong> · 楊氏雙縫 — d sin θ = nλ with intensity profile</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/03_waves/Polarisation.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Polarisation</strong> · 偏振 — Malus's law I = I₀cos²θ</p>
+      </div>
+      <p class="scene-count">6 scenes 場景 · showing 顯示 3</p>
+      <a class="handout" href="../units/03_waves/lesson_handout.html">Lesson handout <span class="zh" lang="zh-Hant">教案手冊</span></a>
+    </article>
+
+    <!-- 04 Electricity & Magnetism -->
+    <article class="card">
+      <div class="card-head">
+        <span class="unit-no">04</span>
+        <h2>Electricity &amp; Magnetism <span class="zh" lang="zh-Hant">電與磁</span></h2>
+      </div>
+      <span class="tag">COMPULSORY 必修 · S4–S5</span>
+      <p class="desc">Electric field lines, Kirchhoff's laws verified in real circuits, magnetic force on moving charges, and a full DC motor with split-ring commutator.
+        <span class="zh" lang="zh-Hant">電場與電場線、以電路驗證基爾霍夫定律、運動電荷所受磁力，以及帶換向器的直流電動機完整動畫。</span></p>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/04_em/ElectricMotor.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Electric Motor</strong> · 電動機 — F = BIL → τ = NBIA sinφ → commutator</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/04_em/MagneticForce.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Magnetic Force</strong> · 磁力 — charged particle in a B-field, r = mv/(qB)</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/04_em/CircuitComparison.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Circuit Comparison</strong> · 電路比較 — KCL + KVL verified numerically</p>
+      </div>
+      <p class="scene-count">5 scenes 場景 · showing 顯示 3</p>
+      <a class="handout" href="../units/04_em/lesson_handout.html">Lesson handout <span class="zh" lang="zh-Hant">教案手冊</span></a>
+    </article>
+
+    <!-- 05 Physics & Engineering -->
+    <article class="card">
+      <div class="card-head">
+        <span class="unit-no">05</span>
+        <h2>Physics &amp; Engineering <span class="zh" lang="zh-Hant">工程物理</span></h2>
+      </div>
+      <span class="tag">COMPULSORY 必修 · S5</span>
+      <p class="desc">Electromagnetic induction and transformers, high-voltage power transmission, orbital motion with energy conservation, and Bernoulli's principle via pitot tube.
+        <span class="zh" lang="zh-Hant">電磁感應與變壓器、高壓電力輸送、能量守恆下的軌道運動，以及以皮托管演示伯努利原理。</span></p>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/05_engineering/ElectromagneticInduction.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Electromagnetic Induction</strong> · 電磁感應 — Faraday's law with Lenz arrows</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/05_engineering/OrbitalMotion.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Orbital Motion</strong> · 軌道運動 — KE/GPE bar chart, v_orb and v_esc</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/05_engineering/TransformerScene.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Transformer</strong> · 變壓器 — turns ratio with power conservation</p>
+      </div>
+      <p class="scene-count">6 scenes 場景 · showing 顯示 3</p>
+      <a class="handout" href="../units/05_engineering/lesson_handout.html">Lesson handout <span class="zh" lang="zh-Hant">教案手冊</span></a>
+    </article>
+
+    <!-- 06 Physics & Society -->
+    <article class="card">
+      <div class="card-head">
+        <span class="unit-no">06</span>
+        <h2>Physics &amp; Society <span class="zh" lang="zh-Hant">社會與能源</span></h2>
+      </div>
+      <span class="tag">COMPULSORY 必修 · S5</span>
+      <p class="desc">Monte Carlo radioactive decay, alpha–beta–gamma penetration, fission chain reactions, and the physics of solar, wind and nuclear energy sources.
+        <span class="zh" lang="zh-Hant">蒙地卡羅放射性衰變、α–β–γ 穿透力、裂變鏈式反應，以及太陽能、風能與核能的物理。</span></p>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/06_society/RadioactiveDecay.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Radioactive Decay</strong> · 放射衰變 — N = N₀·2^(−t/T) with Monte Carlo dots</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/06_society/ChainReaction.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Chain Reaction</strong> · 鏈式反應 — fission generations, critical mass</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/06_society/EnergySources.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Energy Sources</strong> · 能源 — ΔE = Δmc², solar P = S·A·η, wind P ∝ v³</p>
+      </div>
+      <p class="scene-count">5 scenes 場景 · showing 顯示 3</p>
+      <a class="handout" href="../units/06_society/lesson_handout.html">Lesson handout <span class="zh" lang="zh-Hant">教案手冊</span></a>
+    </article>
+
+    <!-- 07 Quantum Physics -->
+    <article class="card">
+      <div class="card-head">
+        <span class="unit-no">07</span>
+        <h2>Quantum Physics <span class="zh" lang="zh-Hant">量子物理</span></h2>
+      </div>
+      <span class="tag">ELECTIVE 選修 · S6</span>
+      <p class="desc">From Rutherford scattering to quantum superposition: the photoelectric effect, Bohr hydrogen spectra, wavefunctions and probability, and measurement collapse.
+        <span class="zh" lang="zh-Hant">由盧瑟福散射到量子疊加：光電效應、波耳氫原子光譜、波函數與機率，以及測量坍縮。</span></p>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/07_quantum/RutherfordScattering.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Rutherford Scattering</strong> · 盧瑟福散射 — impact parameter → scattering angle</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/07_quantum/HydrogenSpectra.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Hydrogen Spectra</strong> · 氫原子光譜 — Bohr levels and the Balmer series</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/07_quantum/Photoelectric.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Photoelectric Effect</strong> · 光電效應 — K_max vs f, threshold frequency</p>
+      </div>
+      <p class="scene-count">6 scenes 場景 · showing 顯示 3</p>
+      <a class="handout" href="../units/07_quantum/lesson_handout.html">Lesson handout <span class="zh" lang="zh-Hant">教案手冊</span></a>
+    </article>
+
+    <!-- 08 Astrophysics & Relativity -->
+    <article class="card">
+      <div class="card-head">
+        <span class="unit-no">08</span>
+        <h2>Astrophysics &amp; Relativity <span class="zh" lang="zh-Hant">天體物理與相對論</span></h2>
+      </div>
+      <span class="tag">ELECTIVE 選修 · S6</span>
+      <p class="desc">Doppler redshift and Hubble's law, the H–R diagram with blackbody curves, spacetime diagrams, and the two observational pillars of the Big Bang.
+        <span class="zh" lang="zh-Hant">都卜勒紅移與哈勃定律、赫羅圖與黑體輻射、時空圖，以及大爆炸的兩大觀測證據。</span></p>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/08_astrophysics/BigBangEvidence.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Big Bang Evidence</strong> · 大爆炸證據 — redshift v = H₀d and the CMB at 2.725 K</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/08_astrophysics/HubbleLawScene.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Hubble's Law</strong> · 哈勃定律 — expanding-universe scatter, v = H₀·d</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/08_astrophysics/HRDiagramScene.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>H–R Diagram</strong> · 赫羅圖 — blackbody inset with colour morphing</p>
+      </div>
+      <p class="scene-count">6 scenes 場景 · showing 顯示 3</p>
+      <a class="handout" href="../units/08_astrophysics/lesson_handout.html">Lesson handout <span class="zh" lang="zh-Hant">教案手冊</span></a>
+    </article>
+
+    <!-- 09 Scientific Inquiry -->
+    <article class="card">
+      <div class="card-head">
+        <span class="unit-no">09</span>
+        <h2>Scientific Inquiry <span class="zh" lang="zh-Hant">物理中的科學探究</span></h2>
+      </div>
+      <span class="tag">S6 · INQUIRY 探究（16 小時）</span>
+      <p class="desc">The new CAF Topic 9: linearisation, uncertainty and outliers, complex-systems simulations — forest fires, epidemics, crowd control — and the engineering design loop.
+        <span class="zh" lang="zh-Hant">對應新 CAF 主題 9：線性化、不確定度與離群值，複雜系統模擬（森林火災、流行病、人群疏散）及工程設計循環。</span></p>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/09_inquiry/ForestFire.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Forest Fire</strong> · 森林火災 — wind-biased cellular automaton with live counts</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/09_inquiry/CrowdControl.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Crowd Control</strong> · 人群疏散 — agent-based evacuation through a single exit</p>
+      </div>
+      <div class="video-wrap">
+        <video controls preload="metadata" src="../dist/videos/09_inquiry/EpidemicSpread.mp4"></video>
+        <div class="vid-fallback" lang="zh-Hant">影片未打包 — 請執行 <code>bash tools/package_videos.sh</code> / Video not packaged — run <code>bash tools/package_videos.sh</code></div>
+        <p class="vid-caption"><strong>Epidemic Spread</strong> · 流行病傳播 — SIR cellular automaton on a grid</p>
+      </div>
+      <p class="scene-count">9 scenes 場景 · showing 顯示 3</p>
+      <a class="handout" href="../units/09_inquiry/lesson_handout.html">Lesson handout <span class="zh" lang="zh-Hant">教案手冊</span></a>
+    </article>
+
+  </section>
+
+  <section class="download" aria-label="Download the videos 下載影片">
+    <h2>Get the videos <span lang="zh-Hant">下載影片</span></h2>
+    <p>All 54 rendered Manim animations (≈13 MB) are packaged as one zip archive for offline classroom use.</p>
+    <p class="zh" lang="zh-Hant">全部 54 段已渲染的 Manim 動畫（約 13 MB）已打包成單一 zip 檔案，供離線課堂使用。</p>
+    <a class="dl-link" href="../dist/dse-computational-physics-videos.zip">⬇ dse-computational-physics-videos.zip</a>
+    <p>If the link does not work, the videos have not been packaged yet — generate the archive (and the individual MP4s shown above) by running <code>bash tools/package_videos.sh</code> from the repository root.</p>
+    <p class="zh" lang="zh-Hant">若連結無效，表示影片尚未打包 — 請在儲存庫根目錄執行 <code>bash tools/package_videos.sh</code> 以產生壓縮檔及上述各段 MP4。</p>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p><span class="repo">dse-computational-physics</span> · Built with Manim + Python · CAF 2026 aligned</p>
+    <p>Generated 生成日期: 2026-08-31</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  if (typeof document === 'undefined' || !document.querySelectorAll) { return; }
+  var vids = document.querySelectorAll('video');
+  for (var i = 0; i < vids.length; i++) {
+    (function (v) {
+      var fb = v.parentNode ? v.parentNode.querySelector('.vid-fallback') : null;
+      function showFallback() {
+        v.style.display = 'none';
+        if (fb) { fb.style.display = 'flex'; }
+      }
+      // error fires on the video element itself because src is set directly (no source children)
+      v.addEventListener('error', showFallback);
+      v.addEventListener('loadeddata', function () { if (fb) { fb.style.display = 'none'; } });
+    })(vids[i]);
+  }
+})();
+</script>
+</body>
+</html>

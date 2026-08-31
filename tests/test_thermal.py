@@ -280,6 +280,60 @@ class TestReferenceGasSim:
                 f"P/T={ratio:.4f} at T={T:.1f}, mean={mean_ratio:.4f}"
             )
 
+    def test_gas_law_isochoric_curve_backward_compatible(self) -> None:
+        """n_averaging_windows=1 must reproduce the default single-trajectory
+        behaviour exactly (backward compatibility)."""
+        sim = ReferenceGasSim(
+            N=100, L=15.0, T=2.0, dt=0.01, dim=2,
+            particle_radius=0.05, seed=42,
+        )
+        T_values = [1.0, 2.0, 3.0]
+        curve_default = sim.gas_law_isochoric_curve(
+            T_values, equilibration_steps=300, sample_steps=200, seed=42
+        )
+        curve_explicit = sim.gas_law_isochoric_curve(
+            T_values, equilibration_steps=300, sample_steps=200, seed=42,
+            n_averaging_windows=1,
+        )
+        assert curve_default == curve_explicit
+
+    def test_gas_law_isochoric_curve_invalid_windows(self) -> None:
+        """n_averaging_windows must be >= 1."""
+        sim = ReferenceGasSim(N=50, L=15.0, T=2.0, seed=42)
+        with pytest.raises(ValueError, match="n_averaging_windows must be >= 1"):
+            sim.gas_law_isochoric_curve(
+                [1.0, 2.0], n_averaging_windows=0
+            )
+
+    def test_gas_law_isochoric_curve_absolute_zero(self) -> None:
+        """Isochoric P-T curve should extrapolate to absolute zero within 15%.
+
+        The low-temperature points are statistically coarse (few wall
+        collisions), so the extrapolation uses a variance-weighted linear
+        fit (weights ``1 / T_sim**1.5``).  Calibration: simulation T=0
+        (where P=0) maps to -273.15°C, so each simulation unit is
+        273.15/2.0 °C (T_sim=2.0 → 0°C).
+        """
+        sim = ReferenceGasSim(
+            N=100, L=15.0, T=2.0, dt=0.01, dim=2,
+            particle_radius=0.05, seed=42,
+        )
+        T_values = [1.0, 2.0, 3.0, 4.0]
+        curve = sim.gas_law_isochoric_curve(
+            T_values, equilibration_steps=500, sample_steps=600, seed=42
+        )
+        Ts = np.array([t for t, _ in curve], dtype=np.float64)
+        P = np.array([p for _, p in curve], dtype=np.float64)
+        weights = 1.0 / Ts**1.5
+        slope, intercept = np.polyfit(Ts, P, 1, w=weights)
+        abs_zero_sim = -intercept / slope
+        # True absolute zero is T_sim = 0; tolerance is 15% of the
+        # T_sim=2.0 reference (i.e. 15% of 273.15 K in Celsius terms).
+        assert abs(abs_zero_sim) / 2.0 < 0.15, (
+            f"Absolute zero extrapolation: got T_sim={abs_zero_sim:.3f}, "
+            f"expected ~0"
+        )
+
 
 class TestMaxwellBoltzmannEquations:
     """Tests for the Maxwell-Boltzmann distribution helpers."""

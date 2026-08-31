@@ -13,7 +13,7 @@ from physics_core.astrophysics.hr_diagram import (
     ReferenceHRDiagram,
     T_SUN,
 )
-from physics_core.astrophysics.hubble import HubbleLaw
+from physics_core.astrophysics.hubble import HubbleLaw, redshift_factor
 from physics_core.astrophysics.relativity import (
     C as C_REL,
     ReferenceRelativityEngine,
@@ -214,6 +214,49 @@ class TestHubbleLaw:
         """Custom H0 value."""
         hl = HubbleLaw(h0=70.0)
         assert hl.velocity(10.0) == pytest.approx(700.0, rel=1e-12)
+
+
+# ===========================================================================
+# redshift_factor — cosmological wavelength stretch
+# ===========================================================================
+
+
+class TestRedshiftFactor:
+    """Tests for the cosmological redshift_factor(z) = 1 + z helper."""
+
+    def test_zero_redshift(self) -> None:
+        """z = 0 → no stretching (factor 1)."""
+        assert redshift_factor(0.0) == pytest.approx(1.0, rel=1e-12)
+
+    def test_value_at_z1(self) -> None:
+        """z = 1 → wavelength doubled (factor 2)."""
+        assert redshift_factor(1.0) == pytest.approx(2.0, rel=1e-12)
+
+    def test_value_at_z0_05(self) -> None:
+        """z = 0.05 → factor 1.05."""
+        assert redshift_factor(0.05) == pytest.approx(1.05, rel=1e-12)
+
+    def test_stretches_wavelength(self) -> None:
+        """λ_o = (1 + z) · λ_e."""
+        lam_e = 656.3  # H-alpha (nm)
+        z = 0.10
+        lam_o = redshift_factor(z) * lam_e
+        assert lam_o == pytest.approx(lam_e * 1.10, rel=1e-12)
+
+    def test_inverse_of_scale_factor(self) -> None:
+        """a = 1 / (1 + z) → a * redshift_factor(z) == 1."""
+        for z in (0.0, 0.25, 0.5, 1.0, 2.0):
+            a = 1.0 / redshift_factor(z)
+            assert a * redshift_factor(z) == pytest.approx(1.0, rel=1e-12)
+
+    def test_raises_for_impossible_negative_redshift(self) -> None:
+        """z < -1 → ValueError (would give a non-positive wavelength)."""
+        with pytest.raises(ValueError):
+            redshift_factor(-1.5)
+
+    def test_boundary_minus_one_is_zero(self) -> None:
+        """z = -1 is the physical limit → factor 0."""
+        assert redshift_factor(-1.0) == pytest.approx(0.0, rel=1e-12)
 
 
 # ===========================================================================

@@ -543,6 +543,7 @@ class ReferenceGasSim(GasSim):
     def gas_law_isochoric_curve(
         self, T_values: list[float], equilibration_steps: int = 500,
         sample_steps: int = 200, seed: int = 42,
+        n_averaging_windows: int = 1,
     ) -> list[tuple[float, float]]:
         """Generate an isochoric P-T curve (pressure law).
 
@@ -559,38 +560,87 @@ class ReferenceGasSim(GasSim):
             Steps over which to average pressure.  Default 200.
         seed : int
             Random seed for reproducibility.  Default 42.
+        n_averaging_windows : int
+            Number of independent short runs whose pressures are averaged
+            at each temperature (ensemble averaging).  Each window starts
+            from a fresh, independently seeded configuration, which
+            decorrelates the samples and reduces the statistical noise of
+            the pressure estimate — important at low temperatures where
+            wall collisions are rare.  Default 1 (single trajectory,
+            backward compatible).
 
         Returns
         -------
         list of (float, float)
             ``(T, P)`` pairs.
         """
+        if n_averaging_windows < 1:
+            raise ValueError(
+                f"n_averaging_windows must be >= 1, got {n_averaging_windows}"
+            )
+
         orig_T = self.T
         orig_L = self.L
 
-        # Re-seed
-        rng = np.random.default_rng(seed)
-        self._positions = rng.uniform(0.0, orig_L, size=(self.N, self.dim)).astype(np.float64)
-        sigma = math.sqrt(self.kB * orig_T / self.m)
-        self._velocities = rng.normal(0.0, sigma, size=(self.N, self.dim)).astype(np.float64)
-        if self.N > 1:
-            self._velocities -= np.mean(self._velocities, axis=0)
-        self._t = 0.0
-        self._momentum_transfer = 0.0
+        if n_averaging_windows == 1:
+            # Single-trajectory path (original behaviour, backward compatible)
+            rng = np.random.default_rng(seed)
+            self._positions = rng.uniform(0.0, orig_L, size=(self.N, self.dim)).astype(np.float64)
+            sigma = math.sqrt(self.kB * orig_T / self.m)
+            self._velocities = rng.normal(0.0, sigma, size=(self.N, self.dim)).astype(np.float64)
+            if self.N > 1:
+                self._velocities -= np.mean(self._velocities, axis=0)
+            self._t = 0.0
+            self._momentum_transfer = 0.0
 
-        curve: list[tuple[float, float]] = []
+            curve: list[tuple[float, float]] = []
+            for T in T_values:
+                self.set_temperature(T)
+                self._momentum_transfer = 0.0
+                self._t = 0.0
+                for _ in range(equilibration_steps):
+                    self.step()
+                self._momentum_transfer = 0.0
+                self._t = 0.0
+                for _ in range(sample_steps):
+                    self.step()
+                P = self.pressure()
+                curve.append((T, P))
+
+            # Restore
+            self.set_temperature(orig_T)
+            self.set_volume(orig_L)
+            self._t = 0.0
+            self._momentum_transfer = 0.0
+
+            return curve
+
+        # Ensemble-averaged path: at each temperature, run several short,
+        # independently seeded trajectories and average their pressures.
+        curve = []
         for T in T_values:
-            self.set_temperature(T)
-            self._momentum_transfer = 0.0
-            self._t = 0.0
-            for _ in range(equilibration_steps):
-                self.step()
-            self._momentum_transfer = 0.0
-            self._t = 0.0
-            for _ in range(sample_steps):
-                self.step()
-            P = self.pressure()
-            curve.append((T, P))
+            pressures: list[float] = []
+            for w in range(n_averaging_windows):
+                rng = np.random.default_rng(seed + w + 1)
+                self._positions = rng.uniform(
+                    0.0, orig_L, size=(self.N, self.dim)
+                ).astype(np.float64)
+                sigma = math.sqrt(self.kB * T / self.m)
+                self._velocities = rng.normal(
+                    0.0, sigma, size=(self.N, self.dim)
+                ).astype(np.float64)
+                if self.N > 1:
+                    self._velocities -= np.mean(self._velocities, axis=0)
+                self._t = 0.0
+                self._momentum_transfer = 0.0
+                for _ in range(equilibration_steps):
+                    self.step()
+                self._momentum_transfer = 0.0
+                self._t = 0.0
+                for _ in range(sample_steps):
+                    self.step()
+                pressures.append(self.pressure())
+            curve.append((T, float(np.mean(pressures))))
 
         # Restore
         self.set_temperature(orig_T)

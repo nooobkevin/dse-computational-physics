@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SCENES_DIR="$SCRIPT_DIR/scenes"
 OUTPUT_DIR="$SCRIPT_DIR/output"
-SCENE_NAMES=("shm_projection" "integrator_convergence" "projectile_dt" "damped_shm" "planet_freefall" "projectile_drag")
+SCENE_NAMES=("shm_projection" "integrator_convergence" "projectile_dt" "damped_shm" "planet_freefall" "projectile_drag" "resonance")
 
 # ── Quality flag ─────────────────────────────────────────────────────
 QUALITY="${2:--qh}"

@@ -347,6 +347,38 @@ def _run_gas(args: argparse.Namespace) -> None:
 # Gas laws mode runner
 # ---------------------------------------------------------------------------
 
+# Celsius calibration for the simulation's temperature scale.
+# The simulation's absolute zero is T_sim = 0 (P = N kB T / V vanishes
+# there), so the calibration must map T_sim = 0 to -273.15 °C while keeping
+# T_sim = 2.0 as 0 °C:
+#     T_Celsius = (T_sim - T_SIM_ZERO_C) * T_SIM_TO_CELSIUS
+T_SIM_ZERO_C = 2.0
+T_SIM_TO_CELSIUS = 273.15 / T_SIM_ZERO_C
+
+
+def _fit_absolute_zero(
+    pt_curve: List[Tuple[float, float]],
+) -> Tuple[float, float, float]:
+    """Weighted linear fit of P vs T_sim, extrapolated to P = 0.
+
+    Returns ``(abs_zero_C, slope_C, intercept_C)`` where the fitted line is
+    ``P = slope_C * T_Celsius + intercept_C``.
+
+    The fit is variance-weighted: wall-collision pressure noise grows
+    roughly as ``T_sim**0.75`` in absolute terms, so each point is weighted
+    by ``1 / T_sim**1.5`` to down-weight the noisiest high-temperature
+    points.  The extrapolated absolute zero is ``-intercept / slope``.
+    """
+    Ts = np.array([t for t, _ in pt_curve], dtype=np.float64)
+    P = np.array([p for _, p in pt_curve], dtype=np.float64)
+    weights = 1.0 / Ts**1.5
+    slope_sim, intercept_sim = np.polyfit(Ts, P, 1, w=weights)
+    abs_zero_sim = -intercept_sim / slope_sim
+    abs_zero_C = (abs_zero_sim - T_SIM_ZERO_C) * T_SIM_TO_CELSIUS
+    slope_C = slope_sim / T_SIM_TO_CELSIUS
+    intercept_C = intercept_sim + slope_sim * T_SIM_ZERO_C
+    return abs_zero_C, slope_C, intercept_C
+
 
 def _run_gas_laws(args: argparse.Namespace) -> None:
     """Gas laws mode — Boyle's law (P-V) and absolute-zero extrapolation (P-T).
@@ -372,37 +404,21 @@ def _run_gas_laws(args: argparse.Namespace) -> None:
         V_values, equilibration_steps=300, sample_steps=100, seed=42
     )
 
-    # Pre-compute pressure law curve (P vs T at constant V)
-    T_sim_values = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0]
+    # Pre-compute pressure law curve (P vs T at constant V).
+    T_sim_values = [1.0, 2.0, 3.0, 4.0]
     pt_curve = sim.gas_law_isochoric_curve(
-        T_sim_values, equilibration_steps=300, sample_steps=100, seed=42
+        T_sim_values, equilibration_steps=500, sample_steps=600, seed=42
     )
 
-    # Convert simulation T to Celsius for absolute-zero extrapolation
-    # Map: simulation T=0 → -273.15°C, simulation T=2.0 → 0°C (arbitrary mapping)
-    # We use: T_Celsius = (T_sim - 2.0) * 100.0  (so T_sim=2 → 0°C, T_sim=4 → 200°C)
-    T_scale = 100.0
-    T_offset = 2.0  # simulation T that maps to 0°C
+    # Convert simulation T to Celsius for absolute-zero extrapolation.
+    # Calibration: simulation T=0 (where P=0) maps to -273.15°C, so each
+    # simulation unit is 273.15/2.0 °C (T_sim=2.0 → 0°C).
     pt_celsius = [
-        ((T_sim - T_offset) * T_scale, P) for T_sim, P in pt_curve
+        ((T_sim - T_SIM_ZERO_C) * T_SIM_TO_CELSIUS, P) for T_sim, P in pt_curve
     ]
 
-    # Linear fit to P-T data for absolute-zero extrapolation
-    T_c_vals = np.array([tc for tc, _ in pt_celsius], dtype=np.float64)
-    P_vals = np.array([P for _, P in pt_curve], dtype=np.float64)
-    if len(T_c_vals) >= 2:
-        coeffs = np.polyfit(T_c_vals, P_vals, 1)
-        slope = coeffs[0]
-        intercept = coeffs[1]
-        # Absolute zero: P = 0 → T = -intercept / slope
-        if abs(slope) > 1e-12:
-            abs_zero_C = -intercept / slope
-        else:
-            abs_zero_C = -273.15
-    else:
-        slope = 0.0
-        intercept = 0.0
-        abs_zero_C = -273.15
+    # Weighted linear fit to P-T data for absolute-zero extrapolation
+    abs_zero_C, slope, intercept = _fit_absolute_zero(pt_curve)
 
     # Layout regions
     boyle_region = (50, 50, 550, 400)
@@ -540,10 +556,10 @@ def _headless_selfcheck(mode: str) -> None:
             assert rel_err < 0.35, (
                 f"Boyle self-check: P*V={pv:.4f} at V={V:.1f}, mean={mean_pv:.4f}"
             )
-        # Test pressure law: P / T should be approximately constant
-        T_values = [1.0, 2.0, 3.0]
+        # Test pressure law: P / T should be approximately constant.
+        T_values = [1.0, 2.0, 3.0, 4.0]
         pt = sim.gas_law_isochoric_curve(
-            T_values, equilibration_steps=500, sample_steps=300, seed=42
+            T_values, equilibration_steps=500, sample_steps=600, seed=42
         )
         pt_ratios = [P / T for T, P in pt]
         mean_ratio = float(np.mean(pt_ratios))
@@ -553,14 +569,10 @@ def _headless_selfcheck(mode: str) -> None:
             assert rel_err < 0.35, (
                 f"Pressure law self-check: P/T={ratio:.4f} at T={T:.1f}, mean={mean_ratio:.4f}"
             )
-        # Test absolute-zero extrapolation
-        T_c_vals = np.array([(T_sim - 2.0) * 100.0 for T_sim, _ in pt], dtype=np.float64)
-        P_vals = np.array([P for _, P in pt], dtype=np.float64)
-        coeffs = np.polyfit(T_c_vals, P_vals, 1)
-        slope = coeffs[0]
-        intercept = coeffs[1]
-        abs_zero_C = -intercept / slope
-        assert abs(abs_zero_C - (-273.15)) / 273.15 < 0.5, (
+        # Test absolute-zero extrapolation (weighted fit, correct Celsius
+        # calibration: simulation T=0 maps to -273.15°C).
+        abs_zero_C, slope, intercept = _fit_absolute_zero(pt)
+        assert abs(abs_zero_C - (-273.15)) / 273.15 < 0.15, (
             f"Absolute zero self-check: got {abs_zero_C:.1f} °C, expected -273.15 °C"
         )
         print(f"Gas laws self-check OK (abs zero = {abs_zero_C:.1f} °C)")
