@@ -31,6 +31,7 @@ from manim import (
     Axes,
     BLUE,
     DOWN,
+    GRAY,
     GREEN,
     GREY_D,
     LEFT,
@@ -60,6 +61,7 @@ class WaveSpeedIntensity(Scene):
         amplitudes = [0.5, 1.0, 1.5]
         lam = 4.0
         f = 0.5
+        v = f * lam  # 2.0 m/s — same medium, so all three move at this speed
         sims = [
             ReferenceWaveSim(amplitude=A, wavelength=lam, frequency=f, L=12.0, nx=200)
             for A in amplitudes
@@ -87,7 +89,7 @@ class WaveSpeedIntensity(Scene):
         wave_axes.to_corner(UP + LEFT, buff=0.5)
 
         wave_title = MathTex(
-            "\\text{Traveling waves: } y = A \\sin(kx - \\omega t)",
+            "\\text{Traveling waves: } y = A \\sin(kx - \\omega t),\\; v = f\\lambda",
             font_size=22,
         ).next_to(wave_axes, UP, buff=0.1)
 
@@ -96,6 +98,7 @@ class WaveSpeedIntensity(Scene):
             MathTex(f"\\text{{A = {amplitudes[0]:.1f}}}", color=BLUE, font_size=18),
             MathTex(f"\\text{{A = {amplitudes[1]:.1f}}}", color=GREEN, font_size=18),
             MathTex(f"\\text{{A = {amplitudes[2]:.1f}}}", color=RED, font_size=18),
+            MathTex(f"v = f\\lambda = {v:.1f}\\,\\text{{m/s}}", color=GRAY, font_size=18),
         ).arrange(DOWN, aligned_edge=LEFT).next_to(wave_axes, RIGHT, buff=0.3)
 
         # Wave curves — always_redraw, one single VMobject per wave

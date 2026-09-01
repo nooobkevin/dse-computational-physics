@@ -38,8 +38,9 @@ class MagneticForce(Scene):
 
         mc = ReferenceMovingCharge(m=m, q=q)
         r_orbit: float = mc.orbit_radius(m, v, q, B)
-        # Orbit radius r=0.0209m should span ~1.5 scene units
-        scale: float = 1.5 / r_orbit  # ~72
+        # r = mv/(|q|B) ≈ 0.042 m for these parameters; scale maps it to
+        # ~1.5 scene units so the arc is clearly visible.
+        scale: float = 1.5 / r_orbit
 
         field_left_su: float = -1.8  # scene units
         field_right_su: float = 1.8

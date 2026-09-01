@@ -164,11 +164,15 @@ class DampedSHM(Scene):
         dot_mobs: list[VMobject] = []
         for i, rd in enumerate(regimes):
             trace_mobs.append(make_trace(rd, panels[i]))
-            env_mobs.append(make_envelope(rd, panels[i]))
+            # θ₀e^{-γt} bounds the motion only in the underdamped regime; the
+            # critical/overdamped solutions decay slower early on and would
+            # visibly break out of this envelope.
+            if rd.name == "Underdamped":
+                env_mobs.append(make_envelope(rd, panels[i]))
             dot_mobs.append(_make_dot(rd, panels[i], t))
 
         caption = MathTex(
-            "\\text{Envelope: } \\theta_0 e^{-\\gamma t}, \\; \\gamma = b/2",
+            "\\text{Envelope (underdamped): } \\theta_0 e^{-\\gamma t}, \\; \\gamma = b/2",
             font_size=22, color=GRAY_BROWN,
         )
         caption.next_to(panels[-1], DOWN, buff=0.4)

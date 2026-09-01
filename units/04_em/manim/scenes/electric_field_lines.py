@@ -85,7 +85,9 @@ class ElectricFieldLines(Scene):
                 if E_mag < 1e-9:
                     continue
                 start = charge_center + np.array([wx * 1.4, wy * 1.4, 0])
-                arrow_len = 0.35
+                # Arrow length encodes |E| ∝ 1/r² : halved at r=0.8 → quarter
+                # at r=1.6, so the inverse-square falloff is visible.
+                arrow_len = 0.55 * (0.8 / r) ** 2
                 direction = np.array([Ex / E_mag, Ey / E_mag, 0])
                 end = start + direction * arrow_len
                 arr = Arrow(start, end, color=ORANGE, stroke_width=3, buff=0)

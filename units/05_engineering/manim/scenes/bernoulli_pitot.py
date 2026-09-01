@@ -57,8 +57,12 @@ class BernoulliPitot(Scene):
         sim.step()
         v2 = sim.state["v2"]
         P2 = sim.state["P2"]
+        # Venturi: pressure drop between the two different cross-sections.
         delta_P = P1 - P2
-        pitot_v = sim.pitot_speed(delta_P, rho)
+        # Pitot: stagnation minus static pressure at the SAME point (wide
+        # section), so the recovered speed is exactly v1.
+        delta_P_stag = 0.5 * rho * v1 * v1
+        pitot_v = sim.pitot_speed(delta_P_stag, rho)
 
         t: list[float] = [0.0]
         total_time: float = 8.0
@@ -160,14 +164,20 @@ class BernoulliPitot(Scene):
         # Pitot tube display (right side)
         # ------------------------------------------------------------------
         pitot_label = MathTex(
-            f"v = {pitot_v:.2f}\\,\\text{{m/s}}",
+            f"\\text{{Pitot: }} v_1 = {pitot_v:.2f}\\,\\text{{m/s}}",
             font_size=22, color=GREEN,
         ).to_corner(DOWN + RIGHT, buff=0.5)
 
         pitot_info = MathTex(
-            f"\\Delta P = {delta_P:.1f}\\,\\text{{Pa}}",
+            f"\\Delta P_{{\\text{{stag}}}} = \\tfrac{{1}}{{2}}\\rho v_1^2"
+            f" = {delta_P_stag:.0f}\\,\\text{{Pa}}",
             font_size=20, color=ORANGE,
         ).next_to(pitot_label, UP, buff=0.2)
+
+        venturi_info = MathTex(
+            f"\\text{{Venturi: }} \\Delta P = P_1 - P_2 = {delta_P:.0f}\\,\\text{{Pa}}",
+            font_size=20, color=GRAY,
+        ).next_to(pitot_info, UP, buff=0.2)
 
         # ------------------------------------------------------------------
         # Formula display
@@ -203,7 +213,7 @@ class BernoulliPitot(Scene):
         self.add(stream_vis)
         self.add(manometer_vis)
         self.add(continuity_formula, bernoulli_formula)
-        self.add(pitot_label, pitot_info)
+        self.add(pitot_label, pitot_info, venturi_info)
         self.add(driver)
 
         self.wait(total_time)

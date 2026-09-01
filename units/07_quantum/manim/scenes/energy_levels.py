@@ -93,6 +93,14 @@ class EnergyLevels(Scene):
         well_label = Text("Infinite Square Well", font_size=24, color=GRAY)
         well_label.next_to(left_wall, UP, buff=0.3)
 
+        # Pedagogical framing: this is a simplified model, NOT the hydrogen
+        # atom (see HydrogenSpectra for the Bohr hydrogen levels).
+        well_subtitle = Text(
+            "simplified model - not the hydrogen atom",
+            font_size=16, color=GRAY,
+        )
+        well_subtitle.next_to(well_label, DOWN, buff=0.15)
+
         # ------------------------------------------------------------------
         # Energy levels and wavefunctions
         # ------------------------------------------------------------------
@@ -215,6 +223,7 @@ class EnergyLevels(Scene):
             Create(right_wall),
             Create(floor),
             Write(well_label),
+            Write(well_subtitle),
         )
         self.wait(0.5)
 

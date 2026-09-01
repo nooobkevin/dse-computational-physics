@@ -1,8 +1,11 @@
 """Scene B — Euler vs Velocity-Verlet for molecular dynamics.
 
-Compares energy conservation of Euler and Verlet integration schemes
-for a gas of particles bouncing inside a box.  Verlet conserves kinetic
-energy much better than Euler when particles collide with walls.
+Compares energy conservation of Euler and Verlet integration schemes for
+an atom vibrating about its lattice site (harmonic restoring force
+F = -k(x - x_c)).  Euler's energy grows without bound; Verlet keeps it
+bounded near E0.  A force-free particle would make the two schemes
+numerically identical, so the spring force is what makes the comparison
+meaningful.
 
 Physics drivers
 ---------------
@@ -61,69 +64,59 @@ class IntegratorConvergence(Scene):
         # ==================================================================
         total_time = 10.0
         dt = 0.02
-        N = 50
-        L = 15.0
-        T_init = 2.0
         m = 1.0
+        k = 4.0  # spring constant -> omega0 = 2 rad/s, period ~ pi s
+        x_c = 7.5  # lattice-site equilibrium
+        amplitude = 3.0
 
         # ==================================================================
-        # Pre-compute data using ReferenceGasSim-like logic
-        # We use the integrators directly on a single particle bouncing
-        # between walls to show the energy conservation difference.
+        # Pre-compute data: an atom bound to a lattice site by a harmonic
+        # restoring force.  This is the thermal-physics context (vibrating
+        # solid) and, unlike force-free motion, it makes Euler and Verlet
+        # behave differently.
         # ==================================================================
 
-        def wall_collision(pos: float, vel: float, L: float) -> tuple[float, float]:
-            """Reflect at walls."""
-            if pos < 0:
-                return -pos, abs(vel)
-            if pos > L:
-                return 2.0 * L - pos, -abs(vel)
-            return pos, vel
+        def spring_deriv(x: float, v: float, t: float) -> float:
+            return -k * (x - x_c) / m
 
-        # Single particle bouncing in 1D
-        amplitude = L * 0.4
-        x0 = L / 2 + amplitude
-        v0 = -3.0
+        def total_energy(x: float, v: float) -> float:
+            return 0.5 * m * v * v + 0.5 * k * (x - x_c) ** 2
+
+        x0 = x_c + amplitude
+        v0 = 0.0
 
         # Euler trajectory
         euler_ts: list[float] = [0.0]
         euler_xs: list[float] = [x0]
         euler_vs: list[float] = [v0]
-        euler_ke: list[float] = [0.5 * m * v0 * v0]
+        euler_ke: list[float] = [total_energy(x0, v0)]
         state = {"x": x0, "v": v0, "t": 0.0}
 
-        def zero_deriv(x: float, v: float, t: float) -> float:
-            return 0.0
-
         while state["t"] < total_time:
-            state = euler_step(state, dt, zero_deriv)
+            state = euler_step(state, dt, spring_deriv)
             x, v = state["x"], state["v"]
-            x, v = wall_collision(x, v, L)
-            state["x"], state["v"] = x, v
             euler_ts.append(state["t"])
             euler_xs.append(x)
             euler_vs.append(v)
-            euler_ke.append(0.5 * m * v * v)
+            euler_ke.append(total_energy(x, v))
 
         # Verlet trajectory
         verlet_ts: list[float] = [0.0]
         verlet_xs: list[float] = [x0]
         verlet_vs: list[float] = [v0]
-        verlet_ke: list[float] = [0.5 * m * v0 * v0]
+        verlet_ke: list[float] = [total_energy(x0, v0)]
         state = {"x": x0, "v": v0, "t": 0.0}
 
         while state["t"] < total_time:
-            state = verlet_step(state, dt, zero_deriv)
+            state = verlet_step(state, dt, spring_deriv)
             x, v = state["x"], state["v"]
-            x, v = wall_collision(x, v, L)
-            state["x"], state["v"] = x, v
             verlet_ts.append(state["t"])
             verlet_xs.append(x)
             verlet_vs.append(v)
-            verlet_ke.append(0.5 * m * v * v)
+            verlet_ke.append(total_energy(x, v))
 
-        # Normalise KE to initial value
-        ke0 = 0.5 * m * v0 * v0
+        # Normalise total energy to initial value
+        ke0 = total_energy(x0, v0)
         euler_ke_norm = [e / ke0 for e in euler_ke]
         verlet_ke_norm = [e / ke0 for e in verlet_ke]
 
@@ -132,7 +125,7 @@ class IntegratorConvergence(Scene):
         # ==================================================================
         axes = Axes(
             x_range=[0, total_time + 0.5, 2],
-            y_range=[-L * 0.1, L * 1.1, L / 4],
+            y_range=[0, x_c + amplitude * 1.4, x_c / 2],
             x_length=8,
             y_length=4,
             axis_config={
@@ -159,10 +152,10 @@ class IntegratorConvergence(Scene):
         ).arrange(DOWN, aligned_edge=LEFT).to_corner(RIGHT + UP, buff=0.5)
 
         # ==================================================================
-        # Gas parameters caption (N particles at T_init in a box of side L)
+        # Model parameters caption (atom vibrating about a lattice site)
         # ==================================================================
         gas_caption = MathTex(
-            f"N = {N},\\; T = {T_init},\\; L = {L},\\; m = {m}",
+            f"m = {m},\\; k = {k},\\; F = -k(x - x_c),\\; A = {amplitude}",
             font_size=20,
         ).to_corner(UP + LEFT, buff=0.4)
 
@@ -226,14 +219,11 @@ class IntegratorConvergence(Scene):
         euler_en_scr = screen_points(en_axes, euler_ts, euler_ke_norm)
         verlet_en_scr = screen_points(en_axes, verlet_ts, verlet_ke_norm)
 
-        # For force-free motion Euler and Verlet give the SAME trajectory, so
-        # the Verlet stroke is drawn thinner on top of the Euler one to keep
-        # both schemes visible where the two curves coincide.
         trace_euler = always_redraw(
-            lambda: revealed(euler_ts, euler_scr, RED, 8)
+            lambda: revealed(euler_ts, euler_scr, RED, 5)
         )
         trace_verlet = always_redraw(
-            lambda: revealed(verlet_ts, verlet_scr, BLUE, 3)
+            lambda: revealed(verlet_ts, verlet_scr, BLUE, 5)
         )
 
         head_euler = always_redraw(

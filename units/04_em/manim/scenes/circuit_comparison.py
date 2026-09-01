@@ -20,6 +20,7 @@ from manim import (
     GREEN,
     LEFT,
     MathTex,
+    ORANGE,
     RED,
     RIGHT,
     Scene,
@@ -154,13 +155,46 @@ class CircuitComparison(Scene):
         self.play(Write(power_eq3))
 
         # ==================================================================
+        # Parallel circuit — KCL at a node (current actually splits)
+        # ==================================================================
+        # V=10V source feeding R1=6Ω and R2=3Ω in parallel about node 1.
+        par_branches = [
+            (0, 1, 0.001, 10.0),
+            (1, 0, 6.0, 0.0),
+            (1, 0, 3.0, 0.0),
+        ]
+        par_ckt = ReferenceCircuit(par_branches)
+        par_ckt.resolve()
+        I_R1 = par_ckt.currents["1"]
+        I_R2 = par_ckt.currents["2"]
+        I_src = I_R1 + I_R2
+
+        par_title = MathTex(
+            "\\text{Parallel circuit: } V_s = 10\\,\\mathrm{V},\\; R_1 = 6\\,\\Omega,\\; R_2 = 3\\,\\Omega",
+            font_size=20,
+            color=ORANGE,
+        ).next_to(power_eq3, DOWN, buff=0.5, aligned_edge=LEFT)
+        self.play(Write(par_title))
+
+        par_eq1 = MathTex(
+            f"\\text{{KCL: }} I_s = \\frac{{V_s}}{{R_1}} + \\frac{{V_s}}{{R_2}}"
+            f" = {I_R1:.3f} + {I_R2:.3f} = {I_src:.3f}\\,\\mathrm{{A}}",
+            font_size=22,
+            color=GREEN,
+        ).next_to(par_title, DOWN, buff=0.3, aligned_edge=LEFT)
+
+        self.play(Write(par_eq1))
+
+        self.wait(1.0)
+
+        # ==================================================================
         # Summary
         # ==================================================================
         summary = MathTex(
-            "\\text{Both KCL and KVL are satisfied — the circuit is consistent}",
-            font_size=24,
+            "\\text{Both KCL and KVL are satisfied — series and parallel}",
+            font_size=22,
             color=GREEN,
-        ).to_edge(DOWN, buff=0.5)
+        ).to_edge(DOWN, buff=0.3)
         self.play(Write(summary))
 
         self.wait(3.0)

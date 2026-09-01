@@ -69,6 +69,16 @@ class YoungSlit(Scene):
         # Fringe spacing: Δy = λD / d
         fringe_spacing = wavelength * screen_dist / slit_sep
 
+        # Scene↔physical mapping: the screen's ±screen_half_height spans the
+        # ±n_orders interference orders (physical y in metres).
+        y_phys_max = n_orders * fringe_spacing
+
+        def scene_to_phys(y_scene: float) -> float:
+            return y_scene / screen_half_height * y_phys_max
+
+        def phys_to_scene(y_phys: float) -> float:
+            return y_phys / y_phys_max * screen_half_height
+
         # Authoritative simulation time — read from scene (video) time.
         t: list[float] = [0.0]
 
@@ -114,8 +124,7 @@ class YoungSlit(Scene):
         for n in range(-n_orders, n_orders + 1):
             # y position on screen: y = n * λD / d
             y_pos = n * fringe_spacing
-            # Scale to scene coordinates
-            y_scene = y_pos / (screen_half_height * 2) * screen_half_height * 2
+            y_scene = phys_to_scene(y_pos)
 
             if abs(y_scene) > screen_half_height:
                 continue
@@ -174,11 +183,15 @@ class YoungSlit(Scene):
 
         def path_difference_text() -> MathTex:
             target = sweep_target()
-            path_upper = math.hypot(target[0] - slit_upper[0], target[1] - slit_upper[1])
-            path_lower = math.hypot(target[0] - slit_lower[0], target[1] - slit_lower[1])
-            path_diff = abs(path_upper - path_lower)
+            # Physical path difference d·sinθ at the sweep point — the scene
+            # geometry is schematic, so compute from the mapped physical y.
+            y_phys = scene_to_phys(float(target[1]))
+            sin_theta = y_phys / math.sqrt(screen_dist**2 + y_phys**2)
+            path_diff = slit_sep * sin_theta
+            n_lambda = path_diff / wavelength
             label = MathTex(
-                f"\\text{{Path diff}} = {path_diff*1e3:.2f} \\text{{ mm}}",
+                f"\\text{{Path diff}} = {path_diff*1e6:.2f} \\text{{ }} \\mu\\text{{m}}"
+                f" = {n_lambda:.1f}\\,\\lambda",
                 font_size=18, color=YELLOW,
             )
             label.next_to(formula, DOWN, buff=0.3)
@@ -192,7 +205,7 @@ class YoungSlit(Scene):
         slit_width: float = 0.02e-3  # 0.02 mm slit width for diffraction envelope
 
         intensity_axes = Axes(
-            x_range=[-screen_half_height, screen_half_height, 1],
+            x_range=[-y_phys_max * 1e3, y_phys_max * 1e3, 10],
             y_range=[0, 1.1, 0.2],
             x_length=3.0,
             y_length=2.0,
@@ -205,18 +218,16 @@ class YoungSlit(Scene):
         intensity_axes.to_corner(DOWN + RIGHT, buff=0.5)
 
         intensity_title = MathTex(
-            "\\text{Intensity } I(y)", font_size=18,
+            "\\text{Intensity } I \\;\\text{vs}\\; y\\,(\\text{mm})", font_size=18,
         ).next_to(intensity_axes, UP, buff=0.1)
 
         def intensity_curve() -> VMobject:
             """Build the I(y) curve as a single VMobject."""
             n_pts = 200
             ys = np.linspace(-screen_half_height, screen_half_height, n_pts)
-            # Convert scene y to physical y: scale factor
-            phys_scale = screen_half_height * 2.0  # maps scene coords to physical
             intensities = [
                 young_slit_intensity(
-                    y * fringe_spacing / phys_scale,
+                    scene_to_phys(float(y)),
                     slit_separation=slit_sep,
                     slit_width=slit_width,
                     screen_distance=screen_dist,
@@ -225,7 +236,7 @@ class YoungSlit(Scene):
                 for y in ys
             ]
             pts = [
-                intensity_axes.c2p(float(y), float(I))
+                intensity_axes.c2p(scene_to_phys(float(y)) * 1e3, float(I))
                 for y, I in zip(ys, intensities)
             ]
             vm = VMobject(color=YELLOW, stroke_width=2)
@@ -238,9 +249,6 @@ class YoungSlit(Scene):
         max_min_labels = VGroup()
         for n in range(-n_orders, n_orders + 1):
             y_pos = n * fringe_spacing
-            y_scene = y_pos / (screen_half_height * 2) * screen_half_height * 2
-            if abs(y_scene) > screen_half_height:
-                continue
             I_val = young_slit_intensity(
                 y_pos,
                 slit_separation=slit_sep,
@@ -257,7 +265,7 @@ class YoungSlit(Scene):
                     f"min n={n}", font_size=10, color=GRAY,
                 )
             label.next_to(
-                intensity_axes.c2p(float(y_scene), float(I_val)),
+                intensity_axes.c2p(float(y_pos) * 1e3, float(I_val)),
                 UP if I_val > 0.5 else DOWN,
                 buff=0.05,
             )

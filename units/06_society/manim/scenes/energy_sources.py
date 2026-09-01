@@ -243,25 +243,32 @@ class EnergySources(Scene):
         # ==================================================================
         # Part 4 — Bar chart comparing output magnitudes
         # ==================================================================
-        bar_title = Text("Power Output Comparison (per unit)", font_size=22, color=YELLOW)
+        bar_title = Text("Power Output Comparison (log scale)", font_size=22, color=YELLOW)
         bar_title.move_to(np.array([0.0, -2.5, 0]))
         self.play(Write(bar_title))
 
-        # Compute representative values
-        # Fission: 1 kg of U-235 → ~8.2e13 J (typical)
-        # But for display, use relative scale
-        fission_power_rel = 100.0  # reference
-        solar_power_rel = sim.solar_power(area=1.0, solar_constant=1000.0, efficiency=0.20) / 100.0  # ~2.0
-        wind_power_rel = sim.wind_power(r=5.0, wind_speed=10.0, air_density=1.2, efficiency=0.4) / 10000.0  # ~1.88
+        # Every bar is computed from its own physics:
+        #   fission: 1 kg U-235, mass defect ~0.09% -> ΔE = Δmc², per day
+        #   solar:   P = S·A·η for a 1 m² panel
+        #   wind:    P = ½ηρπr²v³ for r = 5 m at 10 m/s
+        fission_E_J, _ = sim.mass_energy_delta(0.0009, in_amu=False)
+        p_fission = fission_E_J / 86400.0
+        p_solar = sim.solar_power(area=1.0, solar_constant=1000.0, efficiency=0.20)
+        p_wind = sim.wind_power(r=5.0, wind_speed=10.0, air_density=1.2, efficiency=0.4)
 
-        # Normalize so fission is 100
-        max_val = fission_power_rel
-        bar_scale = 3.0 / max_val
+        def fmt_power(p: float) -> str:
+            if p >= 1e6:
+                return f"{p/1e6:.0f} MW"
+            if p >= 1e3:
+                return f"{p/1e3:.1f} kW"
+            return f"{p:.0f} W"
 
+        # Spans ~10^2 W to ~10^9 W, so heights use log10(P).
+        log_lo, log_hi = 1.0, 9.0
         bar_data = [
-            ("Fission", fission_power_rel, ORANGE),
-            ("Solar (1 m²)", solar_power_rel, YELLOW),
-            ("Wind (r=5m)", wind_power_rel, BLUE),
+            ("Fission (1 kg/day)", p_fission, ORANGE),
+            ("Solar (1 m²)", p_solar, YELLOW),
+            ("Wind (r=5m, v=10)", p_wind, BLUE),
         ]
 
         bars = VGroup()
@@ -270,7 +277,7 @@ class EnergySources(Scene):
 
         for i, (name, val, color) in enumerate(bar_data):
             x_pos = -3.0 + i * 3.0
-            bar_h = val * bar_scale
+            bar_h = (math.log10(val) - log_lo) / (log_hi - log_lo) * 3.0
             bar = VMobject(color=color, fill_opacity=0.8)
             bar.set_points_as_corners([
                 np.array([x_pos - 0.3, -1.5, 0]),
@@ -284,7 +291,7 @@ class EnergySources(Scene):
             label.move_to(np.array([x_pos, -1.8, 0]))
             bar_labels.add(label)
 
-            val_text = Text(f"{val:.1f}", font_size=14, color=WHITE)
+            val_text = Text(fmt_power(val), font_size=14, color=WHITE)
             val_text.move_to(np.array([x_pos, -1.5 + bar_h + 0.2, 0]))
             bar_values.add(val_text)
 
