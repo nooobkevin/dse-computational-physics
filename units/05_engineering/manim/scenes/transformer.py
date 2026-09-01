@@ -86,18 +86,22 @@ class TransformerScene(Scene):
             secondary_v, DOWN, buff=0.3
         )
 
-        # Formulas
+        # Formulas — anchored as one bottom-left block so both lines fit
         ratio_formula = MathTex(
             f"\\frac{{V_p}}{{V_s}} = \\frac{{N_p}}{{N_s}} = {t.Np/t.Ns:.2f}",
             font_size=28,
             color=GREEN,
-        ).to_corner(DOWN + LEFT, buff=0.5)
+        )
 
         power_formula = MathTex(
             f"V_p I_p = {Pp:.1f}\\,\\text{{W}} \\quad V_s I_s = {Ps:.1f}\\,\\text{{W}}",
             font_size=28,
             color=GREEN,
-        ).next_to(ratio_formula, DOWN, buff=0.3)
+        )
+
+        VGroup(ratio_formula, power_formula).arrange(
+            DOWN, aligned_edge=LEFT, buff=0.3
+        ).to_corner(DOWN + LEFT, buff=0.5)
 
         # Animate
         self.play(Create(core))

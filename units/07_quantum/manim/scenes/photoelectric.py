@@ -68,6 +68,10 @@ class Photoelectric(Scene):
         pe = PhotoElectric(work_function=phi)
         f0 = pe.threshold_frequency()
 
+        # Frequency scale: the axis is drawn in units of 1e14 Hz so tick
+        # labels are small integers rather than 1e14-scale floats.
+        f0_THz14 = f0 / 1e14
+
         # Frequency range
         f_min = 0.0
         f_max = 3.0 * f0
@@ -86,10 +90,11 @@ class Photoelectric(Scene):
         t: list[float] = [0.0]
 
         # ------------------------------------------------------------------
-        # Axes
+        # Axes — x in units of 10^14 Hz
         # ------------------------------------------------------------------
+        unit = 1e14
         axes = Axes(
-            x_range=[0, f_max, f_max / 4],
+            x_range=[0, f_max / unit, 2.0],
             y_range=[0, max(ke_vals) * 1.2, 1],
             x_length=8.0,
             y_length=5.0,
@@ -97,14 +102,15 @@ class Photoelectric(Scene):
                 "color": GRAY,
                 "include_numbers": True,
                 "font_size": 20,
+                "decimal_number_config": {"num_decimal_places": 0},
             },
         )
         axes.center()
 
         # Labels
-        x_label = MathTex("f", "\\text{ (Hz)}", font_size=28).next_to(
-            axes.x_axis.get_end(), DOWN
-        )
+        x_label = MathTex(
+            "f", "\\ (\\times 10^{14}\\ \\text{Hz})", font_size=28
+        ).next_to(axes.c2p(f_max / unit * 0.5, 0), DOWN, buff=0.4)
         y_label = MathTex("K_\\text{max}", "\\text{ (eV)}", font_size=28).next_to(
             axes.y_axis.get_end(), LEFT
         )
@@ -113,13 +119,17 @@ class Photoelectric(Scene):
         # Threshold frequency marker (static)
         # ------------------------------------------------------------------
         f0_line = Line(
-            axes.c2p(f0, 0),
-            axes.c2p(f0, max(ke_vals) * 1.2),
+            axes.c2p(f0_THz14, 0),
+            axes.c2p(f0_THz14, max(ke_vals) * 1.2),
             color=RED,
             stroke_width=2,
             stroke_opacity=0.7,
         )
-        f0_label = MathTex(f"f_0 = {f0:.2e}\\,\\text{{Hz}}", font_size=20, color=RED)
+        f0_label = MathTex(
+            f"f_0 = {f0_THz14:.2f} \\times 10^{{14}}\\ \\text{{Hz}}",
+            font_size=20,
+            color=RED,
+        )
         f0_label.next_to(f0_line, UP, buff=0.1)
 
         # ------------------------------------------------------------------
@@ -130,7 +140,10 @@ class Photoelectric(Scene):
 
         def draw_trace() -> VMobject:
             k = visible_count()
-            pts = [axes.c2p(float(freqs[i]), float(ke_vals[i])) for i in range(k)]
+            pts = [
+                axes.c2p(float(freqs[i]) / unit, float(ke_vals[i]))
+                for i in range(k)
+            ]
             vm = VMobject(color=GREEN, stroke_width=3)
             vm.set_points_as_corners(pts)
             return vm
@@ -141,7 +154,7 @@ class Photoelectric(Scene):
         current_dot = always_redraw(
             lambda: Dot(
                 axes.c2p(
-                    float(freqs[min(visible_count() - 1, n_points)]),
+                    float(freqs[min(visible_count() - 1, n_points)]) / unit,
                     float(ke_vals[min(visible_count() - 1, n_points)]),
                 ),
                 color=GREEN,

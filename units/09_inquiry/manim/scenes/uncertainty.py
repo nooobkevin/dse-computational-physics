@@ -74,12 +74,12 @@ class Uncertainty(Scene):
         axes = Axes(
             x_range=[0, 1.2, 0.2],
             y_range=[0, 5.5, 1.0],
-            x_length=6.0,
-            y_length=4.0,
+            x_length=4.4,
+            y_length=3.4,
             axis_config={"color": GRAY_A, "include_numbers": True, "font_size": 20},
         )
         axes.center()
-        axes.shift(DOWN * 0.3)
+        axes.shift(DOWN * 0.3 + LEFT * 1.5)
         self.play(Create(axes), run_time=1.2)
 
         x_label = MathTex("t^2", font_size=24, color=GRAY).next_to(
@@ -108,14 +108,14 @@ class Uncertainty(Scene):
                 stroke_width=2,
             )
             cap_top = Line(
-                [px - 3, py + y_err_px, 0],
-                [px + 3, py + y_err_px, 0],
+                [px - 0.1, py + y_err_px, 0],
+                [px + 0.1, py + y_err_px, 0],
                 color=ORANGE,
                 stroke_width=2,
             )
             cap_bot = Line(
-                [px - 3, py - y_err_px, 0],
-                [px + 3, py - y_err_px, 0],
+                [px - 0.1, py - y_err_px, 0],
+                [px + 0.1, py - y_err_px, 0],
                 color=ORANGE,
                 stroke_width=2,
             )
@@ -161,16 +161,20 @@ class Uncertainty(Scene):
         self.wait(0.3)
 
         explanation = VGroup(
-            Text("Key Concepts:", font_size=24, color=YELLOW),
-            Text("Error bars show +/-1sigma measurement uncertainty", font_size=20, color=GRAY),
-            Text("Best-fit line minimises squared residuals", font_size=20, color=GRAY),
-            Text("Slope gives g = 2 x slope", font_size=20, color=GRAY),
-            Text("Percent error compares to accepted value", font_size=20, color=GRAY),
-            Text("Uncertainty propagates: sigma_g = 2 x sigma_slope", font_size=20, color=GRAY),
+            Text("Key Concepts:", font_size=22, color=YELLOW),
+            Text("Error bars show +/-1sigma", font_size=17, color=GRAY),
+            Text("measurement uncertainty", font_size=17, color=GRAY),
+            Text("Best-fit line minimises", font_size=17, color=GRAY),
+            Text("squared residuals", font_size=17, color=GRAY),
+            Text("Slope gives g = 2 x slope", font_size=17, color=GRAY),
+            Text("Percent error compares to", font_size=17, color=GRAY),
+            Text("accepted value", font_size=17, color=GRAY),
+            Text("Uncertainty propagates:", font_size=17, color=GRAY),
+            Text("sigma_g = 2 x sigma_slope", font_size=17, color=GRAY),
         )
         explanation.arrange(DOWN, aligned_edge=LEFT, buff=0.1)
-        explanation.next_to(title, DOWN, buff=0.5)
-        explanation.shift(LEFT * 0.5)
+        explanation.next_to(axes, RIGHT, buff=0.5)
+        explanation.align_to(axes, UP)
 
         for line in explanation:
             self.play(Write(line), run_time=0.55)

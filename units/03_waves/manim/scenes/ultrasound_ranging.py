@@ -61,6 +61,10 @@ class UltrasoundRanging(Scene):
         # Round-trip time
         round_trip = 2.0 * target_distance / speed
 
+        # One-way traversal in video seconds; physical echo time (~0.13 ms)
+        # cannot be animated directly, so visual time maps back to physical.
+        visual_leg = 2.5
+
         # Authoritative simulation time
         t: list[float] = [0.0]
 
@@ -109,14 +113,14 @@ class UltrasoundRanging(Scene):
             elapsed = t[0]
 
             # Pulse position: goes out and back
-            if elapsed <= round_trip:
+            if elapsed <= visual_leg:
                 # Outgoing: x goes from transducer to target
-                frac = elapsed / round_trip
+                frac = elapsed / visual_leg
                 pulse_x = transducer_x + (target_x - transducer_x) * frac
                 direction = 1.0  # rightward
             else:
                 # Return: x goes from target back to transducer
-                frac = (elapsed - round_trip) / round_trip
+                frac = (elapsed - visual_leg) / visual_leg
                 pulse_x = target_x - (target_x - transducer_x) * frac
                 direction = -1.0  # leftward
 
@@ -142,12 +146,12 @@ class UltrasoundRanging(Scene):
         def echo() -> VMobject:
             """Reflected pulse (shown only on return journey)."""
             elapsed = t[0]
-            if elapsed <= round_trip:
+            if elapsed <= visual_leg:
                 # No echo yet
                 return VMobject()
 
             # Echo position: returning from target to transducer
-            frac = (elapsed - round_trip) / round_trip
+            frac = (elapsed - visual_leg) / visual_leg
             echo_x = target_x - (target_x - transducer_x) * frac
 
             xs = np.linspace(-0.5, 0.5, 80)
@@ -170,23 +174,22 @@ class UltrasoundRanging(Scene):
         # ------------------------------------------------------------------
         def readout() -> VGroup:
             elapsed = t[0]
-            if elapsed <= round_trip:
-                # Outgoing: compute distance so far
-                frac = elapsed / round_trip
-                current_d = target_distance * frac
+            journey = 2.0 * visual_leg
+            visual_progress = min(elapsed, journey) / journey
+            t_phys = visual_progress * round_trip
+            if elapsed <= visual_leg:
                 status = "Pulse outgoing..."
-            else:
-                # Returning
-                frac = (elapsed - round_trip) / round_trip
-                current_d = target_distance * (1.0 - frac)
+            elif elapsed <= journey:
                 status = "Echo returning..."
+            else:
+                status = "Echo received"
 
-            d_calc = ultrasound_echo_distance(speed, elapsed)
+            d_calc = ultrasound_echo_distance(speed, t_phys)
 
             lines = VGroup(
                 MathTex(f"\\text{{{status}}}", font_size=22, color=YELLOW),
                 MathTex(f"v = {speed:.0f} \\text{{ m/s}}", font_size=22),
-                MathTex(f"t = {elapsed*1000:.1f} \\text{{ ms}}", font_size=22),
+                MathTex(f"t = {t_phys*1000:.2f} \\text{{ ms}}", font_size=22),
                 MathTex(
                     f"d = v \\times t / 2 = {d_calc*100:.1f} \\text{{ cm}}",
                     font_size=22, color=GREEN,

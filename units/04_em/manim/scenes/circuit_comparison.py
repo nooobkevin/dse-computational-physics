@@ -114,7 +114,7 @@ class CircuitComparison(Scene):
             font_size=22,
         ).next_to(kvl_eq1, DOWN, buff=0.2, aligned_edge=LEFT)
         kvl_eq3 = MathTex(
-            f"V_s - V_{{\\text{{R1}}}} - V_{{\\text{{R2}}}} = {10.0 - V_R1 - V_R2:.1e}\\,\\mathrm{{V}}",
+            f"V_s - V_{{\\text{{R1}}}} - V_{{\\text{{R2}}}} = {10.0 - V_R1 - V_R2:.3f}\\,\\mathrm{{V}}",
             font_size=22,
             color=BLUE,
         ).next_to(kvl_eq2, DOWN, buff=0.2, aligned_edge=LEFT)

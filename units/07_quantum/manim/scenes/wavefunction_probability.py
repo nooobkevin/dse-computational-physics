@@ -110,6 +110,8 @@ class WavefunctionProbability(Scene):
         # ------------------------------------------------------------------
         n_steps = 200
         dx = L / n_steps
+        psi_si_peak = math.sqrt(2.0 / L)
+        prob_si_peak = 2.0 / L
 
         def get_wf_curve(n: int) -> VGroup:
             group = VGroup()
@@ -118,7 +120,7 @@ class WavefunctionProbability(Scene):
                 x = i * dx
                 psi = well.wavefunction(x, n)
                 sx = well_left[0] + (x / L) * well_width
-                sy = psi * 1e5  # scale for visibility
+                sy = (psi / psi_si_peak) * 1.5
                 points.append([sx, sy, 0])
             for i in range(1, len(points)):
                 group.add(
@@ -138,7 +140,7 @@ class WavefunctionProbability(Scene):
                 x = i * dx
                 prob = well.probability_density(x, n)
                 sx = well_left[0] + (x / L) * well_width
-                sy = prob * 2e10  # scale for visibility
+                sy = (prob / prob_si_peak) * 2.0
                 points.append([sx, sy, 0])
             for i in range(1, len(points)):
                 group.add(

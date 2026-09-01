@@ -341,11 +341,10 @@ class SuperpositionState(Scene):
 
         if not measurements:
             latest = Text("(waiting...)", font_size=16, color=GRAY)
-            latest.next_to(title, DOWN, buff=0.2, aligned_edge=LEFT)
+            latest.next_to(title, DOWN, buff=0.2, aligned_edge=RIGHT)
             group.add(latest)
             return group
 
-        # Show the last few outcomes
         recent = measurements[-min(8, len(measurements)):]
         outcome_str = " ".join("|0⟩" if r == 0 else "|1⟩" for r in recent)
         outcome_tex = MathTex(
@@ -353,7 +352,12 @@ class SuperpositionState(Scene):
             font_size=20,
             color=GRAY,
         )
-        outcome_tex.next_to(title, DOWN, buff=0.2, aligned_edge=LEFT)
+        # Right-align into the frame: LEFT alignment here runs rows off the
+        # right screen edge.
+        max_line_width = 6.2
+        if outcome_tex.width > max_line_width:
+            outcome_tex.scale(max_line_width / outcome_tex.width)
+        outcome_tex.next_to(title, DOWN, buff=0.2, aligned_edge=RIGHT)
         group.add(outcome_tex)
 
         # Statistics
@@ -363,10 +367,12 @@ class SuperpositionState(Scene):
         stats = Text(
             f"Total: {total}  |  |0⟩: {count_0} ({count_0/total*100:.0f}%)  "
             f"|  |1⟩: {count_1} ({count_1/total*100:.0f}%)",
-            font_size=16,
+            font_size=14,
             color=GRAY,
         )
-        stats.next_to(outcome_tex, DOWN, buff=0.15, aligned_edge=LEFT)
+        if stats.width > max_line_width:
+            stats.scale(max_line_width / stats.width)
+        stats.next_to(outcome_tex, DOWN, buff=0.15, aligned_edge=RIGHT)
         group.add(stats)
 
         return group

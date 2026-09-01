@@ -74,21 +74,21 @@ class RandomWalkScene(Scene):
             seed=42,
         )
 
-        # Map step index to frame index (interpolate if n_steps < n_frames)
+        # Frame → step mapping must be ceil so the LAST frame reaches step
+        # N (int() truncation never displayed the final step, making the
+        # on-screen √N inconsistent with the N in the info panel).
         steps_per_frame = n_steps / n_frames
 
         # Pre-compute walker positions for each frame
         frame_positions: list[np.ndarray] = []
         for frame in range(n_frames):
-            step_idx = int(frame * steps_per_frame)
-            step_idx = min(step_idx, n_steps)
+            step_idx = min(int(np.ceil(frame * steps_per_frame)), n_steps)
             frame_positions.append(rw.positions[:, step_idx, :].copy())
 
         # Pre-compute RMS values for each frame
         frame_rms: list[float] = []
         for frame in range(n_frames):
-            step_idx = int(frame * steps_per_frame)
-            step_idx = min(step_idx, n_steps)
+            step_idx = min(int(np.ceil(frame * steps_per_frame)), n_steps)
             frame_rms.append(float(rw.rms[step_idx]))
 
         # Theoretical RMS at final step
@@ -102,15 +102,23 @@ class RandomWalkScene(Scene):
         display_range = max_rms * 1.5
         display_range = max(display_range, 3.0)
 
+        # Clean integer tick grid: the display range is rounded up to a whole
+        # multiple of the tick step so no tick value ever needs decimals.
+        tick_step = 1.0
+        display_range = max(
+            tick_step * int(np.ceil(max_rms * 1.5 / tick_step)), 3.0
+        )
+
         axes = Axes(
-            x_range=[-display_range, display_range, display_range / 4],
-            y_range=[-display_range, display_range, display_range / 4],
+            x_range=[-display_range, display_range, tick_step],
+            y_range=[-display_range, display_range, tick_step],
             x_length=8,
             y_length=8,
             axis_config={
                 "color": GREY_D,
                 "include_numbers": True,
                 "font_size": 16,
+                "decimal_number_config": {"num_decimal_places": 0},
             },
         )
         axes.center()
@@ -186,12 +194,13 @@ class RandomWalkScene(Scene):
             return vm
 
         def rms_label_text() -> MathTex:
-            """RMS formula label with current value."""
+            """RMS law plus the value measured from the walker cloud."""
             idx = frame_index()
             r = frame_rms[idx]
-            n = int(idx * steps_per_frame)
+            n = min(int(np.ceil(idx * steps_per_frame)), n_steps)
             return MathTex(
-                f"\\text{{RMS}} = s \\sqrt{{N}} = {step_length} \\sqrt{{{n}}} \\approx {r:.3f}",
+                f"\\text{{RMS}} = s \\sqrt{{N}} \\approx {r:.2f}"
+                f" \\quad (N = {n})",
                 color=RED,
                 font_size=22,
             ).to_corner(DOWN + LEFT, buff=0.5)

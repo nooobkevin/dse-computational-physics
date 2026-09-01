@@ -59,7 +59,7 @@ class EpidemicSpread(Scene):
         p_infect: float = 0.35
         p_recover: float = 0.08
         total_steps: int = 120
-        cell_size: float = 0.06
+        cell_size: float = 0.12
 
         # ------------------------------------------------------------------
         # Precompute ALL simulation frames
@@ -97,19 +97,22 @@ class EpidemicSpread(Scene):
             return max(0, min(idx, n_frames - 1))
 
         # ------------------------------------------------------------------
-        # Layout
+        # Layout — title + step counter share the y=3.45 band (different
+        # columns); grid frame spans y[-1.2, 2.8]; legend below the frame;
+        # chart bars grow from baseline y=-1.0 (max top y=1.5).
         # ------------------------------------------------------------------
         title = Text(
             "Epidemic Spread — SIR Model", font_size=28, color=YELLOW
         )
-        title.to_edge(UP, buff=0.3)
+        title.move_to(UP * 3.45)
         self.add(title)
 
-        # Grid area (left side)
-        grid_origin = np.array([-5.5, 0.5, 0.0])
+        grid_top_y: float = 2.8
+        grid_origin = np.array([-5.5, grid_top_y, 0.0])
 
-        # S/I/R bar chart (right side)
-        chart_origin = np.array([2.5, 2.0, 0.0])
+        # S/I/R bar chart (right side): bars grow upward from a fixed
+        # baseline at chart_origin.y - 1.25 = -1.0, max top y = 1.5.
+        chart_origin = np.array([3.0, 0.25, 0.0])
         bar_w: float = 0.6
         max_count: int = rows * cols
 
@@ -147,16 +150,33 @@ class EpidemicSpread(Scene):
                 )
                 cell_squares.add(sq)
 
-        # Grid background
+        # Grid background — sized and centred on the cell group's bounding
+        # box so the frame fully encloses the grid on all four edges.
         grid_bg = Rectangle(
-            width=cols * cell_size * 1.1 + cell_size,
-            height=rows * cell_size * 1.1 + cell_size,
+            width=cell_squares.width + cell_size,
+            height=cell_squares.height + cell_size,
             color=WHITE,
             stroke_width=1,
             fill_opacity=0.0,
+        ).move_to(cell_squares.get_center())
+
+        # Step counter: same band as the title (y=3.45) but a different
+        # column (title ends near x=2.2, counter starts at x=3.0)
+        step_text = always_redraw(
+            lambda: Text(
+                f"Step: {frame_idx()}",
+                font_size=16, color=WHITE,
+            ).move_to(np.array([3.0, 3.45, 0.0]), aligned_edge=LEFT)
         )
-        grid_bg.move_to(grid_origin + RIGHT * cols * cell_size * 1.1 / 2
-                        - DOWN * rows * cell_size * 1.1 / 2)
+
+        # Legend: bottom-left, below the grid frame (frame bottom y = -1.2),
+        # clear of title, grid frame and chart
+        legend = VGroup(
+            Text("Susceptible", font_size=12, color=GRAY),
+            Text("Infected", font_size=12, color=RED),
+            Text("Recovered", font_size=12, color=GREEN),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.08)
+        legend.move_to(np.array([-6.9, -1.7, 0.0]), aligned_edge=UP + LEFT)
 
         # ------------------------------------------------------------------
         # always_redraw grid cells
@@ -221,39 +241,35 @@ class EpidemicSpread(Scene):
         # ------------------------------------------------------------------
         # Labels for chart
         # ------------------------------------------------------------------
+        bar_baseline_y = chart_origin[1] - 1.25
         s_label = Text("S", font_size=16, color=GRAY)
-        s_label.next_to(chart_origin + RIGHT * bar_w / 2, DOWN, buff=0.1)
+        s_label.next_to(
+            np.array([chart_origin[0] + bar_w / 2, bar_baseline_y, 0.0]),
+            DOWN, buff=0.1,
+        )
         i_label = Text("I", font_size=16, color=RED)
         i_label.next_to(
-            chart_origin + RIGHT * (bar_w + 0.15) + RIGHT * bar_w / 2,
+            np.array(
+                [chart_origin[0] + (bar_w + 0.15) + bar_w / 2, bar_baseline_y, 0.0]
+            ),
             DOWN, buff=0.1,
         )
         r_label = Text("R", font_size=16, color=GREEN)
         r_label.next_to(
-            chart_origin + RIGHT * 2 * (bar_w + 0.15) + RIGHT * bar_w / 2,
+            np.array(
+                [
+                    chart_origin[0] + 2 * (bar_w + 0.15) + bar_w / 2,
+                    bar_baseline_y,
+                    0.0,
+                ]
+            ),
             DOWN, buff=0.1,
         )
 
         chart_title = Text("S/I/R Counts", font_size=16, color=WHITE)
-        chart_title.next_to(chart_origin + UP * 2.6, DOWN, buff=0.1).align_to(
-            chart_origin, LEFT
-        )
-
-        # Step counter
-        step_text = always_redraw(
-            lambda: Text(
-                f"Step: {frame_idx()}",
-                font_size=16, color=WHITE,
-            ).next_to(chart_title, DOWN, buff=0.2).align_to(chart_origin, LEFT)
-        )
-
-        # Legend
-        legend = VGroup(
-            Text("Susceptible", font_size=12, color=GRAY),
-            Text("Infected", font_size=12, color=RED),
-            Text("Recovered", font_size=12, color=GREEN),
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.08)
-        legend.next_to(step_text, DOWN, buff=0.3).align_to(chart_origin, LEFT)
+        chart_title.next_to(
+            np.array([chart_origin[0], bar_baseline_y, 0.0]), DOWN, buff=0.45
+        ).align_to(chart_origin, LEFT)
 
         # ------------------------------------------------------------------
         # Driver

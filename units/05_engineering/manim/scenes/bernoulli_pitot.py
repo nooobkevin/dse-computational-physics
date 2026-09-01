@@ -30,6 +30,7 @@ from manim import (
     RIGHT,
     Scene,
     UP,
+    VGroup,
     VMobject,
     YELLOW,
     always_redraw,
@@ -174,12 +175,16 @@ class BernoulliPitot(Scene):
         continuity_formula = MathTex(
             f"A_1 v_1 = A_2 v_2 \\quad ({A1})({v1}) = ({A2})({v2:.3f})",
             font_size=20, color=GREEN,
-        ).to_corner(DOWN + LEFT, buff=0.3)
+        )
 
         bernoulli_formula = MathTex(
             f"P_1 + \\frac{{1}}{{2}}\\rho v_1^2 = P_2 + \\frac{{1}}{{2}}\\rho v_2^2",
             font_size=20, color=YELLOW,
-        ).next_to(continuity_formula, DOWN, buff=0.1, aligned_edge=LEFT)
+        )
+
+        VGroup(continuity_formula, bernoulli_formula).arrange(
+            DOWN, aligned_edge=LEFT, buff=0.1
+        ).to_corner(DOWN + LEFT, buff=0.3)
 
         # ------------------------------------------------------------------
         # Physics driver

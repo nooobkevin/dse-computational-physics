@@ -156,7 +156,7 @@ class HydrogenSpectra(Scene):
             stroke_width=2,
         )
         axis_title = Text("Balmer Series (visible)", font_size=18, color=GRAY)
-        axis_title.next_to(axis_line, UP, buff=0.3)
+        axis_title.next_to(axis_line, UP, buff=2.0)
 
         # Wavelength labels
         lam_labels = VGroup()
@@ -170,7 +170,7 @@ class HydrogenSpectra(Scene):
 
         # Spectral lines (vertical lines at correct wavelengths)
         spectral_lines = VGroup()
-        for n_i, n_f, latex_name, plain_name, lam, color in balmer_lines:
+        for line_idx, (n_i, n_f, latex_name, plain_name, lam, color) in enumerate(balmer_lines):
             if lam < lam_min or lam > lam_max:
                 continue
             frac = (lam - lam_min) / (lam_max - lam_min)
@@ -183,10 +183,16 @@ class HydrogenSpectra(Scene):
             )
             spectral_lines.add(line)
 
-            # Label above (use plain_name for Text — supports Unicode)
+            # Alternate label heights (two rows) so neighbours in the
+            # crowded 400–520 nm region never collide with each other.
             lam_nm = lam * 1e9
+            buff = 0.30 + 0.55 * (line_idx % 2)
             label = Text(f"{plain_name} {lam_nm:.0f} nm", font_size=14, color=color)
-            label.next_to(np.array([x, axis_center[1], 0]), UP, buff=0.3)
+            label.next_to(
+                np.array([x, axis_center[1], 0]),
+                UP,
+                buff=buff,
+            )
             spectral_lines.add(label)
 
         # ------------------------------------------------------------------

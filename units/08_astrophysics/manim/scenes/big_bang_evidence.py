@@ -252,18 +252,18 @@ class BigBangEvidence(Scene):
         ).move_to(_p(R_CX, dip_cy - 0.5))
 
         # ------------------------------------------------------------------
-        # Closing title card
-        # ------------------------------------------------------------------
-        card = VMobject(color=CLOSING_BG, fill_color=CLOSING_BG,
-                        fill_opacity=0.95, stroke_width=0)
-        card.set_points_as_corners([
-            _p(-4.4, 1.2), _p(4.4, 1.2), _p(4.4, -1.2), _p(-4.4, -1.2),
-            _p(-4.4, 1.2),
-        ])
+        # Closing title card — in the clear strip below both panels
         closing = MathTex(
             "\\text{CMB + redshift = evidence for the Big Bang}",
             font_size=30, color=YELLOW,
-        )
+        ).move_to(_p(0.0, -3.48))
+
+        card = VMobject(color=CLOSING_BG, fill_color=CLOSING_BG,
+                        fill_opacity=0.95, stroke_width=0)
+        card.set_points_as_corners([
+            _p(-4.4, -3.05), _p(4.4, -3.05), _p(4.4, -3.9),
+            _p(-4.4, -3.9), _p(-4.4, -3.05),
+        ])
 
         # ------------------------------------------------------------------
         # Scanning cursor (semi-transparent bar + thin line)
