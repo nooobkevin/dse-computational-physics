@@ -19,7 +19,7 @@ dist/
 
 # Agent workflow state (boulder / run continuation ledgers)
 .omo/
-
+.codegraph/
 # Jupyter notebooks (checkpoints only)
 .ipynb_checkpoints/
 */.ipynb_checkpoints/
