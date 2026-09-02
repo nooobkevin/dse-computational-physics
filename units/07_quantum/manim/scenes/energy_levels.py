@@ -26,6 +26,7 @@ from manim import (
     GRAY,
     GREEN,
     GREEN_B,
+    LaggedStart,
     LEFT,
     Line,
     MathTex,
@@ -45,6 +46,7 @@ from manim import (
 )
 
 from physics_core.quantum.wavefunctions import M_E, ReferenceQuantumWell
+from manim_polish import BEAT_POST, Attention, EASE, PALETTE, Reveal
 
 
 class EnergyLevels(Scene):
@@ -215,44 +217,31 @@ class EnergyLevels(Scene):
             legend.add(line, label)
 
         # ------------------------------------------------------------------
-        # Animation
+        # Animation — 3b1b-style staged reveals with attention beats
         # ------------------------------------------------------------------
-        # Draw well
-        self.play(
-            Create(left_wall),
-            Create(right_wall),
-            Create(floor),
-            Write(well_label),
-            Write(well_subtitle),
-        )
-        self.wait(0.5)
+        reveal = Reveal(self)
+        attention = Attention(self)
 
-        # Draw energy levels one by one
+        # Beat 1: draw the well, then name it.
+        reveal.draw(left_wall, right_wall, floor, run_time=1.2, lag=0.1)
+        reveal.caption(VGroup(well_label, well_subtitle))
+
+        # Beat 2: levels appear as one staggered sweep, not five separate cuts.
+        level_anims = []
         for n_idx in range(n_max):
-            self.play(
-                Create(level_lines[n_idx]),
-                Write(level_labels[n_idx]),
-                run_time=0.5,
-            )
+            level_anims.append(Create(level_lines[n_idx]))
+            level_anims.append(Write(level_labels[n_idx]))
+        self.play(LaggedStart(*level_anims, lag_ratio=0.12), run_time=2.6)
+        self.wait(BEAT_POST)
 
-        self.wait(0.5)
-
-        # Show wavefunctions and probabilities for each level
+        # Beat 3: for each level, pop-attention onto its label, then trace its
+        # wavefunction and probability density — the eye always knows where.
         for n_idx in range(n_max):
-            n = n_idx + 1
-            # Fade in wavefunction
-            self.play(
-                Create(wf_curves[n_idx]),
-                run_time=0.8,
-            )
+            attention.pop(level_labels[n_idx], color=PALETTE["primary"], scale=1.4)
+            self.play(Create(wf_curves[n_idx]), run_time=0.8)
             self.wait(0.3)
-            # Fade in probability density
-            self.play(
-                Create(prob_curves[n_idx]),
-                run_time=0.8,
-            )
+            self.play(Create(prob_curves[n_idx]), run_time=0.8)
             self.wait(0.5)
-            # Fade out both before next level
             if n_idx < n_max - 1:
                 self.play(
                     FadeOut(wf_curves[n_idx]),
@@ -260,13 +249,14 @@ class EnergyLevels(Scene):
                     run_time=0.3,
                 )
 
-        # Show transition
+        # Beat 4: the transition is the payoff — flash marks the emitted photon.
         self.play(
             Create(transition_arrow),
             Write(transition_label),
+            run_time=1.0,
         )
-        self.wait(1.0)
+        attention.flash(transition_arrow, color=PALETTE["accent"])
 
-        # Show legend
-        self.play(Write(legend))
+        # Beat 5: legend fades in last, quietly.
+        reveal.group(*legend)
         self.wait(1.0)

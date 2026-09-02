@@ -32,11 +32,13 @@ import math
 import numpy as np
 from manim import (
     Axes,
+    Create,
     DashedLine,
     Dot,
     DOWN,
     GRAY_BROWN,
     GREY_D,
+    LaggedStart,
     LEFT,
     Line,
     MathTex,
@@ -50,6 +52,7 @@ from manim import (
 )
 
 from physics_core.mechanics.pendulum import steady_state_amplitude
+from manim_polish import BEAT_PRE, Attention, Reveal
 
 
 class Resonance(Scene):
@@ -222,8 +225,10 @@ class Resonance(Scene):
         # ------------------------------------------------------------------
         # Physics driver — authoritative time from the scene clock
         # ------------------------------------------------------------------
+        run_start: list[float] = [0.0]
+
         def updater(_mob: Mobject, dt: float) -> None:
-            t[0] = self.time
+            t[0] = max(0.0, self.time - run_start[0])
 
         driver = Mobject()
         driver.add_updater(updater)
@@ -231,14 +236,32 @@ class Resonance(Scene):
         # ------------------------------------------------------------------
         # Assemble and run
         # ------------------------------------------------------------------
-        self.add(title)
-        self.add(axes, x_label, y_label)
-        self.add(heavy_curve, light_curve)
+        reveal = Reveal(self)
+        attention = Attention(self)
+
+        # Staged intro: title, then axes, then the two resonance curves are
+        # drawn in as a staggered sweep — the viewer meets the physics before
+        # the probe starts.
+        reveal.caption(title)
+        reveal.draw(axes, run_time=1.4, lag=0.1)
+        self.play(
+            LaggedStart(
+                Create(heavy_curve),
+                Create(light_curve),
+                lag_ratio=0.3,
+            ),
+            run_time=1.8,
+        )
+        self.wait(BEAT_PRE)
+        reveal.beat(0.2)
+
+        # Everything static is now on screen; the sweep runs from t=0.
         self.add(omega0_line, omega0_label)
         self.add(legend)
         self.add(guide, sweep_dot)
         self.add(reso)
         self.add(inset_title, pivot_dot, rod, bob)
         self.add(driver)
+        run_start[0] = self.time
 
         self.wait(total_time)
