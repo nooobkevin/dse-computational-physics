@@ -121,81 +121,164 @@ pre code { background: none; padding: 0; }
 <h1 class="title">DSE Computational Physics — Lesson Handout</h1>
 </header>
 <h1 id="unit-01-mechanics-力學-s4">Unit 01: Mechanics 力學 — S4</h1>
-<h2 id="learning-outcomes-學習目標">Learning Outcomes 學習目標</h2>
-<ul>
-<li><strong>Kinematics</strong> 運動學: use SUVAT equations and
-interpret s–t, v–t, a–t graphs.</li>
-<li><strong>Projectile motion</strong> 拋體運動: independence of
-horizontal/vertical motion; effect of air resistance.</li>
-<li><strong>SHM &amp; circular motion</strong> 簡諧運動與圓周運動: SHM
-as projection of uniform circular motion.</li>
-<li><strong>Damping &amp; resonance</strong> 阻尼與共振:
-underdamped/critical/overdamped regimes; resonance curve.</li>
-<li><strong>Numerical methods</strong> 數值方法: compare Euler vs Verlet
-energy drift.</li>
-<li><strong>MVA</strong> 運動影片分析: estimate <em>g</em> from a
-tracked pendulum period.</li>
-</ul>
-<h2 id="key-formulas-核心公式">Key Formulas 核心公式</h2>
+<h2 id="the-big-idea-本課主線">The Big Idea 本課主線</h2>
+<blockquote>
+<p><strong>One sentence:</strong>
+力學的每個「定律」都是同一個想法——<strong>位置隨時間怎麼變</strong>。
+這一課的每個動畫都在回答一個具體問題，而抽象公式是那些問題的答案。</p>
+</blockquote>
+<hr />
+<h2 id="hook-先問一個為什麼再給公式">Hook:
+先問一個「為什麼」，再給公式</h2>
+<p>不要從定義開始。先讓學生心裡有這個問題，才讓公式登場。</p>
 <table>
 <colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>#</th>
+<th>具體 Hook 問題</th>
+<th>對應動畫</th>
+<th>背後的 aha moment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>「為什麼我晃一個掛在繩上的球，它會上下來回、而且<strong>來回一次要的時間固定</strong>？」</td>
+<td><code>ShmProjection.mp4</code></td>
+<td>簡諧運動 = 圓周運動的投影：時間固定是因為圓周轉速固定</td>
+</tr>
+<tr>
+<td>2</td>
+<td>「我在電腦裡模擬一個單擺，為什麼<strong>越小步走一算，能量越飄</strong>？」</td>
+<td><code>IntegratorConvergence.mp4</code></td>
+<td>數值方法有「品質」：Euler 會偷加能量，Verlet 不會</td>
+</tr>
+<tr>
+<td>3</td>
+<td>「同樣一個砲彈，為什麼我<strong>算得越粗心，飛得越近</strong>？」</td>
+<td><code>ProjectileDt.mp4</code></td>
+<td>步長 dt 控制誤差；細步長逼近解析解</td>
+</tr>
+<tr>
+<td>4</td>
+<td>「汽車避震器為什麼要調到<strong>剛剛好</strong>？太軟太硬都不行？」</td>
+<td><code>DampedSHM.mp4</code></td>
+<td>欠/臨界/過阻尼三種衰減；臨界阻尼回正最快</td>
+</tr>
+<tr>
+<td>5</td>
+<td>「為什麼跳過某些頻率時，鞦韆會<strong>越盪越高</strong>？」</td>
+<td><code>Resonance.mp4</code></td>
+<td>驅動頻率 = 固有頻率時能量最有效輸入（共振）</td>
+</tr>
+<tr>
+<td>6</td>
+<td>「月球上跳一下，跟地球上跳一下，誰飄得久？」</td>
+<td><code>PlanetFreeFall.mp4</code></td>
+<td>g 因星球而異，落地時間隨 √(1/g) 長</td>
+</tr>
+<tr>
+<td>7</td>
+<td>「為什麼高爾夫球飛得比想像中近？」</td>
+<td><code>ProjectileDrag.mp4</code></td>
+<td>空氣阻力使實際拋體偏離理想拋物線</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-payoff-核心-aha全課支點">The Payoff 核心
+Aha（全課支點）</h2>
+<blockquote>
+<p><strong>「能量守恆」是看懂所有力學場景的那把鑰匙。</strong> - Euler
+偷能量 → 越算越亂（<code>IntegratorConvergence</code>） - Verlet 守能量
+→ 軌跡可信（<code>IntegratorConvergence</code>） - 阻尼散能量 →
+振幅遞減（<code>DampedSHM</code>） - 共振輸入能量 →
+振幅暴增（<code>Resonance</code>）</p>
+</blockquote>
+<p>讓學生先握住這個主線，再看每個場景，就不會覺得是七個孤立的公式。</p>
+<hr />
+<h2 id="key-formulas-核心公式在-aha-之後登場">Key Formulas 核心公式（在
+aha 之後登場）</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
 </colgroup>
 <thead>
 <tr>
 <th>Formula</th>
 <th>Meaning</th>
+<th>出現於</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><span class="math inline">$v = \frac{\Delta s}{\Delta t},\ a =
-\frac{\Delta v}{\Delta t}$</span></td>
-<td>velocity, acceleration</td>
-</tr>
-<tr>
-<td><span class="math inline"><em>v</em><sup>2</sup> = <em>u</em><sup>2</sup> + 2<em>a</em><em>s</em></span></td>
-<td>SUVAT (no time)</td>
-</tr>
-<tr>
 <td><span class="math inline"><em>x</em>(<em>t</em>) = <em>R</em>cos (<em>ω</em><em>t</em>)</span></td>
-<td>SHM displacement</td>
+<td>SHM 是圓周投影</td>
+<td>Hook 1</td>
 </tr>
 <tr>
 <td><span class="math inline">$T = 2\pi\sqrt{L/g}$</span></td>
-<td>pendulum period</td>
+<td>單擺週期（能量守恒的種子）</td>
+<td>Hook 1/6</td>
+</tr>
+<tr>
+<td><span class="math inline"><em>v</em><sup>2</sup> = <em>u</em><sup>2</sup> + 2<em>a</em><em>s</em></span></td>
+<td>SUVAT（無時間式）</td>
+<td>Hook 3</td>
 </tr>
 <tr>
 <td><span class="math inline">$\alpha = -\frac{g}{L}\theta -
 b\,\omega$</span></td>
-<td>damped angular accel.</td>
+<td>阻尼擺角加速度</td>
+<td>Hook 4</td>
+</tr>
+<tr>
+<td><span class="math inline">$A(\omega_d)=\frac{g/L}{\sqrt{(\omega_0^2-\omega_d^2)^2+(b\omega_d)^2}}$</span></td>
+<td>振盪幅值-頻率響應</td>
+<td>Hook 5</td>
 </tr>
 <tr>
 <td><span class="math inline">$KE = \tfrac{1}{2}mv^2,\ PE =
 mgh$</span></td>
-<td>mechanical energy</td>
+<td>機械能（驗證守恆）</td>
+<td>Hook 2</td>
 </tr>
 </tbody>
 </table>
-<h2 id="lesson-flow-課堂流程">Lesson Flow 課堂流程</h2>
-<ol type="1">
-<li><strong>Watch</strong> 觀看: <code>ShmProjection.mp4</code>,
-<code>DampedSHM.mp4</code>, <code>Resonance.mp4</code>,
-<code>IntegratorConvergence.mp4</code>, <code>ProjectileDt.mp4</code>,
-<code>ProjectileDrag.mp4</code>, <code>PlanetFreeFall.mp4</code>.</li>
-<li><strong>Interact</strong> 互動: teacher app
-<code>--mode pendulum|circular|projectile</code> (pendulum = MVA,
-estimates <em>g</em>).</li>
-<li><strong>Code</strong> 編程: <code>pendulum_exercise.py</code> (fill
-<code>angular_acceleration</code>) or
-<code>kinematics_exercise.py</code> (5 SUVAT hooks).</li>
-</ol>
+<h2 id="lesson-flow-課堂流程敘事順序">Lesson Flow
+課堂流程（敘事順序）</h2>
+<p><strong>Step 1 — 建立主線（3 min）</strong>
+先講「能量守恆是鑰匙」，播放 <code>IntegratorConvergence.mp4</code>：看
+Euler 怎麼偷能量。</p>
+<p><strong>Step 2 — 逐個解 hook（每 hook 一個場景）</strong> 1. 晃繩球 →
+<code>ShmProjection.mp4</code>（圓周投影） 2. 砲彈誤差 →
+<code>ProjectileDt.mp4</code> + <code>ProjectileDrag.mp4</code>（dt
+與阻力） 3. 涉振器 → <code>DampedSHM.mp4</code>（三種阻尼） 4. 鞦韆 →
+<code>Resonance.mp4</code>（共振） 5. 月球跳 →
+<code>PlanetFreeFall.mp4</code>（g vs.T）</p>
+<p><strong>Step 3 — 動手發現（Interact，非示範）</strong> 用
+<code>--mode pendulum</code> 讓學生自己動：把 <code>--length</code>
+改大改小、把初角 θ₀ 調大，觀察週期怎麼變——自己「發現」T ∝
+√(L/g)，而非被告訴。</p>
+<p><strong>Step 4 — 用代碼驗證（Code）</strong> 讓學生
+<code>pendulum_exercise.py</code> 填
+<code>angular_acceleration</code>，跑通後用
+<code>test_exercise.py</code> 檢查能量漂移 &lt;
+2%（Verlet）——把「能量守恆」從口號變成他們親手證明的東西。</p>
 <h2 id="simulation-commands-指令">Simulation Commands 指令</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> sync</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python units/01_mechanics/teacher_app/main.py <span class="at">--mode</span> pendulum</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> units/01_mechanics/manim/render.sh shm_projection <span class="at">-ql</span>   <span class="co"># Docker</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run pytest units/01_mechanics/exercises/test_exercise.py <span class="at">-v</span></span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python units/01_mechanics/teacher_app/main.py <span class="at">--mode</span> pendulum   <span class="co"># 動手發現</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python units/01_mechanics/teacher_app/main.py <span class="at">--mode</span> circular</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run python units/01_mechanics/teacher_app/main.py <span class="at">--mode</span> projectile</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> units/01_mechanics/manim/render.sh shm_projection <span class="at">-ql</span>   <span class="co"># Docker（重渲染）</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">uv</span> run pytest units/01_mechanics/exercises/test_exercise.py <span class="at">-v</span></span></code></pre></div>
 <h2 id="assessment-評估">Assessment 評估</h2>
 <ul>
 <li><strong>Exercise</strong> 練習:

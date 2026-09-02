@@ -27,7 +27,9 @@ from manim import (
     BLUE_B,
     Create,
     DOWN,
+    Flash,
     GRAY,
+    LaggedStart,
     LEFT,
     Line,
     MathTex,
@@ -42,6 +44,7 @@ from manim import (
 )
 
 from physics_core.quantum.bohr import BohrHydrogen
+from manim_polish import BEAT_POST, BEAT_PRE, PALETTE, Attention, Reveal
 
 
 class HydrogenSpectra(Scene):
@@ -196,28 +199,38 @@ class HydrogenSpectra(Scene):
             spectral_lines.add(label)
 
         # ------------------------------------------------------------------
-        # Animation sequence (progressive reveal)
+        # Animation sequence — 3b1b-style staged reveals with a payoff beat
         # ------------------------------------------------------------------
-        self.play(Write(diagram_title))
+        reveal = Reveal(self)
+        attention = Attention(self)
 
-        # Reveal energy levels one by one
+        # Beat 1: title, then the energy levels sweep in as one staggered wave.
+        reveal.caption(diagram_title)
+
+        level_anims = []
         for n_idx in range(n_max):
-            self.play(
-                Create(level_lines[n_idx]),
-                Write(level_labels[n_idx]),
-                run_time=0.4,
-            )
-        self.play(Create(ion_line), Write(ion_label))
+            level_anims.append(Create(level_lines[n_idx]))
+            level_anims.append(Write(level_labels[n_idx]))
+        self.play(LaggedStart(*level_anims, lag_ratio=0.15), run_time=2.4)
+        self.wait(BEAT_POST)
 
-        # Reveal transition arrows one by one
+        # Beat 2: ionisation limit, then the Balmer transition arrows.
+        self.play(Create(ion_line), Write(ion_label), run_time=1.0)
         for arrow_mob in arrow_group:
             self.play(Create(arrow_mob), run_time=0.5)
 
-        # Reveal wavelength axis
-        self.play(Create(axis_line), Write(axis_title))
-        for lam_label in lam_labels:
-            self.play(Write(lam_label), run_time=0.15)
+        # Beat 3: the wavelength axis is the payoff — the visible Balmer lines.
+        self.play(Create(axis_line), Write(axis_title), run_time=1.2)
+        lam_anims = [Write(lam) for lam in lam_labels]
+        self.play(LaggedStart(*lam_anims, lag_ratio=0.1), run_time=1.5)
         for spectral_mob in spectral_lines:
             self.play(Create(spectral_mob), run_time=0.3)
 
-        self.wait(2.0)
+        # Flash the Hα line — the concrete "visible red line" the viewer keeps.
+        if spectral_lines:
+            alpha_mob = spectral_lines[0]
+            self.wait(BEAT_PRE)
+            self.play(Flash(alpha_mob, color=PALETTE["accent"]), run_time=0.8)
+            self.wait(0.3)
+
+        self.wait(1.5)

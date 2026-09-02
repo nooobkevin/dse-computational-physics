@@ -7,6 +7,43 @@ simulation you just implemented.  Answer them in a few sentences each.
 
 ---
 
+## Opening Hooks — think before you compute
+
+Answer these **before** looking at any formula.  They are meant to build the
+intuition that the formulas later make precise.  Do not calculate — just argue
+and reason.
+
+> 中文：先想後算。以下是「先建直覺，再讓公式精確」的引導題。先別計算，先推理。
+
+### (0) Intuition warm-up
+
+1. **Why is energy the key?**  A swinging pendulum always returns to the same
+   maximum height.  If you could film a pendulum and remove *all* friction and
+   drag, would the maximum height ever drop?  What does that tell you about the
+   total energy (KE + PE) as it swings?
+   *（為什麼能量是關鍵？理想無摩擦的擺錘，最高點會變低嗎？這告訴你總能量怎樣？）*
+
+2. **Euler steals energy.**  Imagine you simulate a pendulum but *always use
+   the velocity from the very first instant* to move it each step.  Would that
+   pendulum swing higher over time, or lower?  Explain why.
+   *（若你每次都用「最開始那瞬間的速度」來移動擺錘，它會越盪越高還是越低？為何？）*
+
+3. **What does "period" mean?**  Two pendulums have different lengths.  The
+   longer one takes longer to complete one full swing.  Without computing
+   anything, which length do you *expect* to give a longer period, and roughly
+   why — does a longer string "have more distance to travel" or "take a slower
+   path"?
+   *（較長的擺繩，來回一次要多久？不計算，直覺上較長擺繩的週期較長嗎？為什麼？）*
+
+4. **Resonance by touch.**  Push a swing once, then again at random times.  It
+   wobbles.  Now push it *exactly when it comes back to you*.  It goes higher
+   and higher.  What's different about the timing of your pushes?  Roughly,
+   when does a swing want to receive energy fastest?
+   *（鞦韆：搗亂地推，會亂晃；剛好在它回到你身邊時推，會越盪越高。兩者的差別在哪？鞦韆何時接收能量最快？）*
+
+---
+
+
 ## Questions
 
 ### (a) Estimating *g* from the measured period
